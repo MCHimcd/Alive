@@ -1,38 +1,22 @@
 package mc.alive.role.Sailors;
 
+import mc.alive.role.Role;
+import mc.alive.role.Skill;
 import org.bukkit.entity.Player;
 
-abstract public class Sailor {
-    protected final Player p;
+abstract public class Sailor extends Role {
     public Sailor(Player pl) {
-        p = pl;
+        super(pl);
     }
-    //技能&&被动
-    abstract public void skill1();
-    abstract public void skill2();
-    abstract public void passive();
-    //初始物品给予
-    abstract public void equip();
-    //力量
-    abstract public double getStrength();
-    //护甲
-    abstract public int getArmor();
-    //速度
-    abstract public double getSpeed();
-    //最大生命
-    abstract public double getMaxHealth();
-    //名字
-    abstract public String getName();
+
+    //护盾  (仅船员
+    abstract public int getShield();
+
+
     public static Sailor getSailor(int id, Player p) {
         return switch (id) {
             case 1 -> new New(p);
             default -> new New(p);
         };
     }
-
-
-    public Player getPlayer() {
-        return p;
-    }
-
 }

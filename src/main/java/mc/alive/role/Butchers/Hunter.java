@@ -1,5 +1,7 @@
 package mc.alive.role.Butchers;
 
+import mc.alive.role.Skill;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 public class Hunter extends Butcher {
@@ -8,53 +10,13 @@ public class Hunter extends Butcher {
     }
 
     @Override
-    public void skill1() {
-
-    }
-
-    @Override
-    public void skill2() {
-
-    }
-
-    @Override
-    public void skill3() {
-
-    }
-
-    @Override
-    public void skill4() {
-
-    }
-
-    @Override
-    public void skill5() {
-
-    }
-
-    @Override
-    public void skill6() {
-
-    }
-
-    @Override
-    public void passive() {
-
-    }
-
-    @Override
     public void equip() {
 
     }
 
     @Override
-    public int getArmor() {
-        return 0;
-    }
-
-    @Override
     public double getSpeed() {
-        return 0;
+        return 2;
     }
 
     @Override
@@ -64,16 +26,27 @@ public class Hunter extends Butcher {
 
     @Override
     public double getMaxHealth() {
-        return 0;
+        return 100;
     }
 
     @Override
-    public double getStrength() {
-        return 0;
+    public int getIntelligence() {
+        return 1;
     }
 
     @Override
-    public String getName() {
+    public int getStrength() {
+        return 20;
+    }
+
+    @Override
+    public String toString() {
         return "§c狩猎者";
     }
+
+    @Skill(id = 1, name = "h")
+    public void aaa() {
+        player.sendMessage(Component.text("h"));
+    }
+
 }

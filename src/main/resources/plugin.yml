@@ -2,3 +2,7 @@ name: alive
 version: '${version}'
 main: mc.alive.Alive
 api-version: '1.21'
+commands:
+  start:
+    usage: /<command>
+    description: aaa

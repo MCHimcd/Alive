@@ -1,7 +1,8 @@
-package mc.alive.Menu;
+package mc.alive.menu;
 
 import mc.alive.Alive;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -16,9 +17,10 @@ public abstract class SlotMenu implements InventoryHolder {
     protected final Player player;
     private final Inventory inventory;
     private final HashMap<Integer, BiConsumer<ItemStack, Player>> slotFunctions = new HashMap<>();
+    protected boolean close = true;
 
     public SlotMenu(int size, Component title, Player p) {
-        inventory = Alive.instance.getServer().createInventory(this, size, title);
+        inventory = Alive.plugin.getServer().createInventory(this, size, title);
         player = p;
     }
 
@@ -34,9 +36,11 @@ public abstract class SlotMenu implements InventoryHolder {
 
     public void handleClick(int slot) {
         if (slotFunctions.containsKey(slot)) {
-            player.closeInventory();
             slotFunctions.get(slot).accept(inventory.getItem(slot), player);
+            player.playSound(player, Sound.UI_BUTTON_CLICK, 1, 1);
+            if (close) player.closeInventory();
         }
+        close = true;
     }
 
     @Override
