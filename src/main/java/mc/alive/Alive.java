@@ -1,6 +1,7 @@
 package mc.alive;
 
 import mc.alive.game.Game;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
