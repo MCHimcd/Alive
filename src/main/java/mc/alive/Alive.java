@@ -11,9 +11,13 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.security.auth.kerberos.KerberosTicket;
+
 public final class Alive extends JavaPlugin implements Listener {
     public static Alive plugin;
     public static Game game;
+    public static JavaPlugin instance;
+
 
     @Override
     public void onEnable() {

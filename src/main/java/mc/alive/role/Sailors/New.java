@@ -1,12 +1,11 @@
-package mc.alive.role.Butchers;
+package mc.alive.role.Sailors;
 
 import org.bukkit.entity.Player;
 
-public class Hunter extends Butcher {
-    public Hunter(Player pl) {
+public class New extends Sailor{
+    public New(Player pl) {
         super(pl);
     }
-
     @Override
     public void skill1() {
 
@@ -14,26 +13,6 @@ public class Hunter extends Butcher {
 
     @Override
     public void skill2() {
-
-    }
-
-    @Override
-    public void skill3() {
-
-    }
-
-    @Override
-    public void skill4() {
-
-    }
-
-    @Override
-    public void skill5() {
-
-    }
-
-    @Override
-    public void skill6() {
 
     }
 
@@ -58,11 +37,6 @@ public class Hunter extends Butcher {
     }
 
     @Override
-    public int getMaxLevel() {
-        return 6;
-    }
-
-    @Override
     public double getMaxHealth() {
         return 0;
     }
@@ -74,6 +48,6 @@ public class Hunter extends Butcher {
 
     @Override
     public String getName() {
-        return "§c狩猎者";
+        return "§a船员";
     }
 }
