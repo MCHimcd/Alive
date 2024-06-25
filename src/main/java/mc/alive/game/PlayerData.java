@@ -1,5 +1,6 @@
 package mc.alive.game;
 
+import mc.alive.Alive;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import net.kyori.adventure.text.Component;
@@ -21,6 +22,14 @@ public class PlayerData {
     private final List<Integer> skill_cd = new ArrayList<>() {{
         add(-1);
     }};
+
+    public Role getRole() {
+        return role;
+    }
+
+    public static PlayerData getPlayerData(Player player) {
+        return Alive.game == null ? null : Alive.game.playerData.get(player);
+    }
 
     public void tick() {
         for (int i = 0; i < skill_cd.size(); i++) {
@@ -50,7 +59,7 @@ public class PlayerData {
                                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
                                 )
                         );
-                        player.playSound(player, Sound.UI_BUTTON_CLICK,.3f,10f);
+                        player.playSound(player, Sound.UI_BUTTON_CLICK, .3f, 10f);
                     }
                 });
         if (current_skill_id > role.getSkillCount()) {

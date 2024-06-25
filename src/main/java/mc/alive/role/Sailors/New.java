@@ -1,7 +1,9 @@
 package mc.alive.role.Sailors;
 
 import mc.alive.role.Skill;
+import mc.alive.util.ItemCreator;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -12,7 +14,7 @@ public class New extends Sailor {
 
     @Override
     public void equip() {
-
+        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND,10000).getItem());
     }
 
 

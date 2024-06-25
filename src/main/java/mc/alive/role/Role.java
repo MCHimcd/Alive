@@ -1,5 +1,7 @@
 package mc.alive.role;
 
+import mc.alive.role.Butchers.Hunter;
+import mc.alive.role.Sailors.New;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -39,6 +41,14 @@ public abstract class Role {
         return (int) Arrays.stream(getClass().getMethods())
                 .filter(m -> m.isAnnotationPresent(Skill.class))
                 .count();
+    }
+
+    public static Role of(int id, Player player) {
+        return switch (id) {
+            case 100 -> new Hunter(player);
+            case 200 -> new New(player);
+            default -> null;
+        };
     }
 
 

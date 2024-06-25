@@ -4,7 +4,6 @@ import mc.alive.game.Game;
 import mc.alive.util.ItemCreator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -25,15 +24,6 @@ public class MainMenu extends SlotMenu {
         });
         //加入游戏
         update(p);
-        //op开始
-        if (p.isOp()) {
-            setSlot(26, ItemCreator.create(Material.NETHER_STAR).getItem(), (it, pl) -> {
-                List<Player> l = new ArrayList<>(Bukkit.getOnlinePlayers());
-                Collections.shuffle(l);
-                game.destroy();
-                game = new Game(l);
-            });
-        }
     }
 
     private void update(Player p) {
@@ -45,6 +35,16 @@ public class MainMenu extends SlotMenu {
         else setSlot(15, new ItemStack(Material.OBSIDIAN), (it, pl) -> {
             prepared.add(p);
             update(p);
+            close = false;
+        });
+        if (p.isOp() && prepared.size() >= 2) {
+            setSlot(26, ItemCreator.create(Material.NETHER_STAR).getItem(), (it, pl) -> {
+                List<Player> l = new ArrayList<>(prepared);
+                Collections.shuffle(l);
+                if (game != null) game.destroy();
+                game = new Game(l);
+            });
+        } else setSlot(26, ItemCreator.create(Material.BARRIER).getItem(), (it, pl) -> {
             close = false;
         });
     }
