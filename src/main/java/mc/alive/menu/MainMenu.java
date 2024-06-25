@@ -1,13 +1,19 @@
 package mc.alive.menu;
 
+import mc.alive.game.Game;
+import mc.alive.util.ItemCreator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import static mc.alive.Alive.game;
 
 public class MainMenu extends SlotMenu {
     public static final List<Player> prepared = new ArrayList<>();
@@ -19,9 +25,13 @@ public class MainMenu extends SlotMenu {
         });
         //加入游戏
         update(p);
-        if(p.isOp()){
-            setSlot(26, new ItemStack(Material.ARROW), (it, pl) -> {
-
+        //op开始
+        if (p.isOp()) {
+            setSlot(26, ItemCreator.create(Material.NETHER_STAR).getItem(), (it, pl) -> {
+                List<Player> l = new ArrayList<>(Bukkit.getOnlinePlayers());
+                Collections.shuffle(l);
+                game.destroy();
+                game = new Game(l);
             });
         }
     }
@@ -30,12 +40,12 @@ public class MainMenu extends SlotMenu {
         if (prepared.contains(p)) setSlot(15, new ItemStack(Material.CRYING_OBSIDIAN), (it, pl) -> {
             prepared.remove(p);
             update(p);
-            close=false;
+            close = false;
         });
         else setSlot(15, new ItemStack(Material.OBSIDIAN), (it, pl) -> {
             prepared.add(p);
             update(p);
-            close=false;
+            close = false;
         });
     }
 }

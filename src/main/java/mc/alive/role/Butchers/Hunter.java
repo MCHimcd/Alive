@@ -4,7 +4,7 @@ import mc.alive.role.Skill;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
-public class Hunter extends Butcher {
+public  class Hunter extends Butcher {
     public Hunter(Player pl) {
         super(pl);
     }

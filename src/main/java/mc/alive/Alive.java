@@ -6,9 +6,13 @@ import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
 import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
+import mc.alive.util.ItemCreator;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -52,6 +56,12 @@ public final class Alive extends JavaPlugin implements Listener {
         player.setGameMode(GameMode.ADVENTURE);
         player.clearActivePotionEffects();
         player.getInventory().clear();
+        player.getInventory().setItem(8, ItemCreator
+                .create(Material.CLOCK)
+                .data(20000)
+                .name(Component.text("主菜单", NamedTextColor.GOLD))
+                .getItem()
+        );
     }
 
     @EventHandler
@@ -101,13 +111,15 @@ public final class Alive extends JavaPlugin implements Listener {
                 case 20001 -> {
                 }
             }
-            player.playSound(player, Sound.UI_BUTTON_CLICK,1f,1f);
+            player.playSound(player, Sound.UI_BUTTON_CLICK, 1f, 1f);
         }
         event.setCancelled(true);
     }
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!player.isOp()) event.setCancelled(true);
         if (!(event.getInventory().getHolder() instanceof SlotMenu menu)) return;
         menu.handleClick(event.getSlot());
         event.setCancelled(true);

@@ -9,7 +9,7 @@ abstract public class Sailor extends Role {
         super(pl);
     }
 
-    //护盾  (仅船员
+    //护盾 （仅船员）
     abstract public int getShield();
 
 
