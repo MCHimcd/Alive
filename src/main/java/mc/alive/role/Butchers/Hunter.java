@@ -29,7 +29,7 @@ public  class Hunter extends Butcher {
 
     @Override
     public double getMaxHealth() {
-        return 100;
+        return 1000;
     }
 
     @Override
