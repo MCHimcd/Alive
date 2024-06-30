@@ -1,8 +1,9 @@
 package mc.alive.game;
 
-import mc.alive.Alive;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
+import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Survivor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.title.Title;
@@ -15,6 +16,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static mc.alive.Alive.game;
+import static mc.alive.game.TickRunner.chosen_duct;
+import static mc.alive.game.TickRunner.chosen_item_display;
+
 public class PlayerData {
     private int current_skill_id = 0;
     private final Role role;
@@ -22,21 +27,48 @@ public class PlayerData {
     private final List<Integer> skill_cd = new ArrayList<>() {{
         add(-1);
     }};
+    private double health;
+    private double shield;
+    private int shield_cd = 0;
+    private int shield_tick = 0;
+    public int fix_tick = -1;
 
     public Role getRole() {
         return role;
     }
 
     public static PlayerData getPlayerData(Player player) {
-        return Alive.game == null ? null : Alive.game.playerData.get(player);
+        assert game != null;
+        return game.playerData.get(player);
     }
 
     public void tick() {
+        //技能冷却
         for (int i = 0; i < skill_cd.size(); i++) {
             if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
         }
+        //技能选择
         if (skill_cd.getFirst() == 0) {
             current_skill_id = 0;
+        }
+        //护盾恢复
+        if (role instanceof Survivor s) {
+            if (shield_cd > 0) shield_cd--;
+            if (shield_tick > 0) shield_tick--;
+            if (shield_cd == 0 && shield_tick == 0 && shield < s.getMaxShield()) {
+                shield = Math.min(shield + 5, s.getMaxShield());
+                shield_tick = 20;
+            }
+        }
+        //维修
+        var target = chosen_item_display.get(player);
+        if (fix_tick >= 0) {
+            if (--fix_tick == 0 && target != null) {
+                player.getLocation().getNearbyPlayers(20).forEach(player1 -> {
+                    player1.playSound(player1,Sound.ENTITY_IRON_GOLEM_REPAIR,1f,1f);
+                });
+                game.fix(target, role.getIntelligence());
+            }
         }
     }
 
@@ -99,6 +131,42 @@ public class PlayerData {
 
     public PlayerData(Player player, Role role) {
         this.role = role;
+        health = role.getMaxHealth();
+        if (role instanceof Survivor s) shield = s.getMaxShield();
         this.player = player;
+    }
+
+    public void damage(double amount) {
+        if (amount >= 0) {
+            if (role instanceof Survivor) {
+                if (shield > 0) {
+                    //减护盾
+                    var amount_s = amount;
+                    amount = Math.max(0, amount - shield);
+                    shield = Math.max(0, shield - amount_s);
+                    shield_cd = 200;
+                }
+            }
+            //减血量
+            health -= amount;
+            if (health <= 0) die();
+        } else health = Math.min(health - amount, role.getMaxHealth());
+    }
+
+    public void tryIntoDuct() {
+        if (chosen_duct != null) player.teleport(chosen_duct);
+    }
+
+
+    public void tryLevelUp() {
+        if (!(role instanceof Hunter h)) return;
+        h.levelUp();
+    }
+
+    private void die() {
+        game.survivors.remove(player);
+        if (game.survivors.isEmpty()) {
+            game.end();
+        }
     }
 }

@@ -1,7 +1,7 @@
 package mc.alive.role;
 
-import mc.alive.role.Butchers.Hunter;
-import mc.alive.role.Sailors.New;
+import mc.alive.role.hunter.HunterTodo;
+import mc.alive.role.survivor.SurvivorTodo;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -45,8 +45,8 @@ public abstract class Role {
 
     public static Role of(int id, Player player) {
         return switch (id) {
-            case 100 -> new Hunter(player);
-            case 200 -> new New(player);
+            case 100 -> new HunterTodo(player);
+            case 200,201 -> new SurvivorTodo(player);
             default -> null;
         };
     }

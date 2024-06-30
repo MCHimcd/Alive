@@ -1,4 +1,4 @@
-package mc.alive.role.Butchers;
+package mc.alive.role.hunter;
 
 import mc.alive.Alive;
 import mc.alive.role.Skill;
@@ -7,8 +7,8 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-public  class Hunter extends Butcher {
-    public Hunter(Player pl) {
+public  class HunterTodo extends Hunter {
+    public HunterTodo(Player pl) {
         super(pl);
     }
 
@@ -50,7 +50,7 @@ public  class Hunter extends Butcher {
     @Skill(id = 1, name = "h")
     public void aaa() {
         player.sendMessage(Component.text("hhh"));
-        Alive.game.sailors.forEach(player1 -> player1.damage(5));
+        Alive.game.survivors.forEach(player1 -> player1.damage(5));
     }
 
 }

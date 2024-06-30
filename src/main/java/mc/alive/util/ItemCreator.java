@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-public class ItemCreator {
+public final class ItemCreator {
     private final ItemStack item;
 
     private ItemCreator(Material type) {

@@ -1,4 +1,4 @@
-package mc.alive.role.Sailors;
+package mc.alive.role.survivor;
 
 import mc.alive.role.Skill;
 import mc.alive.util.ItemCreator;
@@ -7,8 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-public class New extends Sailor {
-    public New(Player pl) {
+public class SurvivorTodo extends Survivor {
+    public SurvivorTodo(Player pl) {
         super(pl);
     }
 
@@ -34,7 +34,7 @@ public class New extends Sailor {
     }
 
     @Override
-    public int getShield() {
+    public int getMaxShield() {
         return 50;
     }
 

@@ -39,6 +39,13 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+tasks.register('copyArtifacts', Copy) {
+    from 'build/libs'
+    into "D:/papermc_server/plugins/"
+    include '**/*.jar'
+    rename { "Alive.jar" }
+}
+
 processResources {
     def props = [version: version]
     inputs.properties props
