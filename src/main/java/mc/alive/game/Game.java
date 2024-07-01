@@ -17,6 +17,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
+import static mc.alive.Alive.plugin;
 import static mc.alive.util.Message.rMsg;
 
 
@@ -44,7 +45,7 @@ public class Game {
 
                 chooseRole.nextChoose();
             }
-        }.runTaskLater(Alive.plugin, 1);
+        }.runTaskLater(plugin, 1);
     }
 
     public void start() {
@@ -77,7 +78,7 @@ public class Game {
     private void summonEntities() {
         //管道入口
         for (var s : new String[]{
-                "1.5 -59 1.5"
+                "1.5 -58 1.5"
         }) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
             var world = Bukkit.getWorld("world");
@@ -86,7 +87,7 @@ public class Game {
         }
         //维修
         for (var s : new String[]{
-                "1.5 -59 1.5"
+                "5.5 -59 5.5"
         }) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
             var world = Bukkit.getWorld("world");

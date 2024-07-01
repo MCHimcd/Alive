@@ -154,7 +154,7 @@ public class PlayerData {
     }
 
     public void tryIntoDuct() {
-        if (chosen_duct != null) player.teleport(chosen_duct);
+        if (chosen_duct != null) player.teleport(chosen_duct.clone().setDirection(player.getLocation().getDirection()));
     }
 
 

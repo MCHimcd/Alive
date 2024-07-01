@@ -21,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -60,16 +61,21 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onHurt(EntityDamageByEntityEvent event) {
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
         if (game == null || game.chooseRole != null) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
             var pdp = getPlayerData(player);
             var pdd = getPlayerData(damager);
-            int damage = (int) (pdd.getRole().getStrength()* damager.getAttackCooldown());
-            double damagedealt = event.isCritical() ? damage * 1.3 : damage;
-            pdp.damage(damagedealt);
-            event.setCancelled(true);
+            int damage = (int) (pdd.getRole().getStrength() * damager.getAttackCooldown());
+            double damage_dealt = event.isCritical() ? damage * 1.3 : damage;
+            pdp.damage(damage_dealt);
+            event.setDamage(0);
         }
+    }
+
+    @EventHandler
+    public void avoidDamage(EntityDamageEvent event) {
+        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION) event.setCancelled(true);
     }
 
     @EventHandler
@@ -178,6 +184,13 @@ public final class Alive extends JavaPlugin implements Listener {
         if (game == null || game.chooseRole != null) return;
         var pd = getPlayerData(player);
         pd.fix_tick = -1;
+        if (pd.getRole() instanceof Hunter) {
+            var from = event.getFrom();
+            var to = event.getTo();
+            if (to.getBlock().getType() == Material.GRAY_STAINED_GLASS_PANE) {
+                player.teleport(to.add(to.clone().subtract(from)));
+            }
+        }
     }
 
     @EventHandler

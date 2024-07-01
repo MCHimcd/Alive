@@ -1,13 +1,16 @@
 package mc.alive.game;
 
+import mc.alive.role.hunter.Hunter;
 import mc.alive.util.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.Sound;
+import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
@@ -35,16 +38,19 @@ public class TickRunner extends BukkitRunnable {
                     else if (!player.equals(game.hunter)) {
                         double progress = (double) game.fix(td, 0) / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(Message.rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a)+ "     <red> %d / 400".formatted(game.fix(td,0))));
+                        player.sendActionBar(Message.rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
                 }
             }
+            //药水效果
+            if (game.chooseRole == null && player.isGliding() && PlayerData.getPlayerData(player).getRole() instanceof Hunter)
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 4, false, false));
         });
         //duct
         chosen_duct = null;
         var player = game.hunter;
-        var r = player.getWorld().rayTrace(player.getEyeLocation(), player.getLocation().getDirection(), 3, FluidCollisionMode.NEVER, true, 0.5, entity -> entity.getType() == EntityType.MARKER);
+        var r = player.getWorld().rayTrace(player.getEyeLocation(), player.getLocation().getDirection(), 3, FluidCollisionMode.NEVER, true, 0.5, entity -> entity.getType() == EntityType.MARKER, block -> block.getType() != Material.GRAY_STAINED_GLASS_PANE);
         if (r != null) {
             var m = r.getHitEntity();
             if (m != null) {
