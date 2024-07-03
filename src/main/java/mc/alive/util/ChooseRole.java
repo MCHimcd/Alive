@@ -3,6 +3,7 @@ package mc.alive.util;
 import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
 import mc.alive.role.Role;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,6 +11,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -20,6 +23,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static mc.alive.Alive.game;
+import static mc.alive.Alive.plugin;
 
 public final class ChooseRole {
     private final List<Player> choosing = new ArrayList<>();
@@ -29,6 +33,12 @@ public final class ChooseRole {
 
     public ChooseRole(List<Player> players) {
         choosing.addAll(players);
+        players.forEach(player -> {
+            player.displayName(Component.empty());
+            player.playerListName(Component.empty());
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,Integer.MAX_VALUE,0,false,false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION,Integer.MAX_VALUE,0,false,false));
+        });
     }
 
     private void summonItemDisplay(boolean isHunter) {
@@ -44,6 +54,10 @@ public final class ChooseRole {
                     new Quaternionf()
             ));
             id.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                if (!player.equals(currentPlayer))
+                    player.hideEntity(plugin, id);
+            });
         };
         Supplier<Location> location = () -> {
             //todo

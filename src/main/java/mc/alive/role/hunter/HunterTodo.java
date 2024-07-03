@@ -1,9 +1,10 @@
 package mc.alive.role.hunter;
 
 import mc.alive.Alive;
+import mc.alive.game.PlayerData;
 import mc.alive.role.Skill;
 import mc.alive.util.ItemCreator;
-import net.kyori.adventure.text.Component;
+import mc.alive.util.Message;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -14,12 +15,17 @@ public  class HunterTodo extends Hunter {
 
     @Override
     public void equip() {
-        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND_HOE,10000).getItem());
+        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND_HOE,10100).name(Message.rMsg("<red><bold>手镰")).getItem());
     }
 
     @Override
     public double getSpeed() {
-        return 2;
+        return 0.2;
+    }
+
+    @Override
+    public double getAttackCD() {
+        return 1.8;
     }
 
     @Override
@@ -29,7 +35,7 @@ public  class HunterTodo extends Hunter {
 
     @Override
     public double getMaxHealth() {
-        return 1000;
+        return 50;
     }
 
     @Override
@@ -44,13 +50,12 @@ public  class HunterTodo extends Hunter {
 
     @Override
     public String toString() {
-        return "§c狩猎者";
+        return "§c狩猎者todo";
     }
 
-    @Skill(id = 1, name = "h")
+    @Skill(id = 1, name = "收割")
     public void aaa() {
-        player.sendMessage(Component.text("hhh"));
-        Alive.game.survivors.forEach(player1 -> player1.damage(5));
+        Alive.game.survivors.forEach(player1 -> PlayerData.getPlayerData(player1).damageOrHeal(10));
     }
 
 }

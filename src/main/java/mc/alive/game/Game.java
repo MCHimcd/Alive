@@ -3,22 +3,26 @@ package mc.alive.game;
 import mc.alive.Alive;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
+import mc.alive.util.ItemCreator;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Marker;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Team;
 
 import java.util.*;
 
-import static mc.alive.Alive.plugin;
+import static mc.alive.Alive.*;
 import static mc.alive.util.Message.rMsg;
+import static org.bukkit.attribute.Attribute.*;
 
 
 public class Game {
@@ -28,6 +32,8 @@ public class Game {
     public ChooseRole chooseRole;
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
+    public static Team t_hunter;
+    public static Team t_survivor;
 
 
     public Game(List<Player> players) {
@@ -48,16 +54,48 @@ public class Game {
         }.runTaskLater(plugin, 1);
     }
 
+    public static void resetPlayer(Player player) {
+        Map.of(
+                GENERIC_MOVEMENT_SPEED, .1,
+                GENERIC_ATTACK_DAMAGE, 1.0,
+                GENERIC_MAX_ABSORPTION, 20.0,
+                GENERIC_ATTACK_SPEED, 255.0,
+                GENERIC_ATTACK_KNOCKBACK, -1.0,
+                GENERIC_JUMP_STRENGTH, .0
+        ).forEach((key, value) -> {
+            var a = player.getAttribute(key);
+            assert a != null;
+            a.setBaseValue(value);
+        });
+        var team = ms.getPlayerTeam(player);
+        if (team != null) {
+            team.removePlayer(player);
+        }
+        player.playerListName(player.name());
+        player.displayName(player.name());
+        player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
+        player.setHealth(20);
+        player.setAbsorptionAmount(0);
+        player.setFoodLevel(20);
+        player.setGameMode(GameMode.ADVENTURE);
+        player.clearActivePotionEffects();
+        player.getInventory().clear();
+        if (game == null) player.getInventory().setItem(8, ItemCreator
+                .create(Material.CLOCK)
+                .data(20000)
+                .name(Component.text("主菜单", NamedTextColor.GOLD))
+                .getItem()
+        );
+    }
+
     public void start() {
         chooseRole.roles.keySet().forEach(Entity::remove);
         chooseRole = null;
-        playerData.get(hunter).getRole().equip();
-        Objects.requireNonNull(hunter.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(playerData.get(hunter).getRole().getSpeed() * 0.1);
-        for (Player player : survivors) {
-            playerData.get(player).getRole().equip();
-            //设置属性
-            Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(playerData.get(player).getRole().getSpeed() * 0.1);
-        }
+        playerData.forEach((player, playerData1) -> {
+            player.clearActivePotionEffects();
+            player.setHealth(20);
+            playerData1.getRole().equip();
+        });
         summonEntities();
         Bukkit.broadcast(Component.text("start"));
     }
@@ -65,10 +103,12 @@ public class Game {
     public void end() {
         destroy();
         Alive.game = null;
+        playerData.keySet().forEach(Game::resetPlayer);
+        Bukkit.broadcast(Component.text("end"));
     }
 
     public void destroy() {
-        if (chooseRole!=null){
+        if (chooseRole != null) {
             chooseRole.roles.keySet().forEach(Entity::remove);
         }
         markers.forEach(Entity::remove);
@@ -111,4 +151,6 @@ public class Game {
         }
         return final_amount;
     }
+
+
 }

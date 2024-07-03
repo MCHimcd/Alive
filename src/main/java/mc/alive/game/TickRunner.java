@@ -21,16 +21,30 @@ import static mc.alive.Alive.game;
 public class TickRunner extends BukkitRunnable {
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
     public static Location chosen_duct = null;
+    public static boolean gameEnd = false;
 
     @Override
     public void run() {
         if (game == null) return;
+        if (gameEnd) {
+            game.end();
+            gameEnd = false;
+            return;
+        }
         game.playerData.values().forEach(PlayerData::tick);
         //i_d
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
         chosen_item_display.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {
-            var r = player.getWorld().rayTraceEntities(player.getEyeLocation(), player.getLocation().getDirection(), 4, 0.5, entity -> entity.getType() == EntityType.ITEM_DISPLAY);
+            var r = player.getWorld().rayTrace(
+                    player.getEyeLocation(),
+                    player.getLocation().getDirection(),
+                    4,
+                    FluidCollisionMode.NEVER,
+                    true,
+                    0.5,
+                    entity -> entity.getType() == EntityType.ITEM_DISPLAY
+            );
             if (r != null) {
                 var td = (ItemDisplay) r.getHitEntity();
                 if (td != null) {
@@ -44,13 +58,27 @@ public class TickRunner extends BukkitRunnable {
                 }
             }
             //药水效果
-            if (game.chooseRole == null && player.isGliding() && PlayerData.getPlayerData(player).getRole() instanceof Hunter)
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 4, false, false));
+            if (game.chooseRole != null) return;
+            var pd = PlayerData.getPlayerData(player);
+            if (pd.getRole() instanceof Hunter) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 1, 0, false, false));
+                player.setFoodLevel(20);
+            }
         });
         //duct
         chosen_duct = null;
         var player = game.hunter;
-        var r = player.getWorld().rayTrace(player.getEyeLocation(), player.getLocation().getDirection(), 3, FluidCollisionMode.NEVER, true, 0.5, entity -> entity.getType() == EntityType.MARKER, block -> block.getType() != Material.GRAY_STAINED_GLASS_PANE);
+        @SuppressWarnings("UnstableApiUsage")
+        var r = player.getWorld().rayTrace(
+                player.getEyeLocation(),
+                player.getLocation().getDirection(),
+                3,
+                FluidCollisionMode.NEVER,
+                true,
+                0.5,
+                entity -> entity.getType() == EntityType.MARKER,
+                block -> block.getType() != Material.GRAY_STAINED_GLASS_PANE
+        );
         if (r != null) {
             var m = r.getHitEntity();
             if (m != null) {

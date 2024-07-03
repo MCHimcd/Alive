@@ -2,6 +2,7 @@ package mc.alive.role.survivor;
 
 import mc.alive.role.Skill;
 import mc.alive.util.ItemCreator;
+import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -14,18 +15,23 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public void equip() {
-        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND,10000).getItem());
+        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>施法")).getItem());
     }
 
 
     @Override
     public double getSpeed() {
+        return 0.1;
+    }
+
+    @Override
+    public double getAttackCD() {
         return 1;
     }
 
     @Override
     public double getMaxHealth() {
-        return 200;
+        return 20;
     }
 
     @Override
@@ -35,7 +41,7 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public int getMaxShield() {
-        return 50;
+        return 20;
     }
 
     @Override
@@ -45,7 +51,7 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public String toString() {
-        return "§a船员";
+        return "§a船员todo";
     }
 
     @Skill(id = 1, name = "位移")

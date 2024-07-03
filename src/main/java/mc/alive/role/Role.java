@@ -25,6 +25,9 @@ public abstract class Role {
     //力量
     abstract public int getStrength();
 
+    //攻击间隔
+    abstract public double getAttackCD();
+
     //速度
     abstract public double getSpeed();
 
