@@ -10,6 +10,7 @@ import mc.alive.game.TickRunner;
 import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -244,6 +245,25 @@ public final class Alive extends JavaPlugin implements Listener {
                     "重置游戏",
                     List.of("ar")
             );
+        });
+    }
+
+
+    @EventHandler
+    public void at(AsyncChatEvent event) {
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            String string = Message.msg.serialize(event.message());
+            if (string.equals("@%s".formatted(player.getName()))) {
+                string = "%s".formatted(player.getName());
+                Player atplayer = Bukkit.getPlayer(string);
+                if (atplayer != null) {
+                    atplayer.showTitle(Message.title("", "<green>--<red><bold>你被@了</bold><green>--", 100, 1000, 100));
+                    atplayer.playSound(atplayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 2f, 2f);
+                    atplayer.playSound(atplayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2f, 2f);
+                }
+                event.setCancelled(true);
+                Bukkit.broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(),string)));
+            }
         });
     }
 
