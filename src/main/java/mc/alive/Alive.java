@@ -167,19 +167,13 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player)) return;
         var item = event.getCurrentItem();
         if (event.getRawSlot() > event.getInventory().getSize()) {
             if (item != null) {
                 if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
-                    switch (item.getItemMeta().getCustomModelData()) {
-                        case 10000 -> {
-                            event.setCancelled(true);
-                        }
-                        case 20000 -> {
-                            event.setCancelled(true);
-                        }
-                    }
+                    var data = item.getItemMeta().getCustomModelData();
+                    if (data >= 10000 && data <= 20000) event.setCancelled(true);
                 }
             }
         }
@@ -192,10 +186,7 @@ public final class Alive extends JavaPlugin implements Listener {
     public void onDrop(PlayerDropItemEvent event) {
         if (event.getItemDrop().getItemStack().hasItemMeta()) {
             int i = event.getItemDrop().getItemStack().getItemMeta().getCustomModelData();
-            switch (i) {
-                case 10000 -> event.setCancelled(true);
-                case 20000 -> event.setCancelled(true);
-            }
+            if (i >= 10000 && i <= 20000) event.setCancelled(true);
         }
     }
 
@@ -262,7 +253,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     atplayer.playSound(atplayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2f, 2f);
                 }
                 event.setCancelled(true);
-                Bukkit.broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(),string)));
+                Bukkit.broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), string)));
             }
         });
     }

@@ -29,7 +29,7 @@ public final class ChooseRole {
     private final List<Player> choosing = new ArrayList<>();
     public Player currentPlayer;
     public final Map<ItemDisplay, Integer> roles = new HashMap<>();
-    public final List<Integer> remainedId = new ArrayList<>(IntStream.rangeClosed(200, 201).boxed().toList());
+    public final List<Integer> remainedId = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
 
     public ChooseRole(List<Player> players) {
         choosing.addAll(players);
@@ -78,8 +78,12 @@ public final class ChooseRole {
                         roles.put(id, 200);
                     });
                     case 201 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.create(Material.DIAMOND, 200).getItem());
+                        init.accept(id, ItemCreator.create(Material.DIAMOND, 201).getItem());
                         roles.put(id, 201);
+                    });
+                    case 202 -> world.spawn(location.get(), ItemDisplay.class, id -> {
+                        init.accept(id, ItemCreator.create(Material.DIAMOND, 202).getItem());
+                        roles.put(id, 202);
                     });
                 }
             });

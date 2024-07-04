@@ -51,7 +51,7 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public String toString() {
-        return "§a船员todo";
+        return "§a杰克";
     }
 
     @Skill(id = 1, name = "位移")
