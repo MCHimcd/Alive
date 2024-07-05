@@ -80,6 +80,7 @@ public class Game {
         player.setGameMode(GameMode.ADVENTURE);
         player.clearActivePotionEffects();
         player.getInventory().clear();
+        player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList());
         if (game == null) player.getInventory().setItem(8, ItemCreator
                 .create(Material.CLOCK)
                 .data(20000)

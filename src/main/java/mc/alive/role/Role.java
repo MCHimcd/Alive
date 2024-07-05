@@ -49,22 +49,8 @@ public abstract class Role {
     public static Role of(int id, Player player) {
         return switch (id) {
             case 100 -> new HunterTodo(player);
-            case 200,201 -> new SurvivorTodo(player);
+            case 200,201,202 -> new SurvivorTodo(player);
             default -> null;
         };
     }
-
-
-
-/*
-人物属性注解:
-船员:   基础生命:200  基础护盾:50 基础速度:1  基础力量:10   基础智力:5
-10生命 ->  -> 0.1 速度->1 力量-> 1 智力->10 护盾;
-所有船员应满足如上转换
-
-屠夫:    基础生命:1000 基础速度:2  基础力量:20  基础智力:1
-100生命 -> -> 0.2 速度->1 力量-> 1 智力
-所有屠夫应满足如上转换
-
-*/
 }
