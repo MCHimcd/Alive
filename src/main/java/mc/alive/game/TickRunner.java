@@ -1,5 +1,6 @@
 package mc.alive.game;
 
+import mc.alive.game.effect.Effect;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.util.Message;
 import org.bukkit.Bukkit;
@@ -31,6 +32,7 @@ public class TickRunner extends BukkitRunnable {
             gameEnd = false;
             return;
         }
+        game.playerData.values().forEach(playerData -> playerData.getEffects().removeIf(Effect::tick));
         game.playerData.values().forEach(PlayerData::tick);
         //i_d
         chosen_item_display.values().forEach(e -> e.setGlowing(false));

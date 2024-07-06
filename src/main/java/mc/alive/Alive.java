@@ -258,21 +258,7 @@ public final class Alive extends JavaPlugin implements Listener {
         });
     }
 
-    @EventHandler
-    public void at(AsyncChatEvent event){
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            String string = event.message().toString();
-            if (string.equals("@%s".formatted(player.getName()))) {
-                string="%s".formatted(player.getName());
-                Player atplayer = Bukkit.getPlayer(string);
-                if (atplayer != null) {
-                    atplayer.showTitle(Message.title("","<green>--<red>你被@了<>green--",0,100,0));
-                    atplayer.playSound(atplayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 1f);
-                    atplayer.playSound(atplayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 2f);
-                }
-            }
-        });
-    }
+
     @EventHandler
     public void onChat(AsyncChatEvent event) {
         if (game == null) return;

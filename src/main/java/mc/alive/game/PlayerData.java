@@ -1,6 +1,7 @@
 package mc.alive.game;
 
 import mc.alive.Alive;
+import mc.alive.game.effect.Effect;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import mc.alive.role.hunter.Hunter;
@@ -30,6 +31,8 @@ import static mc.alive.game.TickRunner.chosen_item_display;
 import static mc.alive.util.Message.rMsg;
 
 public class PlayerData {
+    //效果
+    private final List<Effect> effects = new ArrayList<>();
     private int current_skill_id = 0;
     private final Role role;
     private final Player player;
@@ -54,10 +57,16 @@ public class PlayerData {
     public Role getRole() {
         return role;
     }
+    public final List<Effect> getEffects() {
+        return effects;
+    }
 
     public static PlayerData getPlayerData(Player player) {
         assert game != null;
         return game.playerData.get(player);
+    }
+    public void addEffect(Effect effect) {
+        effects.add(effect);
     }
 
     public void tick() {
