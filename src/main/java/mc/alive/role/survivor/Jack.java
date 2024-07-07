@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-public class SurvivorTodo extends Survivor {
-    public SurvivorTodo(Player pl) {
+public class Jack extends Survivor {
+    public Jack(Player pl) {
         super(pl);
     }
 

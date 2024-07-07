@@ -57,6 +57,7 @@ public class TickRunner extends BukkitRunnable {
                         player.sendActionBar(Message.rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
+                    player.sendActionBar(Message.rMsg("<green>当前选择的人物为: %s"));
                 }
             }
             //药水效果
