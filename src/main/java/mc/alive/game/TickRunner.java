@@ -32,9 +32,8 @@ public class TickRunner extends BukkitRunnable {
             gameEnd = false;
             return;
         }
-        game.playerData.values().forEach(playerData -> playerData.getEffects().removeIf(Effect::tick));
         game.playerData.values().forEach(PlayerData::tick);
-        //i_d
+        //player foreach
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
         chosen_item_display.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {

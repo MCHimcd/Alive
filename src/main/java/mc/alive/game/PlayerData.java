@@ -70,6 +70,8 @@ public class PlayerData {
     }
 
     public void tick() {
+        //Effect
+        effects.removeIf(Effect::tick);
         //普攻冷却
         attack_cd = Math.max(0, attack_cd - 0.05);
         if (attack_cd > 0) {
