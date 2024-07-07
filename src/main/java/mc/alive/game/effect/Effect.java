@@ -3,8 +3,13 @@ package mc.alive.game.effect;
 import org.bukkit.entity.Player;
 
 public abstract class Effect {
-    public Player p;
-    public int ticks;
+    private final Player player;
+    private int time;
 
     abstract public boolean tick();
+
+    public Effect(Player player, int ticks) {
+        this.player = player;
+        this.time = ticks;
+    }
 }
