@@ -45,6 +45,12 @@ tasks.register('copyArtifacts', Copy) {
     include '**/*.jar'
     rename { "Alive.jar" }
 }
+tasks.register('copyArtifacts1', Copy) {
+    from 'build/libs'
+    into "D:/AAA1.21Alive/plugins"
+    include '**/*.jar'
+    rename { "Alive.jar" }
+}
 
 processResources {
     def props = [version: version]
