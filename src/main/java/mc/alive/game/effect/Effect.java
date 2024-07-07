@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 
 public abstract class Effect {
     private final Player player;
-    private final int time;
+    private int time;
 
     abstract public boolean tick();
 
