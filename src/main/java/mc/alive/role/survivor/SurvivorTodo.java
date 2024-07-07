@@ -15,7 +15,7 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public void equip() {
-        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>施法")).getItem());
+        player.getInventory().setItem(0, ItemCreator.create(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>个人终端")).getItem());
     }
 
 
@@ -51,7 +51,7 @@ public class SurvivorTodo extends Survivor {
 
     @Override
     public String toString() {
-        return "§a杰克";
+        return names.get(200);
     }
 
     @Skill(id = 1, name = "位移")

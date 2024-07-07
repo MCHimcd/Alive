@@ -4,12 +4,11 @@ import mc.alive.Alive;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
 import mc.alive.util.ItemCreator;
+import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import net.kyori.adventure.title.Title;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Marker;
@@ -18,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
+import java.time.Duration;
 import java.util.*;
 
 import static mc.alive.Alive.*;
@@ -61,7 +61,7 @@ public class Game {
                 GENERIC_MAX_ABSORPTION, 20.0,
                 GENERIC_ATTACK_SPEED, 255.0,
                 GENERIC_ATTACK_KNOCKBACK, -1.0,
-                GENERIC_JUMP_STRENGTH, .0
+                GENERIC_JUMP_STRENGTH, .5
         ).forEach((key, value) -> {
             var a = player.getAttribute(key);
             assert a != null;
@@ -90,15 +90,33 @@ public class Game {
     }
 
     public void start() {
-        chooseRole.roles.keySet().forEach(Entity::remove);
-        chooseRole = null;
-        playerData.forEach((player, playerData1) -> {
-            player.clearActivePotionEffects();
-            player.setHealth(20);
-            playerData1.getRole().equip();
-        });
-        summonEntities();
-        Bukkit.broadcast(Component.text("start"));
+        new BukkitRunnable() {
+            int t = 0;
+
+            @Override
+            public void run() {
+                t++;
+                if (t % 10 == 0) {
+                    playerData.keySet().forEach(player -> {
+                        player.playSound(player, Sound.UI_BUTTON_CLICK, .5f, 1f);
+                        player.showTitle(Title.title(Message.rMsg("<rainbow> --游戏加载中--"),
+                                Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10)),
+                                Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)));
+                    });
+                }
+                if (t == 100) {
+                    chooseRole.roles.keySet().forEach(Entity::remove);
+                    chooseRole = null;
+                    playerData.forEach((player, playerData1) -> {
+                        player.clearActivePotionEffects();
+                        player.setHealth(20);
+                        playerData1.getRole().equip();
+                    });
+                    summonEntities();
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
     }
 
     public void end() {

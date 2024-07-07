@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
@@ -118,6 +119,8 @@ public final class ChooseRole {
                 if (role != null) {
                     remainedId.remove(role);
                     game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
+                    player.playSound(player, Sound.UI_BUTTON_CLICK,0.5f,1f);
+                    player.playSound(player,Sound.BLOCK_NOTE_BLOCK_BIT,2f,1f);
                     nextChoose();
                     return true;
                 }

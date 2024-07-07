@@ -50,7 +50,7 @@ public  class HunterTodo extends Hunter {
 
     @Override
     public String toString() {
-        return "§c狩猎者todo";
+        return names.get(100);
     }
 
     @Skill(id = 1, name = "收割")

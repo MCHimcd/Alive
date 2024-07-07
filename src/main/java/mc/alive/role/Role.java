@@ -5,8 +5,15 @@ import mc.alive.role.survivor.SurvivorTodo;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public abstract class Role {
+    public final static Map<Integer, String> names = Map.of(
+            100, "§c狩猎者todo",
+            200, "§a杰克",
+            201, "§a杰克",
+            202, "§a杰克"
+    );
     protected final Player player;
     protected int level = 0;
 
@@ -49,7 +56,7 @@ public abstract class Role {
     public static Role of(int id, Player player) {
         return switch (id) {
             case 100 -> new HunterTodo(player);
-            case 200,201,202 -> new SurvivorTodo(player);
+            case 200, 201, 202 -> new SurvivorTodo(player);
             default -> null;
         };
     }

@@ -1,8 +1,8 @@
 package mc.alive.game;
 
-import mc.alive.game.effect.Effect;
+import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
-import mc.alive.util.Message;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static mc.alive.Alive.game;
+import static mc.alive.util.Message.rMsg;
 
 public class TickRunner extends BukkitRunnable {
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
@@ -49,24 +50,39 @@ public class TickRunner extends BukkitRunnable {
             if (r != null) {
                 var td = (ItemDisplay) r.getHitEntity();
                 if (td != null) {
-                    if (game.chooseRole != null) td.setGlowing(true);
-                    else if (!player.equals(game.hunter)) {
+                    if (game.chooseRole != null) {
+                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(game.chooseRole.roles.get(td)))));
+                        td.setGlowing(true);
+                    } else if (!player.equals(game.hunter)) {
                         double progress = (double) game.fix(td, 0) / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(Message.rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
+                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
                 }
             }
-            //药水效果
+            //playerData
             if (game.chooseRole != null) return;
             var pd = PlayerData.getPlayerData(player);
-            if (pd.getRole() instanceof Hunter) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 1, 0, false, false));
-                player.setFoodLevel(20);
+            if (pd != null) {
+                if (pd.getRole() instanceof Hunter) {
+                    //hunter
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 1, 0, false, false));
+                    player.setFoodLevel(20);
+                } else {
+                    //幸存者
+                    var itemMeta = player.getInventory().getItemInMainHand().getItemMeta();
+                    if (itemMeta != null && itemMeta.hasCustomModelData() && itemMeta.getCustomModelData() == 10200) {
+                        if (player.getPitch() >= 0) {
+                            player.sendActionBar(rMsg(""));
+                        }else {
+                            player.sendActionBar(rMsg(""));
+                        }
+                    }
+                }
             }
         });
-        //duct
+        //管道
         chosen_duct = null;
         var player = game.hunter;
         @SuppressWarnings("UnstableApiUsage")
@@ -86,5 +102,7 @@ public class TickRunner extends BukkitRunnable {
                 chosen_duct = m.getLocation();
             }
         }
+
+
     }
 }

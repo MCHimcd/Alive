@@ -261,33 +261,33 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (game == null) return;
-        event.renderer(((source, sourceDisplayName, message, viewer) -> {
-            if (game.chooseRole != null || !(viewer instanceof Player player)) return Component.empty();
-            else {
-                var ps = PlayerData.getPlayerData(source);
-                var pv = PlayerData.getPlayerData(player);
-                if (ps == null || pv == null) return Component.empty();
-                if (ps.getRole() instanceof Hunter) {
-                    return Component.text("-")
-                            .append(sourceDisplayName)
-                            .append(Component.text(" : "))
-                            .append(message.decoration(TextDecoration.OBFUSCATED, true));
-                } else {
-                    //船员发出
-                    if (pv.getRole() instanceof Hunter) {
-                        message = message.decoration(TextDecoration.OBFUSCATED, true);
-                    } else {
-                        //todo
-                        player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
-                        player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
-                    }
-                    return Component.text("-")
-                            .append(sourceDisplayName)
-                            .append(Component.text(" : ")
-                                    .append(message));
-                }
-            }
-        }));
+//        if (game == null) return;
+//        event.renderer(((source, sourceDisplayName, message, viewer) -> {
+//            if (game.chooseRole != null || !(viewer instanceof Player player)) return Component.empty();
+//            else {
+//                var ps = PlayerData.getPlayerData(source);
+//                var pv = PlayerData.getPlayerData(player);
+//                if (ps == null || pv == null) return Component.empty();
+//                if (ps.getRole() instanceof Hunter) {
+//                    return Component.text("-")
+//                            .append(sourceDisplayName)
+//                            .append(Component.text(" : "))
+//                            .append(message.decoration(TextDecoration.OBFUSCATED, true));
+//                } else {
+//                    //船员发出
+//                    if (pv.getRole() instanceof Hunter) {
+//                        message = message.decoration(TextDecoration.OBFUSCATED, true);
+//                    } else {
+//                        //todo
+//                        player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
+//                        player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
+//                    }
+//                    return Component.text("-")
+//                            .append(sourceDisplayName)
+//                            .append(Component.text(" : ")
+//                                    .append(message));
+//                }
+//            }
+//        }));
     }
 }
