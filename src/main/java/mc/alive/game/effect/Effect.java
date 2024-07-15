@@ -3,13 +3,13 @@ package mc.alive.game.effect;
 import org.bukkit.entity.Player;
 
 public abstract class Effect {
-    private final Player player;
-    private int time;
+    public Player player;
+    public int tick;
+
+    public static Giddy giddy(Player player, int tick) {
+        return new Giddy(player, tick);
+    }
 
     abstract public boolean tick();
-
-    public Effect(Player player, int ticks) {
-        this.player = player;
-        this.time = ticks;
-    }
 }
+

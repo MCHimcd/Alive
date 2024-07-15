@@ -7,13 +7,12 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.game.Game;
 import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
+import mc.alive.game.effect.Giddy;
 import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.util.Message;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -22,13 +21,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -81,38 +80,24 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
-        if (game == null || game.chooseRole != null) return;
-        if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
-            var pd_hurt = getPlayerData(player);
-            var pd_damager = getPlayerData(damager);
-            if (pd_damager.attack_cd > 0) {
-//                damager.showTitle(Message.title("", "     %s<red>s".formatted(pd_damager.attack_cd), 0, 1000, 0));
-                event.setCancelled(true);
-                return;
-            }
-            pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
-            int damage = (pd_damager.getRole().getStrength());
-            double damage_dealt = event.isCritical() ? damage * 1.3 : damage;
-            pd_hurt.damageOrHeal(damage_dealt);
-            event.setDamage(0);
-        }
-    }
-
-    @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
-        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || game == null) event.setCancelled(true);
+        if (game != null && event.getCause()!= EntityDamageEvent.DamageCause.CUSTOM) event.setCancelled(true);
     }
 
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (game != null) {
+            var pd = game.playerData.get(event.getPlayer());
             ItemStack item = event.getOffHandItem();
             if (!item.hasItemMeta() || !item.getItemMeta().hasCustomModelData()) return;
             var data = item.getItemMeta().getCustomModelData();
             if (data < 10000 || data >= 20000) return;
             PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
             event.setCancelled(true);
+            if (pd.hasEffect(Giddy.class)) {
+                event.setCancelled(true);
+                return;
+            }
         }
         ItemStack item = event.getOffHandItem();
         if (item.hasItemMeta() || item.getItemMeta().getCustomModelData() == 20000) event.setCancelled(true);
@@ -135,6 +120,10 @@ public final class Alive extends JavaPlugin implements Listener {
             var target = chosen_item_display.get(player);
             if (target != null && pd.fix_tick == -1) {
                 pd.fix_tick = 20;
+                return;
+            }
+            if (pd.hasEffect(Giddy.class)) {
+                event.setCancelled(true);
                 return;
             }
         }
@@ -192,6 +181,7 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
+
         var player = event.getPlayer();
         if (doc.contains(player)) {
             player.setGameMode(GameMode.ADVENTURE);
@@ -199,6 +189,10 @@ public final class Alive extends JavaPlugin implements Listener {
         }
         if (game == null || game.chooseRole != null) return;
         var pd = getPlayerData(player);
+        if (pd.hasEffect(Giddy.class)) {
+            event.setCancelled(true);
+            return;
+        }
         pd.fix_tick = -1;
         if (pd.getRole() instanceof Hunter) {
             var from = event.getFrom();
@@ -228,6 +222,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     Commands.literal("reset")
                             .executes(ctx -> {
                                 if (ctx.getSource().getSender() instanceof Player) {
+                                    game.destroy();
                                     game = null;
                                     Bukkit.getOnlinePlayers().forEach(Game::resetPlayer);
                                 }
@@ -248,9 +243,18 @@ public final class Alive extends JavaPlugin implements Listener {
                 string = "%s".formatted(player.getName());
                 Player atplayer = Bukkit.getPlayer(string);
                 if (atplayer != null) {
-                    atplayer.showTitle(Message.title("", "<green>--<red><bold>你被@了</bold><green>--", 100, 1000, 100));
-                    atplayer.playSound(atplayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 2f, 2f);
-                    atplayer.playSound(atplayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2f, 2f);
+                    atplayer.showTitle(Message.title("", "<green>--<red><bold>你被@了</bold><green>--", 0, 1000, 0));
+                    new BukkitRunnable() {
+                        int time = 20;
+                        @Override
+                        public void run() {
+                            atplayer.playSound(atplayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 10f, 10f);
+                            atplayer.playSound(atplayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 10f, 10f);
+                            if (time-- <= 0) {
+                                cancel();
+                            }
+                        }
+                    }.runTaskTimer(plugin, 0, 1);
                 }
                 event.setCancelled(true);
                 Bukkit.broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), string)));

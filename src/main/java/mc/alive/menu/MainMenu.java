@@ -25,7 +25,7 @@ public class MainMenu extends SlotMenu {
     public MainMenu(Player p) {
         super(27, Component.text("主菜单", NamedTextColor.GOLD), p);
         //资料
-        setSlot(11, ItemCreator.create(Material.BOOK).name(rMsg("资料", NamedTextColor.AQUA)).getItem(), (it, pl) -> {
+        setSlot(11, ItemCreator.material(Material.BOOK).name(rMsg("资料", NamedTextColor.AQUA)).create(), (it, pl) -> {
             pl.setGameMode(GameMode.SPECTATOR);
             doc.add(pl);
             pl.closeInventory();
@@ -37,17 +37,17 @@ public class MainMenu extends SlotMenu {
         });
         //加入游戏
         if (prepared.contains(p)) {
-            setSlot(15, ItemCreator.create(Material.CRYING_OBSIDIAN)
+            setSlot(15, ItemCreator.material(Material.CRYING_OBSIDIAN)
                     .name(rMsg("点击取消准备", NamedTextColor.RED))
                     .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
-                    .getItem(), (it, pl) -> {
+                    .create(), (it, pl) -> {
                 //取消准备
                 prepared.remove(pl);
                 update();
                 close = false;
             });
         } else
-            setSlot(15, ItemCreator.create(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).getItem(), (it, pl) -> {
+            setSlot(15, ItemCreator.material(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).create(), (it, pl) -> {
                 //准备
                 prepared.add(pl);
                 update();
@@ -55,7 +55,7 @@ public class MainMenu extends SlotMenu {
             });
         if (p.isOp()) {
             if (prepared.size() >= 2) {
-                setSlot(26, ItemCreator.create(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).getItem(), (it, pl) -> {
+                setSlot(26, ItemCreator.material(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).create(), (it, pl) -> {
                     List<Player> l = new ArrayList<>(prepared);
                     Collections.shuffle(l);
                     if (game != null) game.destroy();
@@ -63,7 +63,7 @@ public class MainMenu extends SlotMenu {
                 });
             } else setSlot(
                     26,
-                    ItemCreator.create(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).getItem(),
+                    ItemCreator.material(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).create(),
                     (it, pl) -> close = false
             );
         }
@@ -73,17 +73,17 @@ public class MainMenu extends SlotMenu {
         Bukkit.getOnlinePlayers().forEach(player1 -> {
             if (player1.getOpenInventory().getTopInventory().getHolder() instanceof MainMenu m) {
                 if (prepared.contains(player1)) {
-                    m.setSlot(15, ItemCreator.create(Material.CRYING_OBSIDIAN)
+                    m.setSlot(15, ItemCreator.material(Material.CRYING_OBSIDIAN)
                             .name(rMsg("点击取消准备", NamedTextColor.RED))
                             .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
-                            .getItem(), (it, pl) -> {
+                            .create(), (it, pl) -> {
                         //取消准备
                         prepared.remove(pl);
                         update();
                         close = false;
                     });
                 } else
-                    m.setSlot(15, ItemCreator.create(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).getItem(), (it, pl) -> {
+                    m.setSlot(15, ItemCreator.material(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).create(), (it, pl) -> {
                         //准备
                         prepared.add(pl);
                         update();
@@ -91,7 +91,7 @@ public class MainMenu extends SlotMenu {
                     });
                 if (player1.isOp()) {
                     if (prepared.size() >= 2) {
-                        m.setSlot(26, ItemCreator.create(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).getItem(), (it, pl) -> {
+                        m.setSlot(26, ItemCreator.material(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).create(), (it, pl) -> {
                             List<Player> l = new ArrayList<>(prepared);
                             Collections.shuffle(l);
                             if (game != null) game.destroy();
@@ -99,7 +99,7 @@ public class MainMenu extends SlotMenu {
                         });
                     } else m.setSlot(
                             26,
-                            ItemCreator.create(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).getItem(),
+                            ItemCreator.material(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).create(),
                             (it, pl) -> close = false
                     );
                 }

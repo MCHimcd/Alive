@@ -2,6 +2,7 @@ package mc.alive.game;
 
 import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
@@ -59,7 +60,6 @@ public class TickRunner extends BukkitRunnable {
                         player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
-                    player.sendActionBar(Message.rMsg("<green>当前选择的人物为: %s"));
                 }
             }
             //playerData

@@ -18,11 +18,11 @@ public final class ItemCreator {
         });
     }
 
-    public static ItemCreator create(Material type) {
+    public static ItemCreator material(Material type) {
         return new ItemCreator(type);
     }
 
-    public static ItemCreator create(Material type, int data) {
+    public static ItemCreator material(Material type, int data) {
         return new ItemCreator(type).data(data);
     }
 
@@ -31,7 +31,7 @@ public final class ItemCreator {
         return this;
     }
 
-    public ItemStack getItem() {
+    public ItemStack create() {
         return item;
     }
 

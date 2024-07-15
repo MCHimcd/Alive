@@ -10,6 +10,7 @@ abstract public class Hunter extends Role {
 
     //最大等级
     abstract public int getMaxLevel();
+    abstract public double getRange();
 
     public void levelUp(){
         level=Math.max(getMaxLevel(),level+1);

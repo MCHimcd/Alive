@@ -9,11 +9,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Marker;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
@@ -34,7 +32,6 @@ public class Game {
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public static Team t_hunter;
     public static Team t_survivor;
-
 
     public Game(List<Player> players) {
         MainMenu.prepared.clear();
@@ -61,7 +58,7 @@ public class Game {
                 GENERIC_MAX_ABSORPTION, 20.0,
                 GENERIC_ATTACK_SPEED, 255.0,
                 GENERIC_ATTACK_KNOCKBACK, -1.0,
-                GENERIC_JUMP_STRENGTH, .5
+                GENERIC_JUMP_STRENGTH, .0
         ).forEach((key, value) -> {
             var a = player.getAttribute(key);
             assert a != null;
@@ -82,16 +79,16 @@ public class Game {
         player.getInventory().clear();
         player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList());
         if (game == null) player.getInventory().setItem(8, ItemCreator
-                .create(Material.CLOCK)
+                .material(Material.CLOCK)
                 .data(20000)
                 .name(Component.text("主菜单", NamedTextColor.GOLD))
-                .getItem()
+                .create()
         );
     }
 
     public void start() {
         new BukkitRunnable() {
-            int t = 0;
+            int t = 99;
 
             @Override
             public void run() {
@@ -169,6 +166,16 @@ public class Game {
             fix_progress.put(id, final_amount);
         }
         return final_amount;
+    }
+
+    public void spawnBody(Player player) {
+        markers.add(player.getWorld().spawn(player.getLocation().add(0, -1.5, 0), ArmorStand.class, armorStand -> {
+            armorStand.setInvisible(true);
+            armorStand.setMarker(true);
+            armorStand.getEquipment().setHelmet(new ItemStack(Material.PLAYER_HEAD) {{
+                editMeta(meta -> ((SkullMeta) meta).setOwningPlayer(player));
+            }});
+        }));
     }
 
 

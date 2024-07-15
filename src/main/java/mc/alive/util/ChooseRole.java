@@ -15,14 +15,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import static java.lang.Math.*;
 import static mc.alive.Alive.game;
 import static mc.alive.Alive.plugin;
 
@@ -37,8 +40,8 @@ public final class ChooseRole {
         players.forEach(player -> {
             player.displayName(Component.empty());
             player.playerListName(Component.empty());
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,Integer.MAX_VALUE,0,false,false));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION,Integer.MAX_VALUE,0,false,false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 0, false, false));
         });
     }
 
@@ -46,28 +49,35 @@ public final class ChooseRole {
         var world = Bukkit.getWorld("world");
         assert world != null;
         roles.clear();
+        AtomicInteger i = new AtomicInteger(1);
         BiConsumer<ItemDisplay, ItemStack> init = (id, it) -> {
             id.setItemStack(it);
+//            id.teleport(id.getLocation().setDirection(id.getLocation().getDirection().rotateAroundY(Math.toRadians(45 * i.get()))));
             id.setTransformation(new Transformation(
                     new Vector3f(0, -.5f, 0),
                     new Quaternionf(),
                     new Vector3f(1, 1, 1),
-                    new Quaternionf()
+                    new Quaternionf(
+                            0,
+                            sin(toRadians(45 * i.get() - 90) * 0.5),
+                            0,
+                            cos(toRadians(45 * i.get() - 90) * 0.5)
+                    )
             ));
             id.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
             Bukkit.getOnlinePlayers().forEach(player -> {
                 if (!player.equals(currentPlayer))
                     player.hideEntity(plugin, id);
             });
+            i.incrementAndGet();
         };
-        Supplier<Location> location = () -> {
-            //todo
-            return new Location(world, -2, -58, -4);
-        };
+
+        Supplier<Location> location = () -> new Location(currentPlayer.getWorld(), -4, -58, -2)
+                .add(new Vector(2, 0, 0).rotateAroundY((float) toRadians(45 * i.get())));
         if (isHunter) {
             //狩猎者
             world.spawn(location.get(), ItemDisplay.class, id -> {
-                init.accept(id, ItemCreator.create(Material.DIAMOND_HOE, 200).getItem());
+                init.accept(id, ItemCreator.material(Material.DIAMOND_HOE, 200).create());
                 roles.put(id, 100);
             });
         } else {
@@ -75,15 +85,15 @@ public final class ChooseRole {
             remainedId.forEach(rid -> {
                 switch (rid) {
                     case 200 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.create(Material.DIAMOND, 200).getItem());
+                        init.accept(id, ItemCreator.material(Material.DIAMOND, 200).create());
                         roles.put(id, 200);
                     });
                     case 201 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.create(Material.DIAMOND, 201).getItem());
+                        init.accept(id, ItemCreator.material(Material.DIAMOND, 201).create());
                         roles.put(id, 201);
                     });
                     case 202 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.create(Material.DIAMOND, 202).getItem());
+                        init.accept(id, ItemCreator.material(Material.DIAMOND, 202).create());
                         roles.put(id, 202);
                     });
                 }
@@ -107,7 +117,7 @@ public final class ChooseRole {
         //下一个
         currentPlayer = choosing.removeFirst();
         summonItemDisplay(currentPlayer.equals(game.hunter));
-        currentPlayer.teleport(new Location(world, 0.5, -58, 0.5));
+        currentPlayer.teleport(new Location(world, -4.5, -58, -1.5));
     }
 
     public boolean handleEvent(Player player) {
@@ -119,8 +129,8 @@ public final class ChooseRole {
                 if (role != null) {
                     remainedId.remove(role);
                     game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
-                    player.playSound(player, Sound.UI_BUTTON_CLICK,0.5f,1f);
-                    player.playSound(player,Sound.BLOCK_NOTE_BLOCK_BIT,2f,1f);
+                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                    player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
                     nextChoose();
                     return true;
                 }
