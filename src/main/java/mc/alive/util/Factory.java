@@ -7,6 +7,8 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
+import static mc.alive.Alive.plugin;
+
 public final class Factory {
     //更改玩家视角
     static public void setYawPitch(float Yaw, float Pitch, Player player) {
@@ -42,14 +44,23 @@ public final class Factory {
     }
 
     //攻击范围
-    static public List<Location> attackRange(double range, Player player) {
+    public static List<Location> attackRange(double range, Player player) {
         List<Location> locations = new ArrayList<>();
-        for (double x = -4, y = 0; x < 4; x += 0.1, y += 0.005) {
-            double a = 0.5 * x * x;
-            Location loc = roloc(player, a, y, x, 30);
-            loc.add(player.getLocation().getDirection().normalize().multiply(range));
-            locations.add(loc.clone());
+        for (double x = -4, y = 0; x <= 0; x += 0.1, y += 0.005) {
+            if (loc(range, player, locations, x, y)) break;
+        }
+        for (double x = 4, y = 0; x >= 0; x -= 0.1, y += 0.005) {
+            if (loc(range, player, locations, x, y)) break;
         }
         return locations;
+    }
+
+    private static boolean loc(double range, Player player, List<Location> locations, double x, double y) {
+        double a = 0.5 * x * x;
+        Location loc = roloc(player, a, y, x, 30);
+        loc.add(player.getLocation().getDirection().normalize().multiply(range)).add(0,1,0);
+        if (!(loc.getBlock().isPassable() || loc.getBlock().isLiquid())) return true;
+        locations.add(loc.clone());
+        return false;
     }
 }
