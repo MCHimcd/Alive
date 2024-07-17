@@ -13,9 +13,10 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
+import static mc.alive.Alive.game;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.PlayerData.setSkillCD;
 
@@ -71,18 +72,29 @@ public class Alien extends Hunter {
 
     @Skill
     public void attack() {
+        List<Location> locations = Factory.attackRange(getRange(), player);
+        List<Location> locations2 = new LinkedList<>();
+        locations.forEach(location -> {
+            locations2.addAll(Factory.line(player.getLocation(), location));
+        });
         new BukkitRunnable() {
             @Override
             public void run() {
-                List<Location> locations = Factory.attackRange(getRange(), player);
-                HashSet<Player> players = new HashSet<>();
-                locations.forEach(location -> {
-                    player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.RED, 1f), true);
-                    location.getNearbyPlayers(2, player1 -> !player1.equals(player) && player1.getBoundingBox().contains(location.toVector()) && players.add(player1))
-                            .forEach(player2 -> {
-                                var pd = getPlayerData(player2);
-                                pd.damageOrHeal(getStrength());
-                            });
+                locations2.forEach(location -> player.getWorld().spawnParticle(
+                        Particle.DUST,
+                        location,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        new Particle.DustOptions(Color.RED, .5f),
+                        true
+                ));
+                game.survivors.forEach(player2 -> {
+                    if (locations2.stream().anyMatch(location1 -> player2.getBoundingBox().contains(location1.toVector()))) {
+                        getPlayerData(player2).damageOrHeal(getStrength());
+                    }
                 });
             }
         }.runTaskLater(Alive.plugin, 10);
@@ -99,17 +111,17 @@ public class Alien extends Hunter {
     @Skill(id = 2, name = "粘液")
 
     public void a() {
-        ;
+        //todo
     }
 
     @Skill(id = 3, name = "粘液", minLevel = 1)
     public void b() {
-        ;
+        //todo
     }
 
     @Skill(id = 4, name = "粘液", minLevel = 2)
     public void c() {
-        ;
+        //todo
     }
 
 
