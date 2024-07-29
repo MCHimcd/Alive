@@ -24,16 +24,19 @@ public abstract class SlotMenu implements InventoryHolder {
         player = p;
     }
 
+    // 设置槽位物品和点击事件
     public void setSlot(int slot, ItemStack item, BiConsumer<ItemStack, Player> function) {
         inventory.setItem(slot, item);
         slotFunctions.put(slot, function);
     }
 
+    // 移除槽位物品和点击事件
     public void removeSlot(int slot) {
         inventory.setItem(slot, null);
         slotFunctions.remove(slot);
     }
 
+    // 处理槽位点击事件
     public void handleClick(int slot) {
         if (slotFunctions.containsKey(slot)) {
             slotFunctions.get(slot).accept(inventory.getItem(slot), player);

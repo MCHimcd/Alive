@@ -8,10 +8,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Skill {
-    //技能顺序
+    // 技能的唯一标识符，用于确定技能的顺序
     int id() default 0;
-    //名称
+
+    // 技能的名称，用于显示和识别
     String name() default "";
-    //最低等级
+
+    // 技能使用的最低等级要求
     int minLevel() default 0;
 }

@@ -4,7 +4,7 @@ import mc.alive.Alive;
 import mc.alive.game.effect.Effect;
 import mc.alive.role.Skill;
 import mc.alive.util.Factory;
-import mc.alive.util.ItemCreator;
+import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -27,7 +27,7 @@ public class Alien extends Hunter {
 
     @Override
     public void equip() {
-        player.getInventory().setItem(0, ItemCreator.material(Material.DIAMOND_HOE, 10100).name(Message.rMsg("<red><bold>手镰")).create());
+        player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND_HOE, 10100).name(Message.rMsg("<red><bold>手镰")).build());
     }
 
     @Override
@@ -73,14 +73,12 @@ public class Alien extends Hunter {
     @Skill
     public void attack() {
         List<Location> locations = Factory.attackRange(getRange(), player);
-        List<Location> locations2 = new LinkedList<>();
-        locations.forEach(location -> {
-            locations2.addAll(Factory.line(player.getLocation(), location));
-        });
+        List<Location> finalLocations = new LinkedList<>();
+        locations.forEach(location -> finalLocations.addAll(Factory.line(player.getLocation(), location)));
         new BukkitRunnable() {
             @Override
             public void run() {
-                locations2.forEach(location -> player.getWorld().spawnParticle(
+                finalLocations.forEach(location -> player.getWorld().spawnParticle(
                         Particle.DUST,
                         location,
                         1,
@@ -92,12 +90,13 @@ public class Alien extends Hunter {
                         true
                 ));
                 game.survivors.forEach(player2 -> {
-                    if (locations2.stream().anyMatch(location1 -> player2.getBoundingBox().contains(location1.toVector()))) {
+                    if (finalLocations.stream().anyMatch(location1 -> player2.getBoundingBox().contains(location1.toVector()))) {
                         getPlayerData(player2).damageOrHeal(getStrength());
                     }
                 });
             }
         }.runTaskLater(Alive.plugin, 10);
+
         getPlayerData(player).addEffect(Effect.giddy(player, 10));
         setSkillCD(player, 0, 50);
     }

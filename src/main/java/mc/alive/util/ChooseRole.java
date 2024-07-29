@@ -46,13 +46,14 @@ public final class ChooseRole {
     }
 
     private void summonItemDisplay(boolean isHunter) {
+        roles.clear();
         var world = Bukkit.getWorld("world");
         assert world != null;
-        roles.clear();
+
+        //itemDisplay初始化
         AtomicInteger i = new AtomicInteger(1);
         BiConsumer<ItemDisplay, ItemStack> init = (id, it) -> {
             id.setItemStack(it);
-//            id.teleport(id.getLocation().setDirection(id.getLocation().getDirection().rotateAroundY(Math.toRadians(45 * i.get()))));
             id.setTransformation(new Transformation(
                     new Vector3f(0, -.5f, 0),
                     new Quaternionf(),
@@ -72,31 +73,29 @@ public final class ChooseRole {
             i.incrementAndGet();
         };
 
+        //获取itemDisplay位置
         Supplier<Location> location = () -> new Location(currentPlayer.getWorld(), -4, -58, -2)
                 .add(new Vector(2, 0, 0).rotateAroundY((float) toRadians(45 * i.get())));
+
         if (isHunter) {
-            //狩猎者
+            // 狩猎者
             world.spawn(location.get(), ItemDisplay.class, id -> {
-                init.accept(id, ItemCreator.material(Material.DIAMOND_HOE, 200).create());
+                init.accept(id, ItemBuilder.material(Material.DIAMOND_HOE, 200).build());
                 roles.put(id, 100);
             });
         } else {
-            //幸存者
+            // 幸存者
             remainedId.forEach(rid -> {
-                switch (rid) {
-                    case 200 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.material(Material.DIAMOND, 200).create());
-                        roles.put(id, 200);
-                    });
-                    case 201 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.material(Material.DIAMOND, 201).create());
-                        roles.put(id, 201);
-                    });
-                    case 202 -> world.spawn(location.get(), ItemDisplay.class, id -> {
-                        init.accept(id, ItemCreator.material(Material.DIAMOND, 202).create());
-                        roles.put(id, 202);
-                    });
-                }
+                Material material = switch (rid) {
+                    case 200 -> Material.DIAMOND;
+                    case 201 -> Material.IRON_INGOT;
+                    case 202 -> Material.WALL_TORCH;
+                    default -> throw new IllegalArgumentException("Unexpected value: " + rid);
+                };
+                world.spawn(location.get(), ItemDisplay.class, id -> {
+                    init.accept(id, ItemBuilder.material(material, rid).build());
+                    roles.put(id, rid);
+                });
             });
         }
     }
@@ -104,16 +103,20 @@ public final class ChooseRole {
     public void nextChoose() {
         var world = Bukkit.getWorld("world");
         assert world != null;
+
         //上一个
         if (currentPlayer != null) {
             roles.keySet().forEach(Entity::remove);
             currentPlayer.teleport(new Location(world, 10.5, -58, 10.5));
         }
+
+        //结束判断
         if (choosing.isEmpty()) {
             roles.keySet().forEach(Entity::remove);
             game.start();
             return;
         }
+
         //下一个
         currentPlayer = choosing.removeFirst();
         summonItemDisplay(currentPlayer.equals(game.hunter));
@@ -121,21 +124,19 @@ public final class ChooseRole {
     }
 
     public boolean handleEvent(Player player) {
-        if (player.equals(currentPlayer)) {
-            //选role
-            var td = TickRunner.chosen_item_display.get(player);
-            if (td != null) {
-                var role = roles.get(td);
-                if (role != null) {
-                    remainedId.remove(role);
-                    game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
-                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-                    player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
-                    nextChoose();
-                    return true;
-                }
-            }
-        }
-        return false;
+        if (!player.equals(currentPlayer)) return false;
+
+        var td = TickRunner.chosen_item_display.get(player);
+        if (td == null) return false;
+
+        var role = roles.get(td);
+        if (role == null) return false;
+
+        remainedId.remove(role);
+        game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
+        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+        player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
+        nextChoose();
+        return true;
     }
 }

@@ -12,8 +12,9 @@ import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.util.Message;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -39,6 +40,7 @@ import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.TickRunner.chosen_item_display;
 import static mc.alive.menu.MainMenu.doc;
 import static mc.alive.menu.MainMenu.prepared;
+import static org.bukkit.Bukkit.*;
 
 public final class Alive extends JavaPlugin implements Listener {
     public static Alive plugin;
@@ -48,30 +50,35 @@ public final class Alive extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         plugin = this;
-        ms = Bukkit.getScoreboardManager().getMainScoreboard();
+        ms = getScoreboardManager().getMainScoreboard();
+
         t_hunter = ms.getTeam("hunter");
         if (t_hunter == null) {
             t_hunter = ms.registerNewTeam("hunter");
             t_hunter.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
             t_hunter.color(NamedTextColor.DARK_PURPLE);
         }
+
         t_survivor = ms.getTeam("survivor");
         if (t_survivor == null) {
             t_survivor = ms.registerNewTeam("survivor");
             t_survivor.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
             t_survivor.color(NamedTextColor.DARK_GRAY);
         }
-        Bukkit.getPluginManager().registerEvents(this, this);
+
+        getPluginManager().registerEvents(this, this);
+
         registerCommands();
+
         new TickRunner().runTaskTimer(this, 0, 1);
-        Bukkit.getOnlinePlayers().forEach(Game::resetPlayer);
+
+        getOnlinePlayers().forEach(Game::resetPlayer);
     }
 
     @Override
     public void onDisable() {
-        if (game != null) {
-            game.destroy();
-        }
+        if (game == null) return;
+        game.destroy();
     }
 
     @EventHandler
@@ -81,7 +88,7 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
-        if (game != null && event.getCause()!= EntityDamageEvent.DamageCause.CUSTOM) event.setCancelled(true);
+        if (game != null && event.getCause() != EntityDamageEvent.DamageCause.CUSTOM) event.setCancelled(true);
     }
 
     @EventHandler
@@ -89,25 +96,34 @@ public final class Alive extends JavaPlugin implements Listener {
         if (game != null) {
             var pd = game.playerData.get(event.getPlayer());
             ItemStack item = event.getOffHandItem();
-            if (!item.hasItemMeta() || !item.getItemMeta().hasCustomModelData()) return;
-            var data = item.getItemMeta().getCustomModelData();
-            if (data < 10000 || data >= 20000) return;
-            PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
-            event.setCancelled(true);
+
+            if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+                var data = item.getItemMeta().getCustomModelData();
+
+                if (data >= 10000 && data < 20000) {
+                    PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
+                    event.setCancelled(true);
+                }
+            }
+
             if (pd.hasEffect(Giddy.class)) {
                 event.setCancelled(true);
-                return;
             }
         }
+
         ItemStack item = event.getOffHandItem();
-        if (item.hasItemMeta() || item.getItemMeta().getCustomModelData() == 20000) event.setCancelled(true);
+        if (item.hasItemMeta() && item.getItemMeta().getCustomModelData() == 20000) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
+
         ItemStack item = event.getItem();
         Player player = event.getPlayer();
+
         if (game != null) {
             if (game.chooseRole != null && game.chooseRole.handleEvent(player)) return;
             if (game.chooseRole != null) return;
@@ -127,6 +143,7 @@ public final class Alive extends JavaPlugin implements Listener {
                 return;
             }
         }
+
         if (
                 item == null
                         || !item.hasItemMeta()
@@ -134,6 +151,7 @@ public final class Alive extends JavaPlugin implements Listener {
                         || event.getAction() == Action.LEFT_CLICK_AIR
                         || event.getAction() == Action.LEFT_CLICK_BLOCK
         ) return;
+
         //使用物品
         if (game != null) {
             var data = item.getItemMeta().getCustomModelData();
@@ -151,49 +169,58 @@ public final class Alive extends JavaPlugin implements Listener {
                 }
             }
         }
+
         event.setCancelled(true);
     }
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
+
         var item = event.getCurrentItem();
-        if (event.getRawSlot() > event.getInventory().getSize()) {
-            if (item != null) {
-                if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
-                    var data = item.getItemMeta().getCustomModelData();
-                    if (data >= 10000 && data <= 20000) event.setCancelled(true);
-                }
+        if (event.getRawSlot() > event.getInventory().getSize() && item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
+            var data = item.getItemMeta().getCustomModelData();
+            if (data >= 10000 && data <= 20000) {
+                event.setCancelled(true);
             }
         }
+
         if (!(event.getInventory().getHolder() instanceof SlotMenu menu)) return;
+
         menu.handleClick(event.getSlot());
         event.setCancelled(true);
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        if (event.getItemDrop().getItemStack().hasItemMeta()) {
-            int i = event.getItemDrop().getItemStack().getItemMeta().getCustomModelData();
-            if (i >= 10000 && i <= 20000) event.setCancelled(true);
+        var itemStack = event.getItemDrop().getItemStack();
+        if (itemStack.hasItemMeta()) {
+            var itemMeta = itemStack.getItemMeta();
+            if (itemMeta.hasCustomModelData() && itemMeta.getCustomModelData() >= 10000 && itemMeta.getCustomModelData() <= 20000) {
+                event.setCancelled(true);
+            }
         }
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-
         var player = event.getPlayer();
+
         if (doc.contains(player)) {
             player.setGameMode(GameMode.ADVENTURE);
             doc.remove(player);
         }
+
         if (game == null || game.chooseRole != null) return;
+
         var pd = getPlayerData(player);
         if (pd.hasEffect(Giddy.class)) {
             event.setCancelled(true);
             return;
         }
+
         pd.fix_tick = -1;
+
         if (pd.getRole() instanceof Hunter) {
             var from = event.getFrom();
             var to = event.getTo();
@@ -221,10 +248,10 @@ public final class Alive extends JavaPlugin implements Listener {
             cs.register(
                     Commands.literal("reset")
                             .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player) {
+                                if (ctx.getSource().getSender() instanceof Player && game != null) {
                                     game.destroy();
                                     game = null;
-                                    Bukkit.getOnlinePlayers().forEach(Game::resetPlayer);
+                                    getOnlinePlayers().forEach(Game::resetPlayer);
                                 }
                                 return Command.SINGLE_SUCCESS;
                             }).build(),
@@ -237,15 +264,16 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void at(AsyncChatEvent event) {
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            String string = Message.msg.serialize(event.message());
-            if (string.equals("@%s".formatted(player.getName()))) {
-                string = "%s".formatted(player.getName());
-                Player atplayer = Bukkit.getPlayer(string);
+        String messageString = Message.msg.serialize(event.message());
+        getOnlinePlayers().forEach(player -> {
+            String atString = "@%s".formatted(player.getName());
+            if (messageString.equals(atString)) {
+                Player atplayer = getPlayer(player.getName());
                 if (atplayer != null) {
                     atplayer.showTitle(Message.title("", "<green>--<red><bold>你被@了</bold><green>--", 0, 1000, 0));
                     new BukkitRunnable() {
                         int time = 20;
+
                         @Override
                         public void run() {
                             atplayer.playSound(atplayer.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 10f, 10f);
@@ -257,7 +285,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     }.runTaskTimer(plugin, 0, 1);
                 }
                 event.setCancelled(true);
-                Bukkit.broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), string)));
+                broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), player.getName())));
             }
         });
     }
@@ -265,33 +293,31 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
-//        if (game == null) return;
-//        event.renderer(((source, sourceDisplayName, message, viewer) -> {
-//            if (game.chooseRole != null || !(viewer instanceof Player player)) return Component.empty();
-//            else {
-//                var ps = PlayerData.getPlayerData(source);
-//                var pv = PlayerData.getPlayerData(player);
-//                if (ps == null || pv == null) return Component.empty();
-//                if (ps.getRole() instanceof Hunter) {
-//                    return Component.text("-")
-//                            .append(sourceDisplayName)
-//                            .append(Component.text(" : "))
-//                            .append(message.decoration(TextDecoration.OBFUSCATED, true));
-//                } else {
-//                    //船员发出
-//                    if (pv.getRole() instanceof Hunter) {
-//                        message = message.decoration(TextDecoration.OBFUSCATED, true);
-//                    } else {
-//                        //todo
-//                        player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
-//                        player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
-//                    }
-//                    return Component.text("-")
-//                            .append(sourceDisplayName)
-//                            .append(Component.text(" : ")
-//                                    .append(message));
-//                }
-//            }
-//        }));
+        if (game == null) return;
+
+        event.renderer((source, sourceDisplayName, message, viewer) -> {
+            if (!(viewer instanceof Player player)) return Component.empty();
+
+            var ps = PlayerData.getPlayerData(source);
+            var pv = PlayerData.getPlayerData(player);
+            if (ps == null || pv == null) return Component.empty();
+
+            if (ps.getRole() instanceof Hunter) {
+                return Component.text("-")
+                        .append(sourceDisplayName)
+                        .append(Component.text(" : "))
+                        .append(message.decoration(TextDecoration.OBFUSCATED, true));
+            } else {
+                if (pv.getRole() instanceof Hunter) {
+                    message = message.decoration(TextDecoration.OBFUSCATED, true);
+                } else {
+                    player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
+                    player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
+                }
+                return Component.text("-")
+                        .append(sourceDisplayName)
+                        .append(Component.text(" : ").append(message));
+            }
+        });
     }
 }

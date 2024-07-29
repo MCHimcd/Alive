@@ -3,7 +3,7 @@ package mc.alive.game;
 import mc.alive.Alive;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
-import mc.alive.util.ItemCreator;
+import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -64,10 +64,12 @@ public class Game {
             assert a != null;
             a.setBaseValue(value);
         });
+
         var team = ms.getPlayerTeam(player);
         if (team != null) {
             team.removePlayer(player);
         }
+
         player.playerListName(player.name());
         player.displayName(player.name());
         player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
@@ -78,12 +80,15 @@ public class Game {
         player.clearActivePotionEffects();
         player.getInventory().clear();
         player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList());
-        if (game == null) player.getInventory().setItem(8, ItemCreator
-                .material(Material.CLOCK)
-                .data(20000)
-                .name(Component.text("主菜单", NamedTextColor.GOLD))
-                .create()
-        );
+
+        if (game == null) {
+            player.getInventory().setItem(8, ItemBuilder
+                    .material(Material.CLOCK)
+                    .data(20000)
+                    .name(Component.text("主菜单", NamedTextColor.GOLD))
+                    .build()
+            );
+        }
     }
 
     public void start() {
@@ -94,14 +99,18 @@ public class Game {
             public void run() {
                 t++;
                 if (t % 10 == 0) {
+                    Component progressBar = Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
+                    Title title = Title.title(
+                            Message.rMsg("<rainbow> --游戏加载中--"),
+                            progressBar,
+                            Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
+                    );
                     playerData.keySet().forEach(player -> {
-                        player.playSound(player, Sound.UI_BUTTON_CLICK, .5f, 1f);
-                        player.showTitle(Title.title(Message.rMsg("<rainbow> --游戏加载中--"),
-                                Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10)),
-                                Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)));
+                        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                        player.showTitle(title);
                     });
                 }
-                if (t == 100) {
+                if (t >= 100) {
                     chooseRole.roles.keySet().forEach(Entity::remove);
                     chooseRole = null;
                     playerData.forEach((player, playerData1) -> {
@@ -115,6 +124,7 @@ public class Game {
             }
         }.runTaskTimer(plugin, 0, 1);
     }
+
 
     public void end() {
         destroy();
@@ -132,22 +142,18 @@ public class Game {
     }
 
     private void summonEntities() {
-        //管道入口
-        for (var s : new String[]{
-                "1.5 -58 1.5"
-        }) {
+        var world = Bukkit.getWorld("world");
+        assert world != null;
+
+        // 管道入口
+        for (var s : new String[]{"1.5 -58 1.5"}) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            var world = Bukkit.getWorld("world");
-            assert world != null;
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, markers::add);
         }
-        //维修
-        for (var s : new String[]{
-                "5.5 -59 5.5"
-        }) {
+
+        // 维修
+        for (var s : new String[]{"5.5 -59 5.5"}) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            var world = Bukkit.getWorld("world");
-            assert world != null;
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), ItemDisplay.class, id -> {
                 id.setItemStack(new ItemStack(Material.FEATHER));
                 fix_progress.put(id, 0);
@@ -156,16 +162,18 @@ public class Game {
     }
 
     public int fix(ItemDisplay id, int amount) {
-        if (amount == 0) return fix_progress.get(id);
-        var final_amount = fix_progress.get(id) + amount;
-        if (final_amount >= 400) {
+        int currentProgress = fix_progress.getOrDefault(id, 0);
+        int finalAmount = currentProgress + amount;
+
+        if (finalAmount >= 400) {
             fix_progress.remove(id);
             id.remove();
             Bukkit.broadcast(rMsg("fix complete"));
         } else {
-            fix_progress.put(id, final_amount);
+            fix_progress.put(id, finalAmount);
         }
-        return final_amount;
+
+        return finalAmount;
     }
 
     public void spawnBody(Player player) {
@@ -177,6 +185,4 @@ public class Game {
             }});
         }));
     }
-
-
 }

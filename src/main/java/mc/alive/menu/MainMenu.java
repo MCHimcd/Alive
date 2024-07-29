@@ -1,7 +1,7 @@
 package mc.alive.menu;
 
 import mc.alive.game.Game;
-import mc.alive.util.ItemCreator;
+import mc.alive.util.ItemBuilder;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,8 +24,11 @@ public class MainMenu extends SlotMenu {
 
     public MainMenu(Player p) {
         super(27, Component.text("主菜单", NamedTextColor.GOLD), p);
-        //资料
-        setSlot(11, ItemCreator.material(Material.BOOK).name(rMsg("资料", NamedTextColor.AQUA)).create(), (it, pl) -> {
+
+        // 资料
+        setSlot(11, ItemBuilder.material(Material.BOOK)
+                .name(rMsg("资料", NamedTextColor.AQUA))
+                .build(), (it, pl) -> {
             pl.setGameMode(GameMode.SPECTATOR);
             doc.add(pl);
             pl.closeInventory();
@@ -35,37 +38,45 @@ public class MainMenu extends SlotMenu {
             pl.teleport(pl);
             close = false;
         });
-        //加入游戏
+
+        // 加入游戏
         if (prepared.contains(p)) {
-            setSlot(15, ItemCreator.material(Material.CRYING_OBSIDIAN)
+            setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                     .name(rMsg("点击取消准备", NamedTextColor.RED))
                     .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
-                    .create(), (it, pl) -> {
-                //取消准备
+                    .build(), (it, pl) -> {
+                // 取消准备
                 prepared.remove(pl);
                 update();
                 close = false;
             });
-        } else
-            setSlot(15, ItemCreator.material(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).create(), (it, pl) -> {
-                //准备
+        } else {
+            setSlot(15, ItemBuilder.material(Material.OBSIDIAN)
+                    .name(rMsg("点击准备", NamedTextColor.GREEN))
+                    .build(), (it, pl) -> {
+                // 准备
                 prepared.add(pl);
                 update();
                 close = false;
             });
+        }
+
+        // 管理员选项
         if (p.isOp()) {
             if (prepared.size() >= 2) {
-                setSlot(26, ItemCreator.material(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).create(), (it, pl) -> {
+                setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
+                        .name(rMsg("开始游戏", NamedTextColor.GOLD))
+                        .build(), (it, pl) -> {
                     List<Player> l = new ArrayList<>(prepared);
                     Collections.shuffle(l);
                     if (game != null) game.destroy();
                     game = new Game(l);
                 });
-            } else setSlot(
-                    26,
-                    ItemCreator.material(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).create(),
-                    (it, pl) -> close = false
-            );
+            } else {
+                setSlot(26, ItemBuilder.material(Material.BARRIER)
+                        .name(rMsg("人数不足", NamedTextColor.DARK_RED))
+                        .build(), (it, pl) -> close = false);
+            }
         }
     }
 
@@ -73,35 +84,41 @@ public class MainMenu extends SlotMenu {
         Bukkit.getOnlinePlayers().forEach(player1 -> {
             if (player1.getOpenInventory().getTopInventory().getHolder() instanceof MainMenu m) {
                 if (prepared.contains(player1)) {
-                    m.setSlot(15, ItemCreator.material(Material.CRYING_OBSIDIAN)
+                    m.setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                             .name(rMsg("点击取消准备", NamedTextColor.RED))
                             .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
-                            .create(), (it, pl) -> {
-                        //取消准备
+                            .build(), (it, pl) -> {
+                        // 取消准备
                         prepared.remove(pl);
                         update();
                         close = false;
                     });
-                } else
-                    m.setSlot(15, ItemCreator.material(Material.OBSIDIAN).name(rMsg("点击准备", NamedTextColor.GREEN)).create(), (it, pl) -> {
-                        //准备
+                } else {
+                    m.setSlot(15, ItemBuilder.material(Material.OBSIDIAN)
+                            .name(rMsg("点击准备", NamedTextColor.GREEN))
+                            .build(), (it, pl) -> {
+                        // 准备
                         prepared.add(pl);
                         update();
                         close = false;
                     });
+                }
+
                 if (player1.isOp()) {
                     if (prepared.size() >= 2) {
-                        m.setSlot(26, ItemCreator.material(Material.NETHER_STAR).name(rMsg("开始游戏", NamedTextColor.GOLD)).create(), (it, pl) -> {
+                        m.setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
+                                .name(rMsg("开始游戏", NamedTextColor.GOLD))
+                                .build(), (it, pl) -> {
                             List<Player> l = new ArrayList<>(prepared);
                             Collections.shuffle(l);
                             if (game != null) game.destroy();
                             game = new Game(l);
                         });
-                    } else m.setSlot(
-                            26,
-                            ItemCreator.material(Material.BARRIER).name(rMsg("人数不足", NamedTextColor.DARK_RED)).create(),
-                            (it, pl) -> close = false
-                    );
+                    } else {
+                        m.setSlot(26, ItemBuilder.material(Material.BARRIER)
+                                .name(rMsg("人数不足", NamedTextColor.DARK_RED))
+                                .build(), (it, pl) -> close = false);
+                    }
                 }
             }
         });

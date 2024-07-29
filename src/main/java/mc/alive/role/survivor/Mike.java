@@ -1,7 +1,7 @@
 package mc.alive.role.survivor;
 
 import mc.alive.role.Skill;
-import mc.alive.util.ItemCreator;
+import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -15,7 +15,7 @@ public class Mike extends Survivor{
 
     @Override
     public void equip() {
-        player.getInventory().setItem(0, ItemCreator.material(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>个人终端")).create());
+        player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>个人终端")).build());
     }
 
 

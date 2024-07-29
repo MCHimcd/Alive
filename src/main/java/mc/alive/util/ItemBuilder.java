@@ -7,10 +7,10 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-public final class ItemCreator {
+public final class ItemBuilder {
     private final ItemStack item;
 
-    private ItemCreator(Material type) {
+    private ItemBuilder(Material type) {
         item = new ItemStack(type);
         item.editMeta(meta -> {
             meta.setUnbreakable(true);
@@ -18,39 +18,39 @@ public final class ItemCreator {
         });
     }
 
-    public static ItemCreator material(Material type) {
-        return new ItemCreator(type);
+    public static ItemBuilder material(Material type) {
+        return new ItemBuilder(type);
     }
 
-    public static ItemCreator material(Material type, int data) {
-        return new ItemCreator(type).data(data);
+    public static ItemBuilder material(Material type, int data) {
+        return new ItemBuilder(type).data(data);
     }
 
-    public ItemCreator hideAttributes() {
+    public ItemBuilder hideAttributes() {
         item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES));
         return this;
     }
 
-    public ItemStack create() {
+    public ItemStack build() {
         return item;
     }
 
-    public ItemCreator name(Component name) {
+    public ItemBuilder name(Component name) {
         item.editMeta(meta -> meta.displayName(name));
         return this;
     }
 
-    public ItemCreator amount(int amount) {
+    public ItemBuilder amount(int amount) {
         item.setAmount(amount);
         return this;
     }
 
-    public ItemCreator data(int data) {
+    public ItemBuilder data(int data) {
         item.editMeta(meta -> meta.setCustomModelData(data));
         return this;
     }
 
-    public ItemCreator lore(Component... lore) {
+    public ItemBuilder lore(Component... lore) {
         item.editMeta(meta -> meta.lore(List.of(lore)));
         return this;
     }
