@@ -72,7 +72,12 @@ public class PlayerData {
     }
 
     public void addEffect(Effect effect) {
-        effects.add(effect);
+        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
+        if (e.isPresent()) {
+            e.get().add(effect.tick);
+        } else {
+            effects.add(effect);
+        }
     }
 
     public boolean hasEffect(Class<? extends Effect> effect) {

@@ -2,7 +2,6 @@ package mc.alive.game;
 
 import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
-import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
@@ -34,6 +33,7 @@ public class TickRunner extends BukkitRunnable {
             gameEnd = false;
             return;
         }
+
         game.playerData.values().forEach(PlayerData::tick);
         //player foreach
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
@@ -62,6 +62,7 @@ public class TickRunner extends BukkitRunnable {
                     chosen_item_display.put(player, td);
                 }
             }
+
             //playerData
             if (game.chooseRole != null) return;
             var pd = PlayerData.getPlayerData(player);
@@ -76,13 +77,14 @@ public class TickRunner extends BukkitRunnable {
                     if (itemMeta != null && itemMeta.hasCustomModelData() && itemMeta.getCustomModelData() == 10200) {
                         if (player.getPitch() >= 0) {
                             player.sendActionBar(rMsg(""));
-                        }else {
+                        } else {
                             player.sendActionBar(rMsg(""));
                         }
                     }
                 }
             }
         });
+
         //管道
         chosen_duct = null;
         var player = game.hunter;
@@ -103,7 +105,5 @@ public class TickRunner extends BukkitRunnable {
                 chosen_duct = m.getLocation();
             }
         }
-
-
     }
 }

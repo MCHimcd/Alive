@@ -10,6 +10,10 @@ public abstract class Effect {
         return new Giddy(player, tick);
     }
 
+    public void add(int tick) {
+        this.tick += tick;
+    }
+
     abstract public boolean tick();
 }
 
