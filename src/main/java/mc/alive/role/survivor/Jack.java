@@ -30,7 +30,6 @@ public class Jack extends Survivor {
         player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND, 10200).name(Message.rMsg("<gold><bold>个人终端")).build());
     }
 
-
     @Override
     public double getSpeed() {
         return 0.1;
@@ -67,8 +66,9 @@ public class Jack extends Survivor {
     }
 
     @Skill
+    @Override
     public void attack() {
-        getPlayerData(game.hunter).damageOrHeal(100);
+        shootPath().forEach(location -> player.spawnParticle(Particle.FLAME, location, 1, 0, 0, 0, 0, null, true));
         setSkillCD(player, 0, 20);
     }
 
@@ -91,7 +91,7 @@ public class Jack extends Survivor {
                 if (time++ == 40) {
                     //noinspection UnstableApiUsage
                     player.lookAt(game.hunter.getLocation(), LookAnchor.EYES);
-                    Factory.line(player.getLocation(), game.hunter.getLocation()).forEach(location ->
+                    Factory.line(player.getLocation(), game.hunter.getLocation(),0.5).forEach(location ->
                             player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.RED, 1f)));
                     cancel();
                 } else {

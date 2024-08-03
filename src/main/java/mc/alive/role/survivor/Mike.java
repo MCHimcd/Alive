@@ -18,6 +18,12 @@ public class Mike extends Survivor{
         player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND,10200).name(Message.rMsg("<gold><bold>个人终端")).build());
     }
 
+    @Skill
+    @Override
+    public void attack() {
+
+    }
+
 
     @Override
     public double getSpeed() {

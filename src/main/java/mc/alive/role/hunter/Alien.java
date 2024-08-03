@@ -71,10 +71,11 @@ public class Alien extends Hunter {
     }
 
     @Skill
+    @Override
     public void attack() {
         List<Location> locations = Factory.attackRange(getRange(), player);
         List<Location> finalLocations = new LinkedList<>();
-        locations.forEach(location -> finalLocations.addAll(Factory.line(player.getLocation(), location)));
+        locations.forEach(location -> finalLocations.addAll(Factory.line(player.getLocation(), location,0.5)));
         new BukkitRunnable() {
             @Override
             public void run() {

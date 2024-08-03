@@ -49,6 +49,9 @@ public abstract class Role {
     //初始物品给予
     abstract public void equip();
 
+    //攻击
+    abstract public void attack();
+
     public int getSkillCount() {
         return Math.max(2, (int) Arrays.stream(getClass().getMethods())
                 .filter(m -> m.isAnnotationPresent(Skill.class))

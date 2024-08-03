@@ -19,12 +19,12 @@ public final class Factory {
     }
 
     // 直线
-    static public List<Location> line(Location start, Location end) {
+    static public List<Location> line(Location start, Location end,double step) {
         List<Location> locations = new ArrayList<>();
         start = start.clone().add(0, 1, 0);
         end = end.clone().add(0, 1, 0);
-        Vector direction = end.clone().subtract(start).toVector().normalize().multiply(0.5);
-        while (start.clone().add(direction).distance(end) > 0.5) {
+        Vector direction = end.clone().subtract(start).toVector().normalize().multiply(step);
+        while (start.clone().add(direction).distance(end) > step) {
             locations.add(start.clone());
             start.add(direction);
         }
