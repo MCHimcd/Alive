@@ -1,16 +1,13 @@
-package mc.alive.role.survivor;
+package mc.alive.game.role.survivor;
 
 import io.papermc.paper.entity.LookAnchor;
 import mc.alive.Alive;
 import mc.alive.game.effect.Effect;
-import mc.alive.role.Skill;
+import mc.alive.game.role.Skill;
 import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
-import org.bukkit.Color;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -65,13 +62,6 @@ public class Jack extends Survivor {
         return names.get(200);
     }
 
-    @Skill
-    @Override
-    public void attack() {
-        shootPath().forEach(location -> player.spawnParticle(Particle.FLAME, location, 1, 0, 0, 0, 0, null, true));
-        setSkillCD(player, 0, 20);
-    }
-
     @Skill(id = 1, name = "§b肾上腺素")
     public void speed() {
         //2s 加速2
@@ -91,7 +81,7 @@ public class Jack extends Survivor {
                 if (time++ == 40) {
                     //noinspection UnstableApiUsage
                     player.lookAt(game.hunter.getLocation(), LookAnchor.EYES);
-                    Factory.line(player.getLocation(), game.hunter.getLocation(),0.5).forEach(location ->
+                    Factory.line(player.getLocation(), game.hunter.getLocation(), 0.5).forEach(location ->
                             player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.RED, 1f)));
                     cancel();
                 } else {
@@ -99,7 +89,7 @@ public class Jack extends Survivor {
                 }
             }
         }.runTaskTimer(Alive.plugin, 0, 1);
-        player.playSound(player,Sound.BLOCK_BEACON_ACTIVATE,1f,.5f);
+        player.playSound(player, Sound.BLOCK_BEACON_ACTIVATE, 1f, .5f);
         getPlayerData(player).addEffect(Effect.giddy(player, 40));
         setSkillCD(player, 2, 140);
     }

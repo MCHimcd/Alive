@@ -1,6 +1,6 @@
-package mc.alive.role.hunter;
+package mc.alive.game.role.hunter;
 
-import mc.alive.role.Role;
+import mc.alive.game.role.Role;
 import org.bukkit.entity.Player;
 
 abstract public class Hunter extends Role {
@@ -10,10 +10,11 @@ abstract public class Hunter extends Role {
 
     //最大等级
     abstract public int getMaxLevel();
+
     abstract public double getRange();
 
-    public void levelUp(){
-        level=Math.max(getMaxLevel(),level+1);
+    public void levelUp() {
+        level = Math.max(getMaxLevel(), level + 1);
     }
 
 }

@@ -7,8 +7,6 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-import static mc.alive.Alive.plugin;
-
 public final class Factory {
     // 更改玩家视角
     static public void setYawPitch(float yaw, float pitch, Player player) {
@@ -19,7 +17,7 @@ public final class Factory {
     }
 
     // 直线
-    static public List<Location> line(Location start, Location end,double step) {
+    static public List<Location> line(Location start, Location end, double step) {
         List<Location> locations = new ArrayList<>();
         start = start.clone().add(0, 1, 0);
         end = end.clone().add(0, 1, 0);
@@ -28,41 +26,44 @@ public final class Factory {
             locations.add(start.clone());
             start.add(direction);
         }
+        start.add(direction);
+        locations.add(start.clone());
         return locations;
     }
 
     // 根据玩家朝向矫正点方向
     public static Location roloc(Player player, double x, double y, double z, double rd1) {
-        float yaw = player.getEyeLocation().getYaw();
-        double rd = Math.toRadians(yaw) + rd1;
-        Location origin = player.getLocation();
-        origin.setPitch(0);
-
-        double dx = x - origin.getX();
-        double dz = z - origin.getZ();
-        double newX = dx * Math.cos(rd) - dz * Math.sin(rd) + origin.getX();
-        double newZ = dz * Math.cos(rd) + dx * Math.sin(rd) + origin.getZ();
-        return new Location(player.getWorld(), newX, y + origin.getY(), newZ);
+        float Yaw = player.getEyeLocation().getYaw();
+        double rd = Math.toRadians(Yaw) + rd1;
+        Location o = player.getLocation();
+        o.setPitch(0);
+        double x1 = player.getLocation().getX() + x;
+        double y1 = player.getLocation().getY() + y;
+        double z1 = player.getLocation().getZ() + z;
+        double dx = x1 -= o.getX();
+        double dz = z1 -= o.getZ();
+        double newX = dx * Math.cos(rd) - dz * Math.sin(rd) + o.getX();
+        double newZ = dz * Math.cos(rd) + dx * Math.sin(rd) + o.getZ();
+        return new Location(player.getWorld(), newX, y1, newZ);
     }
 
     // 攻击范围
     public static List<Location> attackRange(double range, Player player) {
         List<Location> locations = new ArrayList<>();
-        for (double x = -4, y = 0; x <= 0; x += 0.1, y += 0.005) {
-            if (addLocation(range, player, locations, x, y)) break;
+        for (double x = -range, y = 0; x < range; x += 0.1, y += 0.05) {
+            //曲线方程
+            double a = 0.25 * x * x;
+            Location loc = roloc(player, a, y, -x, 30);
+            loc.add(player.getEyeLocation().getDirection().normalize().multiply(range));
+            locations.add(loc);
         }
-        for (double x = 4, y = 0; x >= 0; x -= 0.1, y += 0.005) {
-            if (addLocation(range, player, locations, x, y)) break;
+        for (double x = range, y = 0; x > -range; x -= 0.1, y += 0.05) {
+            //曲线方程
+            double a = 0.25 * x * x;
+            Location loc = roloc(player, a, y, -x, 30);
+            loc.add(player.getEyeLocation().getDirection().normalize().multiply(range));
+            locations.add(loc);
         }
         return locations;
-    }
-
-    private static boolean addLocation(double range, Player player, List<Location> locations, double x, double y) {
-        double a = 0.5 * x * x;
-        Location loc = roloc(player, a, y, x, 30);
-        loc.add(player.getLocation().getDirection().normalize().multiply(range)).add(0, 1, 0);
-        if (!(loc.getBlock().isPassable() || loc.getBlock().isLiquid())) return true;
-        locations.add(loc.clone());
-        return false;
     }
 }

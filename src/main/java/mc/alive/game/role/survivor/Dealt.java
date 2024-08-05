@@ -1,6 +1,6 @@
-package mc.alive.role.survivor;
+package mc.alive.game.role.survivor;
 
-import mc.alive.role.Skill;
+import mc.alive.game.role.Skill;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
@@ -19,7 +19,6 @@ public class Dealt extends Survivor{
     }
 
     @Skill
-    @Override
     public void attack() {
 
     }

@@ -1,10 +1,10 @@
 package mc.alive.game;
 
 import mc.alive.game.effect.Effect;
-import mc.alive.role.Role;
-import mc.alive.role.Skill;
-import mc.alive.role.hunter.Hunter;
-import mc.alive.role.survivor.Survivor;
+import mc.alive.game.role.Role;
+import mc.alive.game.role.Skill;
+import mc.alive.game.role.hunter.Hunter;
+import mc.alive.game.role.survivor.Survivor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;

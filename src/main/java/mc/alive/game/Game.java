@@ -1,6 +1,7 @@
 package mc.alive.game;
 
 import mc.alive.Alive;
+import mc.alive.game.gun.Gun;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
 import mc.alive.util.ItemBuilder;
@@ -32,6 +33,7 @@ public class Game {
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public static Team t_hunter;
     public static Team t_survivor;
+    public final Map<ItemStack, Gun> guns = new HashMap<>();
 
     public Game(List<Player> players) {
         MainMenu.prepared.clear();
@@ -130,6 +132,8 @@ public class Game {
         destroy();
         Alive.game = null;
         playerData.keySet().forEach(Game::resetPlayer);
+        Bukkit.getScheduler().cancelTasks(plugin);
+        new TickRunner().runTaskTimer(plugin, 0, 1);
         Bukkit.broadcast(Component.text("end"));
     }
 

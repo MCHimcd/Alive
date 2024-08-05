@@ -1,4 +1,4 @@
-package mc.alive.role;
+package mc.alive.game.role;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

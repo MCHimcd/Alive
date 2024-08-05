@@ -1,9 +1,9 @@
-package mc.alive.role;
+package mc.alive.game.role;
 
-import mc.alive.role.hunter.Alien;
-import mc.alive.role.survivor.Dealt;
-import mc.alive.role.survivor.Jack;
-import mc.alive.role.survivor.Mike;
+import mc.alive.game.role.hunter.Alien;
+import mc.alive.game.role.survivor.Dealt;
+import mc.alive.game.role.survivor.Jack;
+import mc.alive.game.role.survivor.Mike;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -48,9 +48,6 @@ public abstract class Role {
 
     //初始物品给予
     abstract public void equip();
-
-    //攻击
-    abstract public void attack();
 
     public int getSkillCount() {
         return Math.max(2, (int) Arrays.stream(getClass().getMethods())

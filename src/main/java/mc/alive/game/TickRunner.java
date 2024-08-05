@@ -1,7 +1,7 @@
 package mc.alive.game;
 
-import mc.alive.role.Role;
-import mc.alive.role.hunter.Hunter;
+import mc.alive.game.role.Role;
+import mc.alive.game.role.hunter.Hunter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;

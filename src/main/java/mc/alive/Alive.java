@@ -8,13 +8,15 @@ import mc.alive.game.Game;
 import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
 import mc.alive.game.effect.Giddy;
+import mc.alive.game.gun.ChamberPistol;
+import mc.alive.game.gun.Gun;
 import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
-import mc.alive.role.hunter.Hunter;
+import mc.alive.game.role.hunter.Hunter;
+import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
@@ -87,8 +90,28 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (game == null || game.chooseRole != null) return;
+        if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
+            var pd_hurt = getPlayerData(player);
+            var pd_damager = getPlayerData(damager);
+            if (pd_damager.attack_cd > 0) {
+                event.setCancelled(true);
+                return;
+            }
+            pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
+            if (pd_damager.getRole() instanceof Hunter hunter) {
+                pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
+            } else {
+                event.setCancelled(true);
+            }
+            event.setDamage(0);
+        }
+    }
+
+    @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
-        if (game != null && event.getCause() != EntityDamageEvent.DamageCause.CUSTOM) event.setCancelled(true);
+        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || game == null) event.setCancelled(true);
     }
 
     @EventHandler
@@ -101,7 +124,12 @@ public final class Alive extends JavaPlugin implements Listener {
                 var data = item.getItemMeta().getCustomModelData();
 
                 if (data >= 10000 && data < 20000) {
+                    //技能
                     PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
+                    event.setCancelled(true);
+                } else if (data >= 80000 && data < 90000) {
+                    //枪
+                    game.guns.get(item).reload(event.getPlayer());
                     event.setCancelled(true);
                 }
             }
@@ -155,9 +183,14 @@ public final class Alive extends JavaPlugin implements Listener {
         //使用物品
         if (game != null) {
             var data = item.getItemMeta().getCustomModelData();
+
             if (data >= 10000 && data < 20000) {
+                //技能
                 PlayerData.getPlayerData(player).useSkill();
                 event.setCancelled(true);
+            } else if (data >= 80000 && data < 90000) {
+                //枪
+                game.guns.get(item).shoot(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {
@@ -249,7 +282,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     Commands.literal("reset")
                             .executes(ctx -> {
                                 if (ctx.getSource().getSender() instanceof Player && game != null) {
-                                    game.destroy();
+                                    game.end();
                                     game = null;
                                     getOnlinePlayers().forEach(Game::resetPlayer);
                                 }
@@ -257,6 +290,25 @@ public final class Alive extends JavaPlugin implements Listener {
                             }).build(),
                     "重置游戏",
                     List.of("ar")
+            );
+            cs.register(
+                    Commands.literal("gun")
+                            .executes(ctx -> {
+                                if (ctx.getSource().getSender() instanceof Player pl && game != null) {
+                                    var it = Gun.getGunItemStack(80000);
+                                    game.guns.put(it, new ChamberPistol(it));
+                                    pl.getInventory().addItem(it);
+                                    pl.getInventory().addItem(
+                                            ItemBuilder.material(Material.DIAMOND, 90000)
+                                                    .name(Component.text("舱室标准弹"))
+                                                    .amount(64)
+                                                    .build()
+                                    );
+                                }
+                                return Command.SINGLE_SUCCESS;
+                            }).build(),
+                    "枪",
+                    List.of()
             );
         });
     }
@@ -293,31 +345,31 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (game == null) return;
-
-        event.renderer((source, sourceDisplayName, message, viewer) -> {
-            if (!(viewer instanceof Player player)) return Component.empty();
-
-            var ps = PlayerData.getPlayerData(source);
-            var pv = PlayerData.getPlayerData(player);
-            if (ps == null || pv == null) return Component.empty();
-
-            if (ps.getRole() instanceof Hunter) {
-                return Component.text("-")
-                        .append(sourceDisplayName)
-                        .append(Component.text(" : "))
-                        .append(message.decoration(TextDecoration.OBFUSCATED, true));
-            } else {
-                if (pv.getRole() instanceof Hunter) {
-                    message = message.decoration(TextDecoration.OBFUSCATED, true);
-                } else {
-                    player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
-                    player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
-                }
-                return Component.text("-")
-                        .append(sourceDisplayName)
-                        .append(Component.text(" : ").append(message));
-            }
-        });
+//        if (game == null) return;
+//
+//        event.renderer((source, sourceDisplayName, message, viewer) -> {
+//            if (!(viewer instanceof Player player)) return Component.empty();
+//
+//            var ps = PlayerData.getPlayerData(source);
+//            var pv = PlayerData.getPlayerData(player);
+//            if (ps == null || pv == null) return Component.empty();
+//
+//            if (ps.getRole() instanceof Hunter) {
+//                return Component.text("-")
+//                        .append(sourceDisplayName)
+//                        .append(Component.text(" : "))
+//                        .append(message.decoration(TextDecoration.OBFUSCATED, true));
+//            } else {
+//                if (pv.getRole() instanceof Hunter) {
+//                    message = message.decoration(TextDecoration.OBFUSCATED, true);
+//                } else {
+//                    player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
+//                    player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
+//                }
+//                return Component.text("-")
+//                        .append(sourceDisplayName)
+//                        .append(Component.text(" : ").append(message));
+//            }
+//        });
     }
 }

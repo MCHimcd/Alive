@@ -2,7 +2,7 @@ package mc.alive.util;
 
 import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
-import mc.alive.role.Role;
+import mc.alive.game.role.Role;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -89,7 +89,7 @@ public final class ChooseRole {
                 Material material = switch (rid) {
                     case 200 -> Material.DIAMOND;
                     case 201 -> Material.IRON_INGOT;
-                    case 202 -> Material.WALL_TORCH;
+                    case 202 -> Material.GOLD_INGOT;
                     default -> throw new IllegalArgumentException("Unexpected value: " + rid);
                 };
                 world.spawn(location.get(), ItemDisplay.class, id -> {
