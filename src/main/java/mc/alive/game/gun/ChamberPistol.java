@@ -6,11 +6,11 @@ public class ChamberPistol extends Gun{
     public ChamberPistol(ItemStack item) {
         super(
                 item,
-                1.25f,
+                0.05f,
                 BulletType.Chamber_Standard_Cartridge,
                 10,
                 10,
-                1000,
+                300,
                 20
         );
     }

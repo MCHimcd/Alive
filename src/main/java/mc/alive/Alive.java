@@ -9,10 +9,12 @@ import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
 import mc.alive.game.effect.Giddy;
 import mc.alive.game.gun.ChamberPistol;
+import mc.alive.game.gun.ChamberShotgun;
 import mc.alive.game.gun.Gun;
+import mc.alive.game.role.hunter.Hunter;
+import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.MainMenu;
 import mc.alive.menu.SlotMenu;
-import mc.alive.game.role.hunter.Hunter;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
@@ -127,7 +129,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     //技能
                     PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
                     event.setCancelled(true);
-                } else if (data >= 80000 && data < 90000) {
+                } else if (data >= 80000 && data < 90000 && getPlayerData(event.getPlayer()).getRole() instanceof Survivor) {
                     //枪
                     game.guns.get(item).reload(event.getPlayer());
                     event.setCancelled(true);
@@ -188,7 +190,7 @@ public final class Alive extends JavaPlugin implements Listener {
                 //技能
                 PlayerData.getPlayerData(player).useSkill();
                 event.setCancelled(true);
-            } else if (data >= 80000 && data < 90000) {
+            } else if (data >= 80000 && data < 90000 && getPlayerData(player).getRole() instanceof Survivor) {
                 //枪
                 game.guns.get(item).shoot(player);
             }
@@ -247,7 +249,7 @@ public final class Alive extends JavaPlugin implements Listener {
         if (game == null || game.chooseRole != null) return;
 
         var pd = getPlayerData(player);
-        if (pd.hasEffect(Giddy.class)) {
+        if (pd.hasEffect(Giddy.class) || !pd.canMove()) {
             event.setCancelled(true);
             return;
         }
@@ -298,6 +300,9 @@ public final class Alive extends JavaPlugin implements Listener {
                                     var it = Gun.getGunItemStack(80000);
                                     game.guns.put(it, new ChamberPistol(it));
                                     pl.getInventory().addItem(it);
+                                    var it2 = Gun.getGunItemStack(80001);
+                                    game.guns.put(it2, new ChamberShotgun(it));
+                                    pl.getInventory().addItem(it2);
                                     pl.getInventory().addItem(
                                             ItemBuilder.material(Material.DIAMOND, 90000)
                                                     .name(Component.text("舱室标准弹"))
@@ -342,6 +347,17 @@ public final class Alive extends JavaPlugin implements Listener {
         });
     }
 
+    @EventHandler
+    public void onChangeMainHand(PlayerItemHeldEvent event) {
+        if (game == null || game.chooseRole != null) return;
+        var player = event.getPlayer();
+        var it = player.getInventory().getItem(event.getPreviousSlot());
+        if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasCustomModelData()) return;
+        var data = it.getItemMeta().getCustomModelData();
+        if (data >= 80000 && data < 90000) {
+            game.guns.get(it).changeItem();
+        }
+    }
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {

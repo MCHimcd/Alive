@@ -14,6 +14,9 @@ public final class Factory {
         loc.setYaw(yaw);
         loc.setPitch(pitch);
         player.teleport(loc);
+
+        //todo
+        //我这里用tp改的所以会一顿一顿
     }
 
     // 直线

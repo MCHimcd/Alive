@@ -38,7 +38,7 @@ public class PlayerData {
     private final List<Effect> effects = new ArrayList<>();
     private final Role role;
     private final Player player;
-    private final List<Integer> skill_cd = new ArrayList<>();
+    private final List<Integer> skill_cd = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
     //选择的技能
     private int current_skill_id = 0;
     //选择技能重置cd
@@ -232,7 +232,8 @@ public class PlayerData {
             //减血量
             if (health >= 0) {
                 health -= amount;
-                health_tick = 40;
+                //回血时间=剩余血量%*200
+                health_tick = (int) Math.max(100, (Math.max(0, health / role.getMaxHealth()) * 400));
                 player.damage(0.01);
             }
             if (role instanceof Survivor) {
@@ -249,9 +250,7 @@ public class PlayerData {
         if (health <= role.getMaxHealth() * 0.5) {
             speed.setBaseValue(role.getSpeed() * 0.3);
         } else if (health <= role.getMaxHealth() * 0.2) {
-            speed.setBaseValue(role.getSpeed() * 0.1);
-        } else if (health <= 0) {
-            speed.setBaseValue(0);
+            speed.setBaseValue(-1);
         } else speed.setBaseValue(role.getSpeed());
     }
 
@@ -288,4 +287,7 @@ public class PlayerData {
         });
     }
 
+    public boolean canMove() {
+        return health > role.getMaxHealth() * 0.2;
+    }
 }
