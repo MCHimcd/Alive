@@ -20,9 +20,24 @@ public abstract class Shotgun extends Gun {
         super(item, reactiveForce, bulletType, damage, capacity, shoot_interval, reload_time);
     }
 
-    abstract double getSpread();
+    @Override
+    public boolean shoot(Player player) {
+        if (cannotShoot(player)) return false;
 
-    abstract int getBulletsCount();
+        for (List<Location> locations : shootPath_shotgun(player)) {
+            for (Location location : locations) {
+                player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
+                if (game.hunter.getBoundingBox().contains(location.toVector())) {
+                    PlayerData.getPlayerData(game.hunter).damageOrHeal(damage);
+                    break;
+                }
+                if (location.getBlock().isSolid()) break;
+            }
+        }
+
+        applyRecoil(player);
+        return true;
+    }
 
     protected List<List<Location>> shootPath_shotgun(Player player) {
         Random random = new Random();
@@ -46,22 +61,7 @@ public abstract class Shotgun extends Gun {
         return locations;
     }
 
-    @Override
-    public boolean shoot(Player player) {
-        if (cannotShoot(player)) return false;
+    abstract double getSpread();
 
-        for (List<Location> locations : shootPath_shotgun(player)) {
-            for (Location location : locations) {
-                player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
-                if (game.hunter.getBoundingBox().contains(location.toVector())) {
-                    PlayerData.getPlayerData(game.hunter).damageOrHeal(damage);
-                    break;
-                }
-                if (location.getBlock().isSolid()) break;
-            }
-        }
-
-        applyRecoil(player);
-        return true;
-    }
+    abstract int getBulletsCount();
 }

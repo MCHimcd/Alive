@@ -2,7 +2,7 @@ package mc.alive.game.effect;
 
 import org.bukkit.entity.Player;
 
-public class Giddy extends Effect{
+public class Giddy extends Effect {
     Giddy(Player p, int ticks) {
         this.player = p;
         this.tick = ticks;
@@ -11,6 +11,6 @@ public class Giddy extends Effect{
     @Override
     public boolean tick() {
         tick--;
-        return tick<=0;
+        return tick <= 0;
     }
 }

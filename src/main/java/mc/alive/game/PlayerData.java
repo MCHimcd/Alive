@@ -39,6 +39,10 @@ public class PlayerData {
     private final Role role;
     private final Player player;
     private final List<Integer> skill_cd = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
+    //维修cd
+    public int fix_tick = -1;
+    //攻击cd
+    public double attack_cd = -1;
     //选择的技能
     private int current_skill_id = 0;
     //选择技能重置cd
@@ -52,13 +56,23 @@ public class PlayerData {
     private int shield_cd = 0;
     //回护盾cd
     private int shield_tick = 0;
-    //维修cd
-    public int fix_tick = -1;
-    //攻击cd
-    public double attack_cd = -1;
 
-    public Role getRole() {
-        return role;
+    public PlayerData(Player player, Role role) {
+        this.player = player;
+        this.role = role;
+        damageOrHeal(-role.getMaxHealth());
+        if (role instanceof Survivor s) {
+            Game.t_survivor.addPlayer(player);
+            shieldDamage(-s.getMaxShield());
+        } else {
+            Game.t_hunter.addPlayer(player);
+        }
+        for (int i = 0; i < role.getSkillCount(); i++) {
+            skill_cd.add(0);
+        }
+        var name = Component.text(role.toString());
+        player.displayName(name);
+        player.playerListName(name);
     }
 
     public static PlayerData getPlayerData(Player player) {
@@ -69,6 +83,10 @@ public class PlayerData {
     public static void setSkillCD(Player player, int index, int amount) {
         assert game != null;
         game.playerData.get(player).skill_cd.set(index, amount);
+    }
+
+    public Role getRole() {
+        return role;
     }
 
     public void addEffect(Effect effect) {
@@ -126,92 +144,6 @@ public class PlayerData {
         }
     }
 
-    public void changeSkillValue() {
-        ++current_skill_id;
-        Arrays.stream(role.getClass().getMethods())
-                .forEach(m -> {
-                    var a = m.getAnnotation(Skill.class);
-                    if (a != null && a.id() == current_skill_id) {
-                        if (a.minLevel() > role.getLevel()) {
-                            ++current_skill_id;
-                            return;
-                        }
-                        //找到
-                        current_skill_reset_cd = 20;
-                        if (skill_cd.get(current_skill_id) == 0) {
-                            player.showTitle(
-                                    Title.title(
-                                            Component.text("§a·".repeat(a.id())),
-                                            Component.text(a.name(), TextColor.color(0, 255, 255)),
-                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
-                                    )
-                            );
-                        } else {
-                            player.showTitle(
-                                    Title.title(
-                                            Component.text("§a·".repeat(a.id())),
-                                            Component.text("冷却中", NamedTextColor.DARK_RED),
-                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
-                                    )
-                            );
-                        }
-                        player.playSound(player, Sound.UI_BUTTON_CLICK, .3f, 10f);
-                    }
-                });
-        if (current_skill_id > role.getSkillCount()) {
-            current_skill_id = 0;
-            clearTitle();
-        }
-    }
-
-    public void useSkill() {
-        Arrays.stream(role.getClass().getMethods())
-                .filter(m -> {
-                    var a = m.getAnnotation(Skill.class);
-                    if (a != null) {
-                        return a.id() == current_skill_id && skill_cd.get(a.id()) == 0;
-                    }
-                    return false;
-                })
-                .forEach(m -> {
-                    try {
-                        current_skill_id = 0;
-                        skill_cd.set(0, 1);
-                        m.invoke(role);
-                        clearTitle();
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
-
-    private void clearTitle() {
-        player.showTitle(
-                Title.title(
-                        Component.empty(),
-                        Component.empty()
-                )
-        );
-    }
-
-    public PlayerData(Player player, Role role) {
-        this.player = player;
-        this.role = role;
-        damageOrHeal(-role.getMaxHealth());
-        if (role instanceof Survivor s) {
-            Game.t_survivor.addPlayer(player);
-            shieldDamage(-s.getMaxShield());
-        } else {
-            Game.t_hunter.addPlayer(player);
-        }
-        for (int i = 0; i < role.getSkillCount(); i++) {
-            skill_cd.add(0);
-        }
-        var name = Component.text(role.toString());
-        player.displayName(name);
-        player.playerListName(name);
-    }
-
     /**
      * @param amount 正为扣血，负为加血
      */
@@ -254,24 +186,6 @@ public class PlayerData {
         } else speed.setBaseValue(role.getSpeed());
     }
 
-    /**
-     * @param amount 正为扣护盾，负为加护盾
-     */
-    private void shieldDamage(double amount) {
-        var max = ((Survivor) role).getMaxShield();
-        shield = Math.min(max, Math.max(0, shield - amount));
-        player.setAbsorptionAmount(20 * shield / max);
-    }
-
-    public void tryIntoDuct() {
-        if (chosen_duct != null) player.teleport(chosen_duct.clone().setDirection(player.getLocation().getDirection()));
-    }
-
-    public void tryLevelUp() {
-        if (!(role instanceof Hunter h)) return;
-        h.levelUp();
-    }
-
     private void die() {
         Bukkit.broadcast(player.displayName().append(rMsg("%s".formatted(List.of(
                 "去世了",
@@ -285,6 +199,92 @@ public class PlayerData {
                 TickRunner.gameEnd = true;
             }
         });
+    }
+
+    /**
+     * @param amount 正为扣护盾，负为加护盾
+     */
+    private void shieldDamage(double amount) {
+        var max = ((Survivor) role).getMaxShield();
+        shield = Math.min(max, Math.max(0, shield - amount));
+        player.setAbsorptionAmount(20 * shield / max);
+    }
+
+    public void changeSkillValue() {
+        ++current_skill_id;
+        Arrays.stream(role.getClass().getMethods())
+                .forEach(m -> {
+                    var a = m.getAnnotation(Skill.class);
+                    if (a != null && a.id() == current_skill_id) {
+                        if (a.minLevel() > role.getLevel()) {
+                            ++current_skill_id;
+                            return;
+                        }
+                        //找到
+                        current_skill_reset_cd = 20;
+                        if (skill_cd.get(current_skill_id) == 0) {
+                            player.showTitle(
+                                    Title.title(
+                                            Component.text("§a·".repeat(a.id())),
+                                            Component.text(a.name(), TextColor.color(0, 255, 255)),
+                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
+                                    )
+                            );
+                        } else {
+                            player.showTitle(
+                                    Title.title(
+                                            Component.text("§a·".repeat(a.id())),
+                                            Component.text("冷却中", NamedTextColor.DARK_RED),
+                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
+                                    )
+                            );
+                        }
+                        player.playSound(player, Sound.UI_BUTTON_CLICK, .3f, 10f);
+                    }
+                });
+        if (current_skill_id > role.getSkillCount()) {
+            current_skill_id = 0;
+            clearTitle();
+        }
+    }
+
+    private void clearTitle() {
+        player.showTitle(
+                Title.title(
+                        Component.empty(),
+                        Component.empty()
+                )
+        );
+    }
+
+    public void useSkill() {
+        Arrays.stream(role.getClass().getMethods())
+                .filter(m -> {
+                    var a = m.getAnnotation(Skill.class);
+                    if (a != null) {
+                        return a.id() == current_skill_id && skill_cd.get(a.id()) == 0;
+                    }
+                    return false;
+                })
+                .forEach(m -> {
+                    try {
+                        current_skill_id = 0;
+                        skill_cd.set(0, 1);
+                        m.invoke(role);
+                        clearTitle();
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    public void tryIntoDuct() {
+        if (chosen_duct != null) player.teleport(chosen_duct.clone().setDirection(player.getLocation().getDirection()));
+    }
+
+    public void tryLevelUp() {
+        if (!(role instanceof Hunter h)) return;
+        h.levelUp();
     }
 
     public boolean canMove() {

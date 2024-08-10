@@ -1,6 +1,5 @@
 package mc.alive;
 
-import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -22,7 +21,7 @@ import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -60,6 +59,12 @@ public final class Alive extends JavaPlugin implements Listener {
     public static Scoreboard ms;
 
     @Override
+    public void onDisable() {
+        if (game == null) return;
+        game.destroy();
+    }
+
+    @Override
     public void onEnable() {
         plugin = this;
         ms = getScoreboardManager().getMainScoreboard();
@@ -87,10 +92,53 @@ public final class Alive extends JavaPlugin implements Listener {
         getOnlinePlayers().forEach(Game::resetPlayer);
     }
 
-    @Override
-    public void onDisable() {
-        if (game == null) return;
-        game.destroy();
+    @SuppressWarnings("UnstableApiUsage")
+    private void registerCommands() {
+        var manager = getLifecycleManager();
+        manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            var cs = event.registrar();
+            cs.register(
+                    Commands.literal("reset")
+                            .executes(ctx -> {
+                                if (ctx.getSource().getSender() instanceof Player && game != null) {
+                                    game.end();
+                                    game = null;
+                                    getOnlinePlayers().forEach(Game::resetPlayer);
+                                }
+                                return Command.SINGLE_SUCCESS;
+                            }).build(),
+                    "重置游戏",
+                    List.of("ar")
+            );
+            cs.register(
+                    Commands.literal("gun")
+                            .executes(ctx -> {
+                                if (ctx.getSource().getSender() instanceof Player pl && game != null) {
+                                    var it = Gun.getGunItemStack(80000);
+                                    game.guns.put(it, new ChamberPistol(it));
+                                    pl.getInventory().addItem(it);
+                                    var it2 = Gun.getGunItemStack(80001);
+                                    game.guns.put(it2, new ChamberShotgun(it2));
+                                    pl.getInventory().addItem(it2);
+                                    var it3 = Gun.getGunItemStack(80002);
+                                    game.guns.put(it3, new CabinGuardian(it3));
+                                    pl.getInventory().addItem(it3);
+                                    for (int i = 0; i < 5; i++) {
+                                        pl.getInventory().addItem(
+                                                ItemBuilder.material(Material.DIAMOND, 90001)
+                                                        .name(Component.text("舱室标准弹"))
+                                                        .amount(64)
+                                                        .build()
+                                        );
+                                    }
+
+                                }
+                                return Command.SINGLE_SUCCESS;
+                            }).build(),
+                    "枪",
+                    List.of()
+            );
+        });
     }
 
     @EventHandler
@@ -109,7 +157,7 @@ public final class Alive extends JavaPlugin implements Listener {
                 return;
             }
             pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
-            if (pd_damager.getRole() instanceof Hunter hunter) {
+            if (pd_damager.getRole() instanceof Hunter) {
                 pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
             } else {
                 event.setCancelled(true);
@@ -304,56 +352,6 @@ public final class Alive extends JavaPlugin implements Listener {
         }
     }
 
-    @SuppressWarnings("UnstableApiUsage")
-    private void registerCommands() {
-        var manager = getLifecycleManager();
-        manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var cs = event.registrar();
-            cs.register(
-                    Commands.literal("reset")
-                            .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player && game != null) {
-                                    game.end();
-                                    game = null;
-                                    getOnlinePlayers().forEach(Game::resetPlayer);
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }).build(),
-                    "重置游戏",
-                    List.of("ar")
-            );
-            cs.register(
-                    Commands.literal("gun")
-                            .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player pl && game != null) {
-                                    var it = Gun.getGunItemStack(80000);
-                                    game.guns.put(it, new ChamberPistol(it));
-                                    pl.getInventory().addItem(it);
-                                    var it2 = Gun.getGunItemStack(80001);
-                                    game.guns.put(it2, new ChamberShotgun(it2));
-                                    pl.getInventory().addItem(it2);
-                                    var it3 = Gun.getGunItemStack(80002);
-                                    game.guns.put(it3, new CabinGuardian(it3));
-                                    pl.getInventory().addItem(it3);
-                                    for (int i = 0; i < 5; i++) {
-                                        pl.getInventory().addItem(
-                                                ItemBuilder.material(Material.DIAMOND, 90001)
-                                                        .name(Component.text("舱室标准弹"))
-                                                        .amount(64)
-                                                        .build()
-                                        );
-                                    }
-
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }).build(),
-                    "枪",
-                    List.of()
-            );
-        });
-    }
-
-
     @EventHandler
     public void at(AsyncChatEvent event) {
         String messageString = Message.msg.serialize(event.message());
@@ -402,33 +400,33 @@ public final class Alive extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
+//    @EventHandler
     public void onChat(AsyncChatEvent event) {
-//        if (game == null) return;
-//
-//        event.renderer((source, sourceDisplayName, message, viewer) -> {
-//            if (!(viewer instanceof Player player)) return Component.empty();
-//
-//            var ps = PlayerData.getPlayerData(source);
-//            var pv = PlayerData.getPlayerData(player);
-//            if (ps == null || pv == null) return Component.empty();
-//
-//            if (ps.getRole() instanceof Hunter) {
-//                return Component.text("-")
-//                        .append(sourceDisplayName)
-//                        .append(Component.text(" : "))
-//                        .append(message.decoration(TextDecoration.OBFUSCATED, true));
-//            } else {
-//                if (pv.getRole() instanceof Hunter) {
-//                    message = message.decoration(TextDecoration.OBFUSCATED, true);
-//                } else {
-//                    player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
-//                    player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
-//                }
-//                return Component.text("-")
-//                        .append(sourceDisplayName)
-//                        .append(Component.text(" : ").append(message));
-//            }
-//        });
+        if (game == null) return;
+
+        event.renderer((source, sourceDisplayName, message, viewer) -> {
+            if (!(viewer instanceof Player player)) return Component.empty();
+
+            var ps = PlayerData.getPlayerData(source);
+            var pv = PlayerData.getPlayerData(player);
+            if (ps == null || pv == null) return Component.empty();
+
+            if (ps.getRole() instanceof Hunter) {
+                return Component.text("-")
+                        .append(sourceDisplayName)
+                        .append(Component.text(" : "))
+                        .append(message.decoration(TextDecoration.OBFUSCATED, true));
+            } else {
+                if (pv.getRole() instanceof Hunter) {
+                    message = message.decoration(TextDecoration.OBFUSCATED, true);
+                } else {
+                    player.stopSound(Sound.ENTITY_VILLAGER_AMBIENT);
+                    player.playSound(player, Sound.ENTITY_VILLAGER_AMBIENT, 1, 1);
+                }
+                return Component.text("-")
+                        .append(sourceDisplayName)
+                        .append(Component.text(" : ").append(message));
+            }
+        });
     }
 }

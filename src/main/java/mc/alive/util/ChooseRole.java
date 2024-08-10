@@ -30,10 +30,10 @@ import static mc.alive.Alive.game;
 import static mc.alive.Alive.plugin;
 
 public final class ChooseRole {
-    private final List<Player> choosing = new ArrayList<>();
-    public Player currentPlayer;
     public final Map<ItemDisplay, Integer> roles = new HashMap<>();
     public final List<Integer> remainedId = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
+    private final List<Player> choosing = new ArrayList<>();
+    public Player currentPlayer;
 
     public ChooseRole(List<Player> players) {
         choosing.addAll(players);
@@ -43,6 +43,46 @@ public final class ChooseRole {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 0, false, false));
         });
+    }
+
+    public boolean handleEvent(Player player) {
+        if (!player.equals(currentPlayer)) return false;
+
+        var td = TickRunner.chosen_item_display.get(player);
+        if (td == null) return false;
+
+        var role = roles.get(td);
+        if (role == null) return false;
+
+        remainedId.remove(role);
+        game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
+        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+        player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
+        nextChoose();
+        return true;
+    }
+
+    public void nextChoose() {
+        var world = Bukkit.getWorld("world");
+        assert world != null;
+
+        //上一个
+        if (currentPlayer != null) {
+            roles.keySet().forEach(Entity::remove);
+            currentPlayer.teleport(new Location(world, 10.5, -58, 10.5));
+        }
+
+        //结束判断
+        if (choosing.isEmpty()) {
+            roles.keySet().forEach(Entity::remove);
+            game.start();
+            return;
+        }
+
+        //下一个
+        currentPlayer = choosing.removeFirst();
+        summonItemDisplay(currentPlayer.equals(game.hunter));
+        currentPlayer.teleport(new Location(world, -4.5, -58, -1.5));
     }
 
     private void summonItemDisplay(boolean isHunter) {
@@ -98,45 +138,5 @@ public final class ChooseRole {
                 });
             });
         }
-    }
-
-    public void nextChoose() {
-        var world = Bukkit.getWorld("world");
-        assert world != null;
-
-        //上一个
-        if (currentPlayer != null) {
-            roles.keySet().forEach(Entity::remove);
-            currentPlayer.teleport(new Location(world, 10.5, -58, 10.5));
-        }
-
-        //结束判断
-        if (choosing.isEmpty()) {
-            roles.keySet().forEach(Entity::remove);
-            game.start();
-            return;
-        }
-
-        //下一个
-        currentPlayer = choosing.removeFirst();
-        summonItemDisplay(currentPlayer.equals(game.hunter));
-        currentPlayer.teleport(new Location(world, -4.5, -58, -1.5));
-    }
-
-    public boolean handleEvent(Player player) {
-        if (!player.equals(currentPlayer)) return false;
-
-        var td = TickRunner.chosen_item_display.get(player);
-        if (td == null) return false;
-
-        var role = roles.get(td);
-        if (role == null) return false;
-
-        remainedId.remove(role);
-        game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
-        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-        player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
-        nextChoose();
-        return true;
     }
 }

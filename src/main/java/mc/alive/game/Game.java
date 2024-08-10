@@ -25,15 +25,15 @@ import static org.bukkit.attribute.Attribute.*;
 
 
 public class Game {
+    public static Team t_hunter;
+    public static Team t_survivor;
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Player hunter;
-    public ChooseRole chooseRole;
+    public final Map<ItemStack, Gun> guns = new HashMap<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
-    public static Team t_hunter;
-    public static Team t_survivor;
-    public final Map<ItemStack, Gun> guns = new HashMap<>();
+    public ChooseRole chooseRole;
 
     public Game(List<Player> players) {
         MainMenu.prepared.clear();
@@ -51,6 +51,69 @@ public class Game {
                 chooseRole.nextChoose();
             }
         }.runTaskLater(plugin, 1);
+    }
+
+    public void start() {
+        new BukkitRunnable() {
+            int t = 99;
+
+            @Override
+            public void run() {
+                t++;
+                if (t % 10 == 0) {
+                    Component progressBar = Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
+                    Title title = Title.title(
+                            Message.rMsg("<rainbow> --游戏加载中--"),
+                            progressBar,
+                            Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
+                    );
+                    playerData.keySet().forEach(player -> {
+                        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                        player.showTitle(title);
+                    });
+                }
+                if (t >= 100) {
+                    chooseRole.roles.keySet().forEach(Entity::remove);
+                    chooseRole = null;
+                    playerData.forEach((player, playerData1) -> {
+                        player.clearActivePotionEffects();
+                        player.setHealth(20);
+                        playerData1.getRole().equip();
+                    });
+                    summonEntities();
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
+    }
+
+    private void summonEntities() {
+        var world = Bukkit.getWorld("world");
+        assert world != null;
+
+        // 管道入口
+        for (var s : new String[]{"1.5 -58 1.5"}) {
+            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+            world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, markers::add);
+        }
+
+        // 维修
+        for (var s : new String[]{"5.5 -59 5.5"}) {
+            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+            world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), ItemDisplay.class, id -> {
+                id.setItemStack(new ItemStack(Material.FEATHER));
+                fix_progress.put(id, 0);
+            });
+        }
+    }
+
+    public void end() {
+        destroy();
+        Alive.game = null;
+        playerData.keySet().forEach(Game::resetPlayer);
+        Bukkit.getScheduler().cancelTasks(plugin);
+        new TickRunner().runTaskTimer(plugin, 0, 1);
+        Bukkit.broadcast(Component.text("end"));
     }
 
     public static void resetPlayer(Player player) {
@@ -93,50 +156,6 @@ public class Game {
         }
     }
 
-    public void start() {
-        new BukkitRunnable() {
-            int t = 99;
-
-            @Override
-            public void run() {
-                t++;
-                if (t % 10 == 0) {
-                    Component progressBar = Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
-                    Title title = Title.title(
-                            Message.rMsg("<rainbow> --游戏加载中--"),
-                            progressBar,
-                            Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
-                    );
-                    playerData.keySet().forEach(player -> {
-                        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-                        player.showTitle(title);
-                    });
-                }
-                if (t >= 100) {
-                    chooseRole.roles.keySet().forEach(Entity::remove);
-                    chooseRole = null;
-                    playerData.forEach((player, playerData1) -> {
-                        player.clearActivePotionEffects();
-                        player.setHealth(20);
-                        playerData1.getRole().equip();
-                    });
-                    summonEntities();
-                    cancel();
-                }
-            }
-        }.runTaskTimer(plugin, 0, 1);
-    }
-
-
-    public void end() {
-        destroy();
-        Alive.game = null;
-        playerData.keySet().forEach(Game::resetPlayer);
-        Bukkit.getScheduler().cancelTasks(plugin);
-        new TickRunner().runTaskTimer(plugin, 0, 1);
-        Bukkit.broadcast(Component.text("end"));
-    }
-
     public void destroy() {
         if (chooseRole != null) {
             chooseRole.roles.keySet().forEach(Entity::remove);
@@ -144,26 +163,6 @@ public class Game {
         markers.forEach(Entity::remove);
         fix_progress.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
-    }
-
-    private void summonEntities() {
-        var world = Bukkit.getWorld("world");
-        assert world != null;
-
-        // 管道入口
-        for (var s : new String[]{"1.5 -58 1.5"}) {
-            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, markers::add);
-        }
-
-        // 维修
-        for (var s : new String[]{"5.5 -59 5.5"}) {
-            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), ItemDisplay.class, id -> {
-                id.setItemStack(new ItemStack(Material.FEATHER));
-                fix_progress.put(id, 0);
-            });
-        }
     }
 
     public int fix(ItemDisplay id, int amount) {

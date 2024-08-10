@@ -2,7 +2,6 @@ package mc.alive.util;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
@@ -27,6 +26,11 @@ public final class ItemBuilder {
         return new ItemBuilder(type).data(data);
     }
 
+    public ItemBuilder data(int data) {
+        item.editMeta(meta -> meta.setCustomModelData(data));
+        return this;
+    }
+
     public ItemBuilder hideAttributes() {
         item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES));
         return this;
@@ -43,11 +47,6 @@ public final class ItemBuilder {
 
     public ItemBuilder amount(int amount) {
         item.setAmount(amount);
-        return this;
-    }
-
-    public ItemBuilder data(int data) {
-        item.editMeta(meta -> meta.setCustomModelData(data));
         return this;
     }
 

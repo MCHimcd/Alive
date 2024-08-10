@@ -19,23 +19,32 @@ public abstract class Role {
             201, "§a迈克",
             202, "§a德尔塔"
     );
+    //技能location
+    public final Map<Location, BukkitTask> skill_locs = new HashMap<>();
     protected final Player player;
     protected int level = 0;
-
-    public int getLevel() {
-        return level;
-    }
 
     public Role(Player p) {
         player = p;
     }
 
+    public static Role of(int id, Player player) {
+        return switch (id) {
+            case 100 -> new Alien(player);
+            case 200 -> new Jack(player);
+            case 201 -> new Mike(player);
+            case 202 -> new Dealt(player);
+            default -> null;
+        };
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
     public Player getPlayer() {
         return player;
     }
-
-    //技能location
-    public final Map<Location, BukkitTask> skill_locs = new HashMap<>();
 
     //力量
     abstract public int getStrength();
@@ -59,15 +68,5 @@ public abstract class Role {
         return Math.max(2, (int) Arrays.stream(getClass().getMethods())
                 .filter(m -> m.isAnnotationPresent(Skill.class))
                 .count());
-    }
-
-    public static Role of(int id, Player player) {
-        return switch (id) {
-            case 100 -> new Alien(player);
-            case 200 -> new Jack(player);
-            case 201 -> new Mike(player);
-            case 202 -> new Dealt(player);
-            default -> null;
-        };
     }
 }

@@ -26,11 +26,11 @@ import static net.kyori.adventure.text.Component.text;
 public abstract class Gun {
 
     protected final float reactiveForce;
-    private final BulletType bulletType;
     protected final double damage;
     protected final int capacity;
     //mSec
     protected final long shoot_interval;
+    private final BulletType bulletType;
     private final ItemStack item;
     //tick
     private final int reload_time;
@@ -42,6 +42,25 @@ public abstract class Gun {
 
     //枪的数值 和 模型id
     //后坐力  子弹类型  伤害  最大容量 穿透力
+
+    protected Gun(ItemStack item, float reactiveForce, BulletType bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
+        this.item = item;
+        this.reactiveForce = reactiveForce;
+        this.bulletType = bulletType;
+        this.damage = damage;
+        this.capacity = capacity;
+        this.shoot_interval = shoot_interval;
+        this.reload_time = reload_time;
+    }
+
+    public static ItemStack getGunItemStack(int data) {
+        return ItemBuilder.material(Material.BOW, data).name(switch (data) {
+            case 80000 -> text("手枪");
+            case 80001 -> text("霰弹枪");
+            case 80002 -> text("冲锋枪");
+            default -> empty();
+        }).build();
+    }
 
     public void startShoot(Player player) {
         if (canShoot) {
@@ -62,80 +81,6 @@ public abstract class Gun {
             }, 0, shoot_interval);
             setCanShoot(player, false);
         }
-    }
-
-    public void stopShoot(@Nullable Player player) {
-        timer.cancel();
-        if (player == null) return;
-        setCanShoot(player, false);
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (remained_bullet > 0) setCanShoot(player, true);
-            }
-        }, shoot_interval);
-        player.getInventory().setItem(35, null);
-
-    }
-
-    protected Gun(ItemStack item, float reactiveForce, BulletType bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
-        this.item = item;
-        this.reactiveForce = reactiveForce;
-        this.bulletType = bulletType;
-        this.damage = damage;
-        this.capacity = capacity;
-        this.shoot_interval = shoot_interval;
-        this.reload_time = reload_time;
-    }
-
-    private static int findBullet(Player player, BulletType bulletType, int count, boolean remove) {
-        int finalCount = 0;
-        var contents = player.getInventory().getContents();
-        for (int i = 0; i < contents.length; i++) {
-            var it = player.getInventory().getItem(i);
-            if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasCustomModelData()) continue;
-            var data = it.getItemMeta().getCustomModelData();
-            if (data != bulletType.getData()) continue;
-            if (it.getAmount() > count) {
-                finalCount += count;
-                if (remove) it.setAmount(it.getAmount() - count);
-                return finalCount;
-            } else {
-                count -= it.getAmount();
-                finalCount += it.getAmount();
-                if (remove) player.getInventory().setItem(i, null);
-            }
-        }
-        player.updateInventory();
-        return finalCount;
-    }
-
-    //重新装填
-    public void reload(Player player) {
-        if (reloading) return;
-        reloading = true;
-
-        if (findBullet(player, bulletType, capacity - remained_bullet, false) == 0) return;
-
-        reload_task = new BukkitRunnable() {
-            int re_time = 0;
-
-            @Override
-            public void run() {
-                Component progressBar = Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(re_time) + "<white>" + "|".repeat(reload_time - re_time));
-                player.sendActionBar(progressBar);
-                if (re_time % 10 == 0) {
-                    player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, .5f, .5f);
-                }
-                if (re_time++ >= reload_time) {
-                    remained_bullet += findBullet(player, bulletType, capacity - remained_bullet, true);
-                    reloading = false;
-                    setCanShoot(player, true);
-                    cancel();
-                }
-            }
-        }.runTaskTimer(Alive.plugin, 0, 1);
     }
 
     //射击
@@ -180,27 +125,30 @@ public abstract class Gun {
         return false;
     }
 
-    public enum BulletType {
-        Chamber_Standard_Cartridge(90001);
+    public void stopShoot(@Nullable Player player) {
+        timer.cancel();
+        if (player == null) return;
+        setCanShoot(player, false);
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (remained_bullet > 0) setCanShoot(player, true);
+            }
+        }, shoot_interval);
+        player.getInventory().setItem(35, null);
 
-        private final int data;
-
-        BulletType(int data) {
-            this.data = data;
-        }
-
-        public int getData() {
-            return data;
-        }
     }
 
-    public static ItemStack getGunItemStack(int data) {
-        return ItemBuilder.material(Material.BOW, data).name(switch (data) {
-            case 80000 -> text("手枪");
-            case 80001 -> text("霰弹枪");
-            case 80002 -> text("冲锋枪");
-            default -> empty();
-        }).build();
+    @SuppressWarnings("DataFlowIssue")
+    private void setCanShoot(Player player, boolean value) {
+        canShoot = value;
+        if (canShoot) {
+            player.getInventory().setItem(35, ItemBuilder.material(Material.ARROW, 90000).build());
+            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
+        } else {
+            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(-1);
+        }
     }
 
     //射击路径
@@ -225,10 +173,53 @@ public abstract class Gun {
         return new Result(Factory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));
     }
 
-    public record Result(List<Location> path, Player target) {
-        public Result(List<Location> path) {
-            this(path, null);
+    //重新装填
+    public void reload(Player player) {
+        if (reloading) return;
+        reloading = true;
+
+        if (findBullet(player, bulletType, capacity - remained_bullet, false) == 0) return;
+
+        reload_task = new BukkitRunnable() {
+            int re_time = 0;
+
+            @Override
+            public void run() {
+                Component progressBar = Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(re_time) + "<white>" + "|".repeat(reload_time - re_time));
+                player.sendActionBar(progressBar);
+                if (re_time % 10 == 0) {
+                    player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, .5f, .5f);
+                }
+                if (re_time++ >= reload_time) {
+                    remained_bullet += findBullet(player, bulletType, capacity - remained_bullet, true);
+                    reloading = false;
+                    setCanShoot(player, true);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(Alive.plugin, 0, 1);
+    }
+
+    private static int findBullet(Player player, BulletType bulletType, int count, boolean remove) {
+        int finalCount = 0;
+        var contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) {
+            var it = player.getInventory().getItem(i);
+            if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasCustomModelData()) continue;
+            var data = it.getItemMeta().getCustomModelData();
+            if (data != bulletType.getData()) continue;
+            if (it.getAmount() > count) {
+                finalCount += count;
+                if (remove) it.setAmount(it.getAmount() - count);
+                return finalCount;
+            } else {
+                count -= it.getAmount();
+                finalCount += it.getAmount();
+                if (remove) player.getInventory().setItem(i, null);
+            }
         }
+        player.updateInventory();
+        return finalCount;
     }
 
     public void handleItemChange(Player player, boolean previous) {
@@ -252,14 +243,23 @@ public abstract class Gun {
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
-    private void setCanShoot(Player player, boolean value) {
-        canShoot = value;
-        if (canShoot) {
-            player.getInventory().setItem(35, ItemBuilder.material(Material.ARROW, 90000).build());
-            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
-        } else {
-            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(-1);
+    public enum BulletType {
+        Chamber_Standard_Cartridge(90001);
+
+        private final int data;
+
+        BulletType(int data) {
+            this.data = data;
+        }
+
+        public int getData() {
+            return data;
+        }
+    }
+
+    public record Result(List<Location> path, Player target) {
+        public Result(List<Location> path) {
+            this(path, null);
         }
     }
 

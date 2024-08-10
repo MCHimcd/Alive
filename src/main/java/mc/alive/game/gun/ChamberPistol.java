@@ -2,7 +2,7 @@ package mc.alive.game.gun;
 
 import org.bukkit.inventory.ItemStack;
 
-public class ChamberPistol extends Gun{
+public class ChamberPistol extends Gun {
     public ChamberPistol(ItemStack item) {
         super(
                 item,

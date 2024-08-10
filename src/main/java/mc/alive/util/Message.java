@@ -18,15 +18,15 @@ public final class Message {
         return sl.stream().map(msg::deserialize).collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public static Component rMsg(String s) {
-        return msg.deserialize("<reset>" + s);
-    }
-
     public static Component rMsg(String s, NamedTextColor color) {
         return Component.text(s, color).decoration(TextDecoration.ITALIC, false);
     }
 
     public static Title title(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
         return Title.title(rMsg(title), rMsg(subtitle), Title.Times.times(Duration.ofMillis(fadeIn), Duration.ofMillis(stay), Duration.ofMillis(fadeOut)));
+    }
+
+    public static Component rMsg(String s) {
+        return msg.deserialize("<reset>" + s);
     }
 }
