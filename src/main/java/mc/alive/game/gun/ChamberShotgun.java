@@ -6,7 +6,7 @@ public class ChamberShotgun extends Shotgun {
     public ChamberShotgun(ItemStack item) {
         super(
                 item,
-                0.15f,
+                15f,
                 BulletType.Chamber_Standard_Cartridge,
                 5,
                 10,

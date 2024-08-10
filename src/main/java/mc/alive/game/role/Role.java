@@ -4,9 +4,12 @@ import mc.alive.game.role.hunter.Alien;
 import mc.alive.game.role.survivor.Dealt;
 import mc.alive.game.role.survivor.Jack;
 import mc.alive.game.role.survivor.Mike;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Role {
@@ -30,6 +33,9 @@ public abstract class Role {
     public Player getPlayer() {
         return player;
     }
+
+    //技能location
+    public final Map<Location, BukkitTask> skill_locs = new HashMap<>();
 
     //力量
     abstract public int getStrength();

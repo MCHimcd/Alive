@@ -2,6 +2,7 @@ package mc.alive.util;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
@@ -54,4 +55,5 @@ public final class ItemBuilder {
         item.editMeta(meta -> meta.lore(List.of(lore)));
         return this;
     }
+
 }

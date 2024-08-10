@@ -13,7 +13,10 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
+
 import static mc.alive.Alive.game;
+import static mc.alive.Alive.plugin;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.PlayerData.setSkillCD;
 
@@ -68,6 +71,31 @@ public class Jack extends Survivor {
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false));
         player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BELL, 1f, 1f);
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().clone().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0, null, true);
+
+        //在这里写一个清除jack 周围4格内  hunter的location
+        var locs = game.playerData.get(game.hunter).getRole().skill_locs;
+        var remove = new ArrayList<Location>();
+        for (Location loc : locs.keySet()) {
+            if (loc.distance(player.getLocation()) <= 4) {
+                Factory.line(player.getEyeLocation().subtract(0,1,0), loc, 0.5).forEach(location ->
+                        player.spawnParticle(
+                                Particle.FLAME,
+                                location.subtract(0,1,0),
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                null,
+                                true
+                        ));
+                remove.add(loc);
+            }
+        }
+        remove.forEach(loc -> {
+            locs.get(loc).cancel();
+            locs.remove(loc);
+        });
         setSkillCD(player, 1, 300);
     }
 

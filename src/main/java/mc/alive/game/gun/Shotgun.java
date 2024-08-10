@@ -1,18 +1,17 @@
 package mc.alive.game.gun;
 
-import io.papermc.paper.entity.LookAnchor;
 import mc.alive.game.PlayerData;
 import mc.alive.util.Factory;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static mc.alive.Alive.game;
 
@@ -48,28 +47,9 @@ public abstract class Shotgun extends Gun {
     }
 
     @Override
-    public void shoot(Player player) {
-        if (count == 0) {
-            player.sendActionBar(Component.text("null"));
-            return;
-        }
-        if (!canShoot) return;
+    public boolean shoot(Player player) {
+        if (cannotShoot(player)) return false;
 
-        //间隔
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                canShoot = true;
-                timer.cancel();
-            }
-        }, shoot_interval);
-        canShoot = false;
-
-        count--;
-
-        player.sendActionBar(Component.text("%s / %s".formatted(count, capacity)));
-        player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 1f, 1f);
         for (List<Location> locations : shootPath_shotgun(player)) {
             for (Location location : locations) {
                 player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
@@ -81,8 +61,7 @@ public abstract class Shotgun extends Gun {
             }
         }
 
-        //后坐力
-        var l = player.getEyeLocation().add(player.getEyeLocation().getDirection().add(new Vector(0, reactiveForce, 0)));
-        player.lookAt(l.getX(), l.getY(), l.getZ(), LookAnchor.EYES);
+        applyRecoil(player);
+        return true;
     }
 }

@@ -143,6 +143,7 @@ public class Game {
         }
         markers.forEach(Entity::remove);
         fix_progress.keySet().forEach(Entity::remove);
+        guns.values().forEach(gun -> gun.stopShoot(null));
     }
 
     private void summonEntities() {

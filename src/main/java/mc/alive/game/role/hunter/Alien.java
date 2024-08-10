@@ -3,8 +3,13 @@ package mc.alive.game.role.hunter;
 import mc.alive.game.role.Skill;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import static mc.alive.Alive.plugin;
 
 public class Alien extends Hunter {
     public Alien(Player pl) {
@@ -59,11 +64,20 @@ public class Alien extends Hunter {
     //吐出一滩粘液 减速范围内的人
     @Skill(id = 1, name = "粘液")
     public void slime() {
+        Location location = player.getEyeLocation();
+        var task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.getWorld().spawnParticle(Particle.END_ROD, location, 0);
+            }
+        }.runTaskTimer(plugin, 0, 1);
+
+        skill_locs.put(location, task);
+
 
     }
 
     @Skill(id = 2, name = "粘液")
-
     public void a() {
         //todo
     }

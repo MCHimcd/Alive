@@ -1,6 +1,5 @@
 package mc.alive.game.gun;
 
-import io.papermc.paper.entity.LookAnchor;
 import mc.alive.Alive;
 import mc.alive.game.PlayerData;
 import mc.alive.util.Factory;
@@ -8,17 +7,21 @@ import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static mc.alive.Alive.game;
+import static mc.alive.Alive.plugin;
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.text;
 
 public abstract class Gun {
 
@@ -31,13 +34,50 @@ public abstract class Gun {
     private final ItemStack item;
     //tick
     private final int reload_time;
-    protected int count = 0;
+    protected int remained_bullet = 0;
     protected boolean canShoot = true;
     protected boolean reloading = false;
     private BukkitTask reload_task;
+    private Timer timer = new Timer();
 
     //枪的数值 和 模型id
     //后坐力  子弹类型  伤害  最大容量 穿透力
+
+    public void startShoot(Player player) {
+        if (canShoot) {
+            timer.cancel();
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    final boolean[] c = {false};
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            c[0] = !shoot(player);
+                        }
+                    }.runTask(plugin);
+                    if (c[0]) cancel();
+                }
+            }, 0, shoot_interval);
+            setCanShoot(player, false);
+        }
+    }
+
+    public void stopShoot(@Nullable Player player) {
+        timer.cancel();
+        if (player == null) return;
+        setCanShoot(player, false);
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (remained_bullet > 0) setCanShoot(player, true);
+            }
+        }, shoot_interval);
+        player.getInventory().setItem(35, null);
+
+    }
 
     protected Gun(ItemStack item, float reactiveForce, BulletType bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
         this.item = item;
@@ -76,22 +116,22 @@ public abstract class Gun {
         if (reloading) return;
         reloading = true;
 
-        if (findBullet(player, bulletType, capacity - count, false) == 0) return;
+        if (findBullet(player, bulletType, capacity - remained_bullet, false) == 0) return;
 
         reload_task = new BukkitRunnable() {
-            int reloadtime = 0;
+            int re_time = 0;
 
             @Override
             public void run() {
-                Component progressBar = Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(reloadtime) + "<white>" + "|".repeat(reload_time - reloadtime));
+                Component progressBar = Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(re_time) + "<white>" + "|".repeat(reload_time - re_time));
                 player.sendActionBar(progressBar);
-                if (reloadtime % 10 == 0) {
+                if (re_time % 10 == 0) {
                     player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, .5f, .5f);
                 }
-                if (reloadtime++ >= reload_time) {
-                    count += findBullet(player, bulletType, capacity - count, true);
-                    player.sendMessage(Component.text(count));
+                if (re_time++ >= reload_time) {
+                    remained_bullet += findBullet(player, bulletType, capacity - remained_bullet, true);
                     reloading = false;
+                    setCanShoot(player, true);
                     cancel();
                 }
             }
@@ -99,27 +139,8 @@ public abstract class Gun {
     }
 
     //射击
-    public void shoot(Player player) {
-        if (count == 0) {
-            player.sendActionBar(Component.text("null"));
-            return;
-        }
-        if (!canShoot) return;
-
-        //间隔
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                canShoot = true;
-                timer.cancel();
-            }
-        }, shoot_interval);
-        canShoot = false;
-
-        count--;
-        player.sendActionBar(Component.text("%s / %s".formatted(count, capacity)));
-        player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 1f, 1f);
+    protected boolean shoot(Player player) {
+        if (cannotShoot(player)) return false;
 
         var pd = PlayerData.getPlayerData(player);
         var result = shootPath(player);
@@ -134,18 +155,37 @@ public abstract class Gun {
             PlayerData.getPlayerData(result.target()).damageOrHeal(damage);
         }
 
-        //后坐力
-        var l = player.getEyeLocation().add(player.getEyeLocation().getDirection().add(new Vector(0, reactiveForce, 0)));
-        player.lookAt(l.getX(), l.getY(), l.getZ(), LookAnchor.EYES);
-//        Factory.setYawPitch(player.getYaw(), player.getPitch() - reactiveForce, player);
+        applyRecoil(player);
+        return true;
+    }
+
+    protected void applyRecoil(Player player) {
+        float pitch = player.getEyeLocation().getPitch();
+        float yaw = player.getEyeLocation().getYaw();
+
+        player.setRotation(yaw, pitch - reactiveForce);
+
+    }
+
+    protected boolean cannotShoot(Player player) {
+        if (remained_bullet == 0) {
+            player.sendActionBar(text("null"));
+            stopShoot(player);
+            return true;
+        }
+
+        remained_bullet--;
+        player.sendActionBar(text("%s / %s".formatted(remained_bullet, capacity)));
+        player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 1f, 1f);
+        return false;
     }
 
     public enum BulletType {
-        Chamber_Standard_Cartridge(90000);
+        Chamber_Standard_Cartridge(90001);
 
         private final int data;
 
-        private BulletType(int data) {
+        BulletType(int data) {
             this.data = data;
         }
 
@@ -155,11 +195,12 @@ public abstract class Gun {
     }
 
     public static ItemStack getGunItemStack(int data) {
-        return switch (data) {
-            case 80000 -> ItemBuilder.material(Material.DIAMOND_HOE, data).build();
-            case 80001 -> ItemBuilder.material(Material.GOLDEN_AXE, data).build();
-            default -> throw new IllegalStateException("Unexpected value: " + data);
-        };
+        return ItemBuilder.material(Material.BOW, data).name(switch (data) {
+            case 80000 -> text("手枪");
+            case 80001 -> text("霰弹枪");
+            case 80002 -> text("冲锋枪");
+            default -> empty();
+        }).build();
     }
 
     //射击路径
@@ -190,10 +231,36 @@ public abstract class Gun {
         }
     }
 
-    public void changeItem() {
-        if (reloading) {
-            reloading = false;
-            reload_task.cancel();
+    public void handleItemChange(Player player, boolean previous) {
+        if (previous) {
+            //切换之前的
+            if (reloading) {
+                reloading = false;
+                reload_task.cancel();
+            }
+            timer.cancel();
+            player.getInventory().setItem(35, new ItemStack(Material.AIR));
+        } else {
+            //切换之后的
+            setCanShoot(player, false);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (remained_bullet > 0) setCanShoot(player, true);
+                }
+            }.runTaskLater(plugin, 20);
         }
     }
+
+    @SuppressWarnings("DataFlowIssue")
+    private void setCanShoot(Player player, boolean value) {
+        canShoot = value;
+        if (canShoot) {
+            player.getInventory().setItem(35, ItemBuilder.material(Material.ARROW, 90000).build());
+            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
+        } else {
+            player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(-1);
+        }
+    }
+
 }

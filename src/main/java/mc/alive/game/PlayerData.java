@@ -242,7 +242,7 @@ public class PlayerData {
                     return;
                 }
             } else health = Math.max(-5, health);
-            Bukkit.broadcast(rMsg(String.valueOf(health)));
+            if (health < 0) Bukkit.broadcast(rMsg(String.valueOf(health)));
         } else health = Math.min(health - amount, role.getMaxHealth());
         player.setHealth(Math.max(0.1, 20 * health / role.getMaxHealth()));
         //减速

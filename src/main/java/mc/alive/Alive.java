@@ -1,13 +1,16 @@
 package mc.alive;
 
+import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.game.Game;
 import mc.alive.game.PlayerData;
 import mc.alive.game.TickRunner;
 import mc.alive.game.effect.Giddy;
+import mc.alive.game.gun.CabinGuardian;
 import mc.alive.game.gun.ChamberPistol;
 import mc.alive.game.gun.ChamberShotgun;
 import mc.alive.game.gun.Gun;
@@ -19,15 +22,19 @@ import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -192,7 +199,7 @@ public final class Alive extends JavaPlugin implements Listener {
                 event.setCancelled(true);
             } else if (data >= 80000 && data < 90000 && getPlayerData(player).getRole() instanceof Survivor) {
                 //枪
-                game.guns.get(item).shoot(player);
+                game.guns.get(item).startShoot(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {
@@ -205,7 +212,6 @@ public final class Alive extends JavaPlugin implements Listener {
             }
         }
 
-        event.setCancelled(true);
     }
 
     @EventHandler
@@ -215,7 +221,7 @@ public final class Alive extends JavaPlugin implements Listener {
         var item = event.getCurrentItem();
         if (event.getRawSlot() > event.getInventory().getSize() && item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData()) {
             var data = item.getItemMeta().getCustomModelData();
-            if (data >= 10000 && data <= 20000) {
+            if ((data >= 10000 && data <= 20000) || data == 90000) {
                 event.setCancelled(true);
             }
         }
@@ -231,10 +237,29 @@ public final class Alive extends JavaPlugin implements Listener {
         var itemStack = event.getItemDrop().getItemStack();
         if (itemStack.hasItemMeta()) {
             var itemMeta = itemStack.getItemMeta();
-            if (itemMeta.hasCustomModelData() && itemMeta.getCustomModelData() >= 10000 && itemMeta.getCustomModelData() <= 20000) {
+            if (itemMeta.hasCustomModelData()
+                    && (itemMeta.getCustomModelData() >= 10000 && itemMeta.getCustomModelData() <= 20000)
+                    || itemMeta.getCustomModelData() == 90000
+            ) {
                 event.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler
+    public void onStopUsing(PlayerStopUsingItemEvent event) {
+        if (game == null || game.chooseRole != null) return;
+        var player = event.getPlayer();
+        var gun = game.guns.get(player.getInventory().getItemInMainHand());
+        if (gun != null) {
+            gun.stopShoot(player);
+        }
+    }
+
+    @EventHandler
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        if (game == null || game.chooseRole != null) return;
+        if (event.getEntityType() == EntityType.ARROW) event.setCancelled(true);
     }
 
     @EventHandler
@@ -249,7 +274,11 @@ public final class Alive extends JavaPlugin implements Listener {
         if (game == null || game.chooseRole != null) return;
 
         var pd = getPlayerData(player);
-        if (pd.hasEffect(Giddy.class) || !pd.canMove()) {
+        if (pd.hasEffect(Giddy.class)) {
+            event.setCancelled(true);
+            return;
+        } else if (!pd.canMove()) {
+            player.teleport(event.getFrom().setDirection(event.getTo().getDirection()));
             event.setCancelled(true);
             return;
         }
@@ -301,14 +330,20 @@ public final class Alive extends JavaPlugin implements Listener {
                                     game.guns.put(it, new ChamberPistol(it));
                                     pl.getInventory().addItem(it);
                                     var it2 = Gun.getGunItemStack(80001);
-                                    game.guns.put(it2, new ChamberShotgun(it));
+                                    game.guns.put(it2, new ChamberShotgun(it2));
                                     pl.getInventory().addItem(it2);
-                                    pl.getInventory().addItem(
-                                            ItemBuilder.material(Material.DIAMOND, 90000)
-                                                    .name(Component.text("舱室标准弹"))
-                                                    .amount(64)
-                                                    .build()
-                                    );
+                                    var it3 = Gun.getGunItemStack(80002);
+                                    game.guns.put(it3, new CabinGuardian(it3));
+                                    pl.getInventory().addItem(it3);
+                                    for (int i = 0; i < 5; i++) {
+                                        pl.getInventory().addItem(
+                                                ItemBuilder.material(Material.DIAMOND, 90001)
+                                                        .name(Component.text("舱室标准弹"))
+                                                        .amount(64)
+                                                        .build()
+                                        );
+                                    }
+
                                 }
                                 return Command.SINGLE_SUCCESS;
                             }).build(),
@@ -348,14 +383,22 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onChangeMainHand(PlayerItemHeldEvent event) {
+    public void onChangeMainHandItem(PlayerItemHeldEvent event) {
         if (game == null || game.chooseRole != null) return;
         var player = event.getPlayer();
-        var it = player.getInventory().getItem(event.getPreviousSlot());
-        if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasCustomModelData()) return;
-        var data = it.getItemMeta().getCustomModelData();
-        if (data >= 80000 && data < 90000) {
-            game.guns.get(it).changeItem();
+        //noinspection DataFlowIssue
+        player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
+        var pre_it = player.getInventory().getItem(event.getPreviousSlot());
+        if (pre_it == null || !pre_it.hasItemMeta() || !pre_it.getItemMeta().hasCustomModelData()) return;
+        var data1 = pre_it.getItemMeta().getCustomModelData();
+        if (data1 >= 80000 && data1 < 90000) {
+            game.guns.get(pre_it).handleItemChange(player, true);
+        }
+        var new_it = player.getInventory().getItem(event.getNewSlot());
+        if (new_it == null || !new_it.hasItemMeta() || !new_it.getItemMeta().hasCustomModelData()) return;
+        var data2 = new_it.getItemMeta().getCustomModelData();
+        if (data2 >= 80000 && data2 < 90000) {
+            game.guns.get(new_it).handleItemChange(player, false);
         }
     }
 
