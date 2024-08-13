@@ -12,7 +12,6 @@ import mc.alive.game.effect.Giddy;
 import mc.alive.game.gun.CabinGuardian;
 import mc.alive.game.gun.ChamberPistol;
 import mc.alive.game.gun.ChamberShotgun;
-import mc.alive.game.gun.Gun;
 import mc.alive.game.role.hunter.Hunter;
 import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.MainMenu;
@@ -114,13 +113,13 @@ public final class Alive extends JavaPlugin implements Listener {
                     Commands.literal("gun")
                             .executes(ctx -> {
                                 if (ctx.getSource().getSender() instanceof Player pl && game != null) {
-                                    var it = Gun.getGunItemStack(80000);
+                                    var it = ItemBuilder.getGunItemStack(80000);
                                     game.guns.put(it, new ChamberPistol(it));
                                     pl.getInventory().addItem(it);
-                                    var it2 = Gun.getGunItemStack(80001);
+                                    var it2 = ItemBuilder.getGunItemStack(80001);
                                     game.guns.put(it2, new ChamberShotgun(it2));
                                     pl.getInventory().addItem(it2);
-                                    var it3 = Gun.getGunItemStack(80002);
+                                    var it3 = ItemBuilder.getGunItemStack(80002);
                                     game.guns.put(it3, new CabinGuardian(it3));
                                     pl.getInventory().addItem(it3);
                                     for (int i = 0; i < 5; i++) {
@@ -400,7 +399,7 @@ public final class Alive extends JavaPlugin implements Listener {
         }
     }
 
-//    @EventHandler
+    //    @EventHandler
     public void onChat(AsyncChatEvent event) {
         if (game == null) return;
 

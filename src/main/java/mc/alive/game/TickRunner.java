@@ -2,6 +2,7 @@ package mc.alive.game;
 
 import mc.alive.game.role.Role;
 import mc.alive.game.role.hunter.Hunter;
+import mc.alive.game.role.survivor.Survivor;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
@@ -14,10 +15,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static mc.alive.Alive.game;
+import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.util.Message.rMsg;
 
 public class TickRunner extends BukkitRunnable {
@@ -65,7 +69,7 @@ public class TickRunner extends BukkitRunnable {
 
             //playerData
             if (game.chooseRole != null) return;
-            var pd = PlayerData.getPlayerData(player);
+            var pd = getPlayerData(player);
             if (pd != null) {
                 if (pd.getRole() instanceof Hunter) {
                     //hunter
@@ -104,6 +108,22 @@ public class TickRunner extends BukkitRunnable {
             if (m != null) {
                 chosen_duct = m.getLocation();
             }
+        }
+
+        //物品拾取
+        List<ItemDisplay> removes = new ArrayList<>();
+        game.items.forEach((itemDisplay, pickUp) -> itemDisplay.getWorld().getNearbyPlayers(itemDisplay.getLocation(), 1,
+                pl -> switch (pickUp) {
+                    case BOTH -> true;
+                    case HUNTER -> getPlayerData(pl).getRole() instanceof Hunter;
+                    case SURVIVOR -> getPlayerData(pl).getRole() instanceof Survivor;
+                }).stream().findAny().ifPresent(player1 -> {
+            player1.getInventory().addItem(itemDisplay.getItemStack());
+            removes.add(itemDisplay);
+        }));
+        for (ItemDisplay remove : removes) {
+            game.items.remove(remove);
+            remove.remove();
         }
     }
 }

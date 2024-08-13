@@ -20,7 +20,6 @@ import java.util.TimerTask;
 
 import static mc.alive.Alive.game;
 import static mc.alive.Alive.plugin;
-import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
 
 public abstract class Gun {
@@ -51,15 +50,6 @@ public abstract class Gun {
         this.capacity = capacity;
         this.shoot_interval = shoot_interval;
         this.reload_time = reload_time;
-    }
-
-    public static ItemStack getGunItemStack(int data) {
-        return ItemBuilder.material(Material.BOW, data).name(switch (data) {
-            case 80000 -> text("手枪");
-            case 80001 -> text("霰弹枪");
-            case 80002 -> text("冲锋枪");
-            default -> empty();
-        }).build();
     }
 
     public void startShoot(Player player) {
@@ -152,7 +142,7 @@ public abstract class Gun {
     }
 
     //射击路径
-    protected Result shootPath(Player player) {
+    protected ResultPath shootPath(Player player) {
         var result = player.getWorld().rayTrace(
                 player.getEyeLocation(),
                 player.getLocation().getDirection(),
@@ -166,11 +156,11 @@ public abstract class Gun {
             var target = result.getHitEntity();
             if (target != null) {
                 var position = result.getHitPosition();
-                return new Result(Factory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
+                return new ResultPath(Factory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
             }
         }
         var end = player.getEyeLocation().add(player.getLocation().getDirection().normalize().multiply(100));
-        return new Result(Factory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));
+        return new ResultPath(Factory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));
     }
 
     //重新装填
@@ -257,8 +247,8 @@ public abstract class Gun {
         }
     }
 
-    public record Result(List<Location> path, Player target) {
-        public Result(List<Location> path) {
+    public record ResultPath(List<Location> path, Player target) {
+        public ResultPath(List<Location> path) {
             this(path, null);
         }
     }

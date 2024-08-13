@@ -7,6 +7,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.text;
+
 public final class ItemBuilder {
     private final ItemStack item;
 
@@ -22,6 +25,15 @@ public final class ItemBuilder {
         return new ItemBuilder(type);
     }
 
+    public static ItemStack getGunItemStack(int data) {
+        return material(Material.BOW, data).name(switch (data) {
+            case 80000 -> text("手枪");
+            case 80001 -> text("霰弹枪");
+            case 80002 -> text("冲锋枪");
+            default -> empty();
+        }).build();
+    }
+
     public static ItemBuilder material(Material type, int data) {
         return new ItemBuilder(type).data(data);
     }
@@ -31,17 +43,17 @@ public final class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder hideAttributes() {
-        item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES));
-        return this;
-    }
-
     public ItemStack build() {
         return item;
     }
 
     public ItemBuilder name(Component name) {
         item.editMeta(meta -> meta.displayName(name));
+        return this;
+    }
+
+    public ItemBuilder hideAttributes() {
+        item.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES));
         return this;
     }
 

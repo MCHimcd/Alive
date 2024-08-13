@@ -9,8 +9,8 @@ public class ChamberShotgun extends Shotgun {
                 15f,
                 BulletType.Chamber_Standard_Cartridge,
                 5,
-                10,
-                2000,
+                5,
+                100,
                 60
         );
     }
@@ -24,6 +24,4 @@ public class ChamberShotgun extends Shotgun {
     int getBulletsCount() {
         return 8;
     }
-
-
 }

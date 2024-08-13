@@ -31,6 +31,7 @@ public class Game {
     public final List<Player> survivors;
     public final Player hunter;
     public final Map<ItemStack, Gun> guns = new HashMap<>();
+    public final Map<ItemDisplay, PickUp> items = new HashMap<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
@@ -51,6 +52,13 @@ public class Game {
                 chooseRole.nextChoose();
             }
         }.runTaskLater(plugin, 1);
+    }
+
+    public void spawnItem(ItemStack item, Location location, PickUp pickUp) {
+        location.getWorld().spawn(location, ItemDisplay.class, itemDisplay -> {
+            itemDisplay.setItemStack(item);
+            items.put(itemDisplay, pickUp);
+        });
     }
 
     public void start() {
@@ -162,6 +170,7 @@ public class Game {
         }
         markers.forEach(Entity::remove);
         fix_progress.keySet().forEach(Entity::remove);
+        items.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
     }
 
@@ -188,5 +197,9 @@ public class Game {
                 editMeta(meta -> ((SkullMeta) meta).setOwningPlayer(player));
             }});
         }));
+    }
+
+    public enum PickUp {
+        BOTH, HUNTER, SURVIVOR
     }
 }

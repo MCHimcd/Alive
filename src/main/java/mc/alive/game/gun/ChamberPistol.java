@@ -6,7 +6,7 @@ public class ChamberPistol extends Gun {
     public ChamberPistol(ItemStack item) {
         super(
                 item,
-                2f,//0.05
+                2f,
                 BulletType.Chamber_Standard_Cartridge,
                 10,
                 10,

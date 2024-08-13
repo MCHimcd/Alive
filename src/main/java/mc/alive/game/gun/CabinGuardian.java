@@ -6,12 +6,12 @@ public class CabinGuardian extends Gun {
     public CabinGuardian(ItemStack item) {
         super(
                 item,
-                2f,//0.05
-                Gun.BulletType.Chamber_Standard_Cartridge,
-                3,
-                25,
-                20,
-                30
+                3f,
+                BulletType.Chamber_Standard_Cartridge,
+                10,
+                30,
+                100,
+                50
         );
     }
 }
