@@ -2,6 +2,7 @@ package mc.alive.game.gun;
 
 import mc.alive.Alive;
 import mc.alive.game.PlayerData;
+import mc.alive.game.game_item.GameItem;
 import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
@@ -29,7 +30,7 @@ public abstract class Gun {
     protected final int capacity;
     //mSec
     protected final long shoot_interval;
-    private final BulletType bulletType;
+    private final Class<? extends GameItem> bulletType;
     private final ItemStack item;
     //tick
     private final int reload_time;
@@ -42,7 +43,7 @@ public abstract class Gun {
     //枪的数值 和 模型id
     //后坐力  子弹类型  伤害  最大容量 穿透力
 
-    protected Gun(ItemStack item, float reactiveForce, BulletType bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
+    protected Gun(ItemStack item, float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
         this.item = item;
         this.reactiveForce = reactiveForce;
         this.bulletType = bulletType;
@@ -190,14 +191,18 @@ public abstract class Gun {
         }.runTaskTimer(Alive.plugin, 0, 1);
     }
 
-    private static int findBullet(Player player, BulletType bulletType, int count, boolean remove) {
+    private static int findBullet(Player player, Class<? extends GameItem> bulletType, int count, boolean remove) {
         int finalCount = 0;
         var contents = player.getInventory().getContents();
         for (int i = 0; i < contents.length; i++) {
             var it = player.getInventory().getItem(i);
             if (it == null || !it.hasItemMeta() || !it.getItemMeta().hasCustomModelData()) continue;
             var data = it.getItemMeta().getCustomModelData();
-            if (data != bulletType.getData()) continue;
+            try {
+                if (data != bulletType.getDeclaredConstructor().newInstance().customModelData()) continue;
+            } catch (Exception e) {
+                plugin.getLogger().info(e.getLocalizedMessage());
+            }
             if (it.getAmount() > count) {
                 finalCount += count;
                 if (remove) it.setAmount(it.getAmount() - count);
@@ -230,20 +235,6 @@ public abstract class Gun {
                     if (remained_bullet > 0) setCanShoot(player, true);
                 }
             }.runTaskLater(plugin, 20);
-        }
-    }
-
-    public enum BulletType {
-        Chamber_Standard_Cartridge(90001);
-
-        private final int data;
-
-        BulletType(int data) {
-            this.data = data;
-        }
-
-        public int getData() {
-            return data;
         }
     }
 

@@ -62,8 +62,8 @@ public final class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder lore(Component... lore) {
-        item.editMeta(meta -> meta.lore(List.of(lore)));
+    public ItemBuilder lore(List<Component> lore) {
+        item.editMeta(meta -> meta.lore(lore));
         return this;
     }
 

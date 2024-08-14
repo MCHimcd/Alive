@@ -1,5 +1,6 @@
 package mc.alive.game.gun;
 
+import mc.alive.game.game_item.ChamberStandardCartridge;
 import org.bukkit.inventory.ItemStack;
 
 public class ChamberPistol extends Gun {
@@ -7,7 +8,7 @@ public class ChamberPistol extends Gun {
         super(
                 item,
                 2f,
-                BulletType.Chamber_Standard_Cartridge,
+                ChamberStandardCartridge.class,
                 10,
                 10,
                 500,

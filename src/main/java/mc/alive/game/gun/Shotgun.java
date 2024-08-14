@@ -1,6 +1,7 @@
 package mc.alive.game.gun;
 
 import mc.alive.game.PlayerData;
+import mc.alive.game.game_item.GameItem;
 import mc.alive.util.Factory;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -16,7 +17,7 @@ import java.util.Random;
 import static mc.alive.Alive.game;
 
 public abstract class Shotgun extends Gun {
-    protected Shotgun(ItemStack item, float reactiveForce, BulletType bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
+    protected Shotgun(ItemStack item, float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
         super(item, reactiveForce, bulletType, damage, capacity, shoot_interval, reload_time);
     }
 

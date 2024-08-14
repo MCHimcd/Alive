@@ -43,7 +43,7 @@ public class MainMenu extends SlotMenu {
         if (prepared.contains(p)) {
             setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                     .name(rMsg("点击取消准备", NamedTextColor.RED))
-                    .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
+                    .lore(Collections.singletonList(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY)))
                     .build(), (it, pl) -> {
                 // 取消准备
                 prepared.remove(pl);
@@ -86,7 +86,7 @@ public class MainMenu extends SlotMenu {
                 if (prepared.contains(player1)) {
                     m.setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                             .name(rMsg("点击取消准备", NamedTextColor.RED))
-                            .lore(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY))
+                            .lore(Collections.singletonList(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY)))
                             .build(), (it, pl) -> {
                         // 取消准备
                         prepared.remove(pl);

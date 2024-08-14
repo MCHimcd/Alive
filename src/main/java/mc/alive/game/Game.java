@@ -1,11 +1,12 @@
 package mc.alive.game;
 
-import mc.alive.Alive;
+import mc.alive.game.game_item.Air;
+import mc.alive.game.game_item.ChamberStandardCartridge;
+import mc.alive.game.game_item.GameItem;
 import mc.alive.game.gun.Gun;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
 import mc.alive.util.ItemBuilder;
-import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -15,6 +16,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.time.Duration;
 import java.util.*;
@@ -54,13 +58,6 @@ public class Game {
         }.runTaskLater(plugin, 1);
     }
 
-    public void spawnItem(ItemStack item, Location location, PickUp pickUp) {
-        location.getWorld().spawn(location, ItemDisplay.class, itemDisplay -> {
-            itemDisplay.setItemStack(item);
-            items.put(itemDisplay, pickUp);
-        });
-    }
-
     public void start() {
         new BukkitRunnable() {
             int t = 99;
@@ -69,9 +66,9 @@ public class Game {
             public void run() {
                 t++;
                 if (t % 10 == 0) {
-                    Component progressBar = Message.rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
+                    Component progressBar = rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
                     Title title = Title.title(
-                            Message.rMsg("<rainbow> --游戏加载中--"),
+                            rMsg("<rainbow> --游戏加载中--"),
                             progressBar,
                             Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
                     );
@@ -113,11 +110,36 @@ public class Game {
                 fix_progress.put(id, 0);
             });
         }
+
+        //可拾取物品
+        for (var s : new String[]{"2 -60 13"}) {
+            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+            spawnItem(ChamberStandardCartridge.class, new Location(world, xyz[0], xyz[1], xyz[2]), PickUp.SURVIVOR);
+        }
+    }
+
+    public void spawnItem(Class<? extends GameItem> game_item, Location location, PickUp pickUp) {
+        location.getWorld().spawn(location, ItemDisplay.class, itemDisplay -> {
+            GameItem item = new Air();
+            try {
+                item = game_item.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                plugin.getLogger().info(e.getLocalizedMessage());
+            }
+            itemDisplay.setItemStack(ItemBuilder.material(item.material()).name(item.name()).data(item.customModelData()).lore(item.lore()).build());
+            itemDisplay.setTransformation(new Transformation(
+                    new Vector3f(),
+                    new AxisAngle4f(),
+                    new Vector3f(1, 1, 1),
+                    new AxisAngle4f()
+            ));
+            items.put(itemDisplay, pickUp);
+        });
     }
 
     public void end() {
         destroy();
-        Alive.game = null;
+        game = null;
         playerData.keySet().forEach(Game::resetPlayer);
         Bukkit.getScheduler().cancelTasks(plugin);
         new TickRunner().runTaskTimer(plugin, 0, 1);
