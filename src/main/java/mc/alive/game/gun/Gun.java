@@ -2,9 +2,8 @@ package mc.alive.game.gun;
 
 import mc.alive.Alive;
 import mc.alive.game.PlayerData;
-import mc.alive.game.game_item.GameItem;
+import mc.alive.game.item.GameItem;
 import mc.alive.util.Factory;
-import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
@@ -127,15 +126,12 @@ public abstract class Gun {
                 if (remained_bullet > 0) setCanShoot(player, true);
             }
         }, shoot_interval);
-        player.getInventory().setItem(35, null);
-
     }
 
     @SuppressWarnings("DataFlowIssue")
     private void setCanShoot(Player player, boolean value) {
         canShoot = value;
         if (canShoot) {
-            player.getInventory().setItem(35, ItemBuilder.material(Material.ARROW, 90000).build());
             player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
         } else {
             player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(-1);
@@ -225,7 +221,6 @@ public abstract class Gun {
                 reload_task.cancel();
             }
             timer.cancel();
-            player.getInventory().setItem(35, new ItemStack(Material.AIR));
         } else {
             //切换之后的
             setCanShoot(player, false);

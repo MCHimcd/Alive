@@ -1,4 +1,4 @@
-package mc.alive.game.game_item;
+package mc.alive.game.item;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -24,6 +24,13 @@ public class ChamberStandardCartridge extends GameItem {
 
     @Override
     public Material material() {
-        return null;
+        return Material.DIAMOND;
     }
+
+    @Override
+    public PickUp pickUp() {
+        return PickUp.SURVIVOR;
+    }
+
+
 }

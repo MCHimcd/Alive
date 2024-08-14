@@ -12,6 +12,7 @@ import mc.alive.game.effect.Giddy;
 import mc.alive.game.gun.CabinGuardian;
 import mc.alive.game.gun.ChamberPistol;
 import mc.alive.game.gun.ChamberShotgun;
+import mc.alive.game.item.PickUp;
 import mc.alive.game.role.hunter.Hunter;
 import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.MainMenu;
@@ -43,11 +44,13 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.util.List;
+import java.util.UUID;
 
 import static mc.alive.game.Game.t_hunter;
 import static mc.alive.game.Game.t_survivor;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.TickRunner.chosen_item_display;
+import static mc.alive.game.item.PickUp.*;
 import static mc.alive.menu.MainMenu.doc;
 import static mc.alive.menu.MainMenu.prepared;
 import static org.bukkit.Bukkit.*;
@@ -202,6 +205,29 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onPickUp(PlayerAttemptPickupItemEvent event) {
+        if (game == null || game.chooseRole != null) return;
+        var item = event.getItem();
+        if (item.isOnGround() && game.items.containsKey(item)) {
+            var pickUp = game.items.get(item);
+            var npl = item.getWorld().getNearbyPlayers(item.getLocation(), 1,
+                    pl -> switch (pickUp) {
+                        case BOTH -> true;
+                        case HUNTER -> getPlayerData(pl).getRole() instanceof Hunter;
+                        case SURVIVOR -> getPlayerData(pl).getRole() instanceof Survivor;
+                    }).stream().findAny();
+            if (npl.isPresent()) {
+                item.setPickupDelay(0);
+                item.setOwner(npl.get().getUniqueId());
+                game.items.remove(item);
+            } else {
+                item.setOwner(new UUID(0, 0));
+            }
+        }
+
+    }
+
+    @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
 
@@ -289,6 +315,14 @@ public final class Alive extends JavaPlugin implements Listener {
                     || itemMeta.getCustomModelData() == 90000
             ) {
                 event.setCancelled(true);
+            } else if (itemMeta.getCustomModelData() > 90000 && itemMeta.getCustomModelData() <= 100000 && game != null && game.chooseRole == null) {
+                var item = event.getItemDrop();
+                item.setCanMobPickup(false);
+                PickUp pickUp = BOTH;
+                var pd = game.playerData.get(event.getPlayer());
+                if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;
+                else if (pd.getRole() instanceof Hunter) pickUp = HUNTER;
+                game.items.put(item, pickUp);
             }
         }
     }
@@ -301,6 +335,12 @@ public final class Alive extends JavaPlugin implements Listener {
         if (gun != null) {
             gun.stopShoot(player);
         }
+    }
+
+    @EventHandler
+    public void avoidConsume(PlayerItemConsumeEvent event) {
+        var item = event.getItem();
+        if (item.getType() == Material.HONEY_BOTTLE) event.setCancelled(true);
     }
 
     @EventHandler

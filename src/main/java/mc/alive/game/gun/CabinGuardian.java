@@ -1,6 +1,6 @@
 package mc.alive.game.gun;
 
-import mc.alive.game.game_item.ChamberStandardCartridge;
+import mc.alive.game.item.ChamberStandardCartridge;
 import org.bukkit.inventory.ItemStack;
 
 public class CabinGuardian extends Gun {

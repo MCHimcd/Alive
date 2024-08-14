@@ -1,9 +1,10 @@
 package mc.alive.game;
 
-import mc.alive.game.game_item.Air;
-import mc.alive.game.game_item.ChamberStandardCartridge;
-import mc.alive.game.game_item.GameItem;
 import mc.alive.game.gun.Gun;
+import mc.alive.game.item.Air;
+import mc.alive.game.item.ChamberStandardCartridge;
+import mc.alive.game.item.GameItem;
+import mc.alive.game.item.PickUp;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ChooseRole;
 import mc.alive.util.ItemBuilder;
@@ -16,9 +17,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
-import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
-import org.joml.Vector3f;
 
 import java.time.Duration;
 import java.util.*;
@@ -35,7 +33,7 @@ public class Game {
     public final List<Player> survivors;
     public final Player hunter;
     public final Map<ItemStack, Gun> guns = new HashMap<>();
-    public final Map<ItemDisplay, PickUp> items = new HashMap<>();
+    public final Map<Item, PickUp> items = new HashMap<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
@@ -52,7 +50,6 @@ public class Game {
         new BukkitRunnable() {
             @Override
             public void run() {
-
                 chooseRole.nextChoose();
             }
         }.runTaskLater(plugin, 1);
@@ -119,21 +116,17 @@ public class Game {
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, PickUp pickUp) {
-        location.getWorld().spawn(location, ItemDisplay.class, itemDisplay -> {
+        location.getWorld().spawn(location, Item.class, item1 -> {
             GameItem item = new Air();
             try {
                 item = game_item.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 plugin.getLogger().info(e.getLocalizedMessage());
             }
-            itemDisplay.setItemStack(ItemBuilder.material(item.material()).name(item.name()).data(item.customModelData()).lore(item.lore()).build());
-            itemDisplay.setTransformation(new Transformation(
-                    new Vector3f(),
-                    new AxisAngle4f(),
-                    new Vector3f(1, 1, 1),
-                    new AxisAngle4f()
-            ));
-            items.put(itemDisplay, pickUp);
+            item1.setItemStack(ItemBuilder.material(item.material()).name(item.name()).data(item.customModelData()).lore(item.lore()).build());
+            item1.setCanMobPickup(false);
+            item1.setWillAge(false);
+            items.put(item1, pickUp);
         });
     }
 
@@ -221,7 +214,4 @@ public class Game {
         }));
     }
 
-    public enum PickUp {
-        BOTH, HUNTER, SURVIVOR
-    }
 }

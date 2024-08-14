@@ -1,4 +1,4 @@
-package mc.alive.game.game_item;
+package mc.alive.game.item;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -24,5 +24,10 @@ public class Air extends GameItem {
     @Override
     public Material material() {
         return Material.AIR;
+    }
+
+    @Override
+    public PickUp pickUp() {
+        return PickUp.BOTH;
     }
 }

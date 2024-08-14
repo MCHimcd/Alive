@@ -1,7 +1,7 @@
 package mc.alive.game.gun;
 
 import mc.alive.game.PlayerData;
-import mc.alive.game.game_item.GameItem;
+import mc.alive.game.item.GameItem;
 import mc.alive.util.Factory;
 import org.bukkit.Color;
 import org.bukkit.Location;

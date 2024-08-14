@@ -26,7 +26,7 @@ public final class ItemBuilder {
     }
 
     public static ItemStack getGunItemStack(int data) {
-        return material(Material.BOW, data).name(switch (data) {
+        return material(Material.HONEY_BOTTLE, data).name(switch (data) {
             case 80000 -> text("手枪");
             case 80001 -> text("霰弹枪");
             case 80002 -> text("冲锋枪");
