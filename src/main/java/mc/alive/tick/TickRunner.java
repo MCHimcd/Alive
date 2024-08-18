@@ -13,7 +13,7 @@ public class TickRunner extends BukkitRunnable {
 
     public TickRunner() {
         tickRunnable.add(new PlayerTickrunnable());
-        tickRunnable.add(new LiftTickrunnable());
+        tickRunnable.add(new MechanismTickrunnable());
     }
 
     @Override

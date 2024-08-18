@@ -7,6 +7,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.game.Game;
 import mc.alive.listener.GunListener;
 import mc.alive.listener.ItemListener;
+import mc.alive.listener.MechanismListener;
 import mc.alive.listener.PlayerListener;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
@@ -52,6 +53,7 @@ public final class Alive extends JavaPlugin implements Listener {
         manager.registerEvents(new ItemListener(), this);
         manager.registerEvents(new PlayerListener(), this);
         manager.registerEvents(new GunListener(), this);
+        manager.registerEvents(new MechanismListener(), this);
     }
 
     private void initScoreboard() {

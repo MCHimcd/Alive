@@ -8,6 +8,7 @@ import mc.alive.game.item.gun.CabinGuardian;
 import mc.alive.game.item.gun.ChamberPistol;
 import mc.alive.game.item.gun.ChamberShotgun;
 import mc.alive.game.item.gun.Gun;
+import mc.alive.game.mechanism.Lift;
 import mc.alive.game.role.Role;
 import mc.alive.menu.MainMenu;
 import mc.alive.tick.PlayerTickrunnable;
@@ -54,7 +55,6 @@ public class Game {
     public final Map<ItemStack, Gun> guns = new HashMap<>();
     public final Map<Item, PickUp> item_on_ground = new HashMap<>();
     public final Map<BlockDisplay, Lift> lifts = new HashMap<>();
-    public final Map<Player, BlockDisplay> player_in_lift = new HashMap<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
@@ -134,7 +134,7 @@ public class Game {
         }
 
         //电梯
-        for (var s : new String[]{"4 -56.3 16"}) {
+        for (var s : new String[]{"4 -59.3 16"}) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
             var blockDisplay = world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
                 bd.setTransformation(new Transformation(
@@ -145,7 +145,7 @@ public class Game {
                 ));
                 bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
             });
-            lifts.put(blockDisplay, new Lift(blockDisplay));
+            lifts.put(blockDisplay, new Lift(blockDisplay, 3));
         }
 
         //可拾取物品
@@ -156,11 +156,11 @@ public class Game {
                 "2 -60 13 1   ", CabinGuardian.class
         ).forEach((key, value) -> {
             var xyz = Arrays.stream(key.strip().split(" ")).mapToDouble(Double::parseDouble).toArray();
-            spawnItem(value, new Location(world, xyz[0], xyz[1], xyz[2]), PickUp.SURVIVOR, (int) xyz[3]);
+            spawnItem(value, new Location(world, xyz[0], xyz[1], xyz[2]), (int) xyz[3]);
         });
     }
 
-    public void spawnItem(Class<? extends GameItem> game_item, Location location, PickUp pickUp, int amount) {
+    public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
         location.getWorld().spawn(location, Item.class, item_entity -> {
             GameItem item = new Air();
             try {
@@ -186,7 +186,7 @@ public class Game {
             item_entity.setCustomNameVisible(true);
             item_entity.setCanMobPickup(false);
             item_entity.setWillAge(false);
-            item_on_ground.put(item_entity, pickUp);
+            item_on_ground.put(item_entity, item.pickUp());
         });
     }
 
@@ -247,7 +247,20 @@ public class Game {
         fix_progress.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
-        lifts.keySet().forEach(Entity::remove);
+        for (BlockDisplay blockDisplay : lifts.keySet()) {
+            replace2x2(blockDisplay.getLocation(), Material.AIR);
+            blockDisplay.remove();
+        }
+    }
+
+    public static void replace2x2(Location loc, Material material) {
+        loc.getBlock().setType(material);
+        loc.add(1, 0, 0);
+        loc.getBlock().setType(material);
+        loc.add(0, 0, 1);
+        loc.getBlock().setType(material);
+        loc.add(-1, 0, 0);
+        loc.getBlock().setType(material);
     }
 
     public int fix(ItemDisplay id, int amount) {
