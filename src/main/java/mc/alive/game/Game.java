@@ -9,15 +9,19 @@ import mc.alive.game.item.gun.ChamberPistol;
 import mc.alive.game.item.gun.ChamberShotgun;
 import mc.alive.game.item.gun.Gun;
 import mc.alive.game.mechanism.Lift;
+import mc.alive.game.mechanism.LiftDoor;
 import mc.alive.game.role.Role;
 import mc.alive.menu.MainMenu;
 import mc.alive.tick.PlayerTickrunnable;
 import mc.alive.tick.TickRunner;
+import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -55,7 +59,8 @@ public class Game {
     public final Map<ItemStack, Gun> guns = new HashMap<>();
     public final Map<Item, PickUp> item_on_ground = new HashMap<>();
     public final Map<BlockDisplay, Lift> lifts = new HashMap<>();
-    private final List<Entity> markers = new LinkedList<>();
+    public final Map<Block, LiftDoor> liftDoors = new HashMap<>();
+    public final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
 
@@ -134,8 +139,10 @@ public class Game {
         }
 
         //电梯
-        for (var s : new String[]{"4 -59.3 16"}) {
-            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+        Map.of(
+                "4 -59.3 16", "3 -58 14,3 -55 14,3 -52 14,-2 -59 10,9 -59 12,5 -59 9"
+        ).forEach((l, ld) -> {
+            var xyz = Arrays.stream(l.split(" ")).mapToDouble(Double::parseDouble).toArray();
             var blockDisplay = world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
                 bd.setTransformation(new Transformation(
                         new Vector3f(),
@@ -145,8 +152,20 @@ public class Game {
                 ));
                 bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
             });
-            lifts.put(blockDisplay, new Lift(blockDisplay, 3));
-        }
+            var lift = new Lift(blockDisplay, 3);
+            lifts.put(blockDisplay, lift);
+            //电梯门
+            var ss = ld.split(",");
+            for (int i = 0; i < ss.length; i++) {
+
+                var xyz1 = Arrays.stream(ss[i].split(" ")).mapToInt(Integer::parseInt).toArray();
+                var block = world.getBlockAt(xyz1[0], xyz1[1], xyz1[2]);
+                LiftDoor liftDoor = new LiftDoor(block, lift, i + 1);
+                if (i == 0) liftDoor.openDoor();
+                else liftDoor.closeDoor();
+                liftDoors.put(block, liftDoor);
+            }
+        });
 
         //可拾取物品
         Map.of(
@@ -243,24 +262,14 @@ public class Game {
         if (chooseRole != null) {
             chooseRole.roles.keySet().forEach(Entity::remove);
         }
-        markers.forEach(Entity::remove);
         fix_progress.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
         for (BlockDisplay blockDisplay : lifts.keySet()) {
-            replace2x2(blockDisplay.getLocation(), Material.AIR);
+            Factory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
             blockDisplay.remove();
         }
-    }
-
-    public static void replace2x2(Location loc, Material material) {
-        loc.getBlock().setType(material);
-        loc.add(1, 0, 0);
-        loc.getBlock().setType(material);
-        loc.add(0, 0, 1);
-        loc.getBlock().setType(material);
-        loc.add(-1, 0, 0);
-        loc.getBlock().setType(material);
+        markers.forEach(Entity::remove);
     }
 
     public int fix(ItemDisplay id, int amount) {

@@ -1,9 +1,10 @@
 package mc.alive.game.mechanism;
 
 import io.papermc.paper.entity.TeleportFlag;
-import mc.alive.game.Game;
+import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import org.bukkit.Material;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.HumanEntity;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -24,14 +26,15 @@ public class Lift {
     private final BlockDisplay blockDisplay;
     private final int max_floor;
     public List<Player> players = new ArrayList<>();
+    public List<LiftDoor> liftDoors = new ArrayList<>();
     private int floor = 1;
     private int target_floor = 0;
+    private BukkitTask task;
 
     public Lift(BlockDisplay blockDisplay, int max_floor) {
         this.blockDisplay = blockDisplay;
         this.max_floor = max_floor;
-        var loc = blockDisplay.getLocation();
-        Game.replace2x2(blockDisplay.getLocation(), Material.BARRIER);
+        Factory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
     }
 
     /**
@@ -46,9 +49,7 @@ public class Lift {
                 meta.addEnchant(Enchantment.UNBREAKING, 1, true);
                 meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             });
-            result.add(new Result(is, (_, _) -> {
-                changeFloorTo(finalI);
-            }));
+            result.add(new Result(is, (_, _) -> changeFloorTo(finalI)));
         }
         return result;
     }
@@ -57,15 +58,12 @@ public class Lift {
      * @param floor 目标楼层
      */
     public void changeFloorTo(int floor) {
-        if (target_floor == floor) return;
+        if (target_floor == floor || (task != null && !task.isCancelled())) return;
+        task = new RunnableTask(players, blockDisplay, this).runTaskTimer(plugin, 0, 1);
         players.forEach(HumanEntity::closeInventory);
         target_floor = floor;
-        new RunnableTask(players, blockDisplay, this).runTaskTimer(plugin, 0, 1);
     }
 
-    /**
-     * @return 获得当前楼层
-     */
     public int getFloor() {
         return floor;
     }
@@ -99,19 +97,22 @@ public class Lift {
             this.players = players;
             this.blockDisplay = blockDisplay;
             this.lift = lift;
-            Game.replace2x2(blockDisplay.getLocation(), Material.AIR);
+            Factory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
         }
 
         public void run() {
+            if (t == 0)
+                lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::closeDoor);
             if (t++ >= 30) {
                 if (lift.changeFloor()) {
-                    var loc = blockDisplay.getLocation();
-                    Game.replace2x2(blockDisplay.getLocation(), Material.BARRIER);
+                    //到达
+                    Factory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
                     players.forEach(player -> player.teleport(
-                            player.getLocation().add(0, 0.1, 0),
+                            player.getLocation().add(0, 0.3, 0),
                             TeleportFlag.Relative.YAW,
                             TeleportFlag.Relative.PITCH
                     ));
+                    lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::openDoor);
                     cancel();
                 } else {
                     t = 0;

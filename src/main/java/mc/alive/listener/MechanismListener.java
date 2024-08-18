@@ -1,7 +1,10 @@
 package mc.alive.listener;
 
 import mc.alive.game.Game;
+import mc.alive.game.PlayerData;
 import mc.alive.game.mechanism.Lift;
+import mc.alive.game.mechanism.LiftDoor;
+import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.LiftMenu;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +16,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import static mc.alive.game.Game.game;
 
 public class MechanismListener implements Listener {
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (!Game.isStarted()) return;
@@ -24,10 +28,20 @@ public class MechanismListener implements Listener {
         //电梯
         for (Lift lift : game.lifts.values()) {
             if (lift.players.contains(player)) {
-                event.setCancelled(true);
-                player.openInventory(new LiftMenu(player, lift).getInventory());
+                if (PlayerData.getPlayerData(player).getRole() instanceof Survivor) {
+                    event.setCancelled(true);
+                    player.openInventory(new LiftMenu(player, lift).getInventory());
+                }
                 break;
             }
+        }
+
+        //呼叫电梯
+        if (action == Action.RIGHT_CLICK_BLOCK) {
+            var block = event.getClickedBlock();
+            LiftDoor liftDoor = game.liftDoors.get(block);
+            if (liftDoor == null) return;
+            liftDoor.callLift();
         }
 
     }

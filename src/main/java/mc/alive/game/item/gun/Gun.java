@@ -199,7 +199,8 @@ public abstract class Gun extends GameItem {
 
             @Override
             public void run() {
-                Component progressBar = Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(re_time) + "<white>" + "|".repeat(reload_time - re_time));
+                Component progressBar = player.getInventory().getItemInMainHand().getItemMeta().itemName()
+                        .append(Message.rMsg(" 子弹装填中: " + "<aqua>" + "|".repeat(re_time) + "<white>" + "|".repeat(reload_time - re_time)));
                 player.sendActionBar(progressBar);
                 if (re_time % 10 == 0) {
                     player.playSound(player, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, .5f, .5f);

@@ -26,7 +26,7 @@ public class ChamberPistol extends Gun {
 
     @Override
     public Component name() {
-        return rMsg("手枪");
+        return rMsg("<red>标准舱室手枪");
     }
 
     @Override
