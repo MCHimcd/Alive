@@ -5,18 +5,12 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.game.Game;
-import mc.alive.game.item.gun.CabinGuardian;
-import mc.alive.game.item.gun.ChamberPistol;
-import mc.alive.game.item.gun.ChamberShotgun;
 import mc.alive.listener.GunListener;
 import mc.alive.listener.ItemListener;
 import mc.alive.listener.PlayerListener;
 import mc.alive.tick.TickRunner;
-import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -95,34 +89,6 @@ public final class Alive extends JavaPlugin implements Listener {
                             }).build(),
                     "重置游戏",
                     List.of("ar")
-            );
-            cs.register(
-                    Commands.literal("gun")
-                            .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player pl && Game.instance != null) {
-                                    var it = ItemBuilder.getGunItemStack(80000);
-                                    Game.instance.guns.put(it, new ChamberPistol());
-                                    pl.getInventory().addItem(it);
-                                    var it2 = ItemBuilder.getGunItemStack(80001);
-                                    Game.instance.guns.put(it2, new ChamberShotgun());
-                                    pl.getInventory().addItem(it2);
-                                    var it3 = ItemBuilder.getGunItemStack(80002);
-                                    Game.instance.guns.put(it3, new CabinGuardian());
-                                    pl.getInventory().addItem(it3);
-                                    for (int i = 0; i < 5; i++) {
-                                        pl.getInventory().addItem(
-                                                ItemBuilder.material(Material.DIAMOND, 90001)
-                                                        .name(Component.text("舱室标准弹"))
-                                                        .amount(64)
-                                                        .build()
-                                        );
-                                    }
-
-                                }
-                                return Command.SINGLE_SUCCESS;
-                            }).build(),
-                    "枪",
-                    List.of()
             );
         });
     }

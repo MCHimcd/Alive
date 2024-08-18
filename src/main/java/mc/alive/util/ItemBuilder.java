@@ -12,9 +12,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Random;
 
-import static net.kyori.adventure.text.Component.empty;
-import static net.kyori.adventure.text.Component.text;
-
 public final class ItemBuilder {
     private final ItemStack item;
 
@@ -28,15 +25,6 @@ public final class ItemBuilder {
 
     public static ItemBuilder material(Material type) {
         return new ItemBuilder(type);
-    }
-
-    public static ItemStack getGunItemStack(int data) {
-        return material(Material.HONEY_BOTTLE, data).name(switch (data) {
-            case 80000 -> text("手枪");
-            case 80001 -> text("霰弹枪");
-            case 80002 -> text("冲锋枪");
-            default -> empty();
-        }).randomData().build();
     }
 
     public static ItemBuilder material(Material type, int data) {
@@ -57,7 +45,7 @@ public final class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder randomData() {
+    public ItemBuilder unique() {
         item.editMeta(meta -> {
             meta.addAttributeModifier(Attribute.GENERIC_LUCK, new AttributeModifier(new NamespacedKey(Alive.plugin, String.valueOf(new Random().nextDouble())), 1, AttributeModifier.Operation.ADD_NUMBER));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

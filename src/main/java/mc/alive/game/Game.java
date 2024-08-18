@@ -166,15 +166,18 @@ public class Game {
             } catch (Exception e) {
                 plugin.getLogger().info(e.getLocalizedMessage());
             }
-            var is = ItemBuilder
+            var ib = ItemBuilder
                     .material(item.material())
                     .name(item.name())
                     .data(item.customModelData())
                     .lore(item.lore())
-                    .amount(amount)
-                    .build();
+                    .amount(amount);
+            ItemStack is;
             if (item instanceof Gun gun) {
+                is = ib.unique().build();
                 guns.put(is, gun);
+            } else {
+                is = ib.build();
             }
             item_entity.setItemStack(is);
             item_entity.customName(is.displayName().append(amount == 1 ? Component.empty() : rMsg("*%d".formatted(amount))));
