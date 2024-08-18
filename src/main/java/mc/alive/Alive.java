@@ -53,6 +53,7 @@ import static mc.alive.game.TickRunner.chosen_item_display;
 import static mc.alive.game.item.PickUp.*;
 import static mc.alive.menu.MainMenu.doc;
 import static mc.alive.menu.MainMenu.prepared;
+import static mc.alive.util.Message.rMsg;
 import static org.bukkit.Bukkit.*;
 
 public final class Alive extends JavaPlugin implements Listener {
@@ -170,6 +171,7 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
+        if (event.getEntityType() != EntityType.PLAYER) return;
         if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || game == null) event.setCancelled(true);
     }
 
@@ -317,6 +319,11 @@ public final class Alive extends JavaPlugin implements Listener {
                 event.setCancelled(true);
             } else if (itemMeta.getCustomModelData() > 90000 && itemMeta.getCustomModelData() <= 100000 && game != null && game.chooseRole == null) {
                 var item = event.getItemDrop();
+                ItemStack is = item.getItemStack();
+                item.customName(is.displayName().append(rMsg("*%d".formatted(is.getAmount()))));
+                item.setCustomNameVisible(true);
+                item.setCanMobPickup(false);
+                item.setWillAge(false);
                 item.setCanMobPickup(false);
                 PickUp pickUp = BOTH;
                 var pd = game.playerData.get(event.getPlayer());

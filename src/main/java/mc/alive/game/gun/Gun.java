@@ -38,6 +38,7 @@ public abstract class Gun {
     protected boolean reloading = false;
     private BukkitTask reload_task;
     private Timer timer = new Timer();
+    private long timer_next_run = 0;
 
     //枪的数值 和 模型id
     //后坐力  子弹类型  伤害  最大容量 穿透力
@@ -50,6 +51,14 @@ public abstract class Gun {
         this.capacity = capacity;
         this.shoot_interval = shoot_interval;
         this.reload_time = reload_time;
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (timer_next_run < shoot_interval) {
+                    timer_next_run++;
+                }
+            }
+        }, 0, 1);
     }
 
     public void startShoot(Player player) {
@@ -66,7 +75,11 @@ public abstract class Gun {
                             c[0] = !shoot(player);
                         }
                     }.runTask(plugin);
-                    if (c[0]) cancel();
+                    if (c[0]) {
+                        cancel();
+                    } else {
+                        timer_next_run = 0;
+                    }
                 }
             }, 0, shoot_interval);
             setCanShoot(player, false);
@@ -116,16 +129,18 @@ public abstract class Gun {
     }
 
     public void stopShoot(@Nullable Player player) {
-        timer.cancel();
         if (player == null) return;
-        setCanShoot(player, false);
+        timer.cancel();
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (remained_bullet > 0) setCanShoot(player, true);
+                if (remained_bullet > 0) {
+                    setCanShoot(player, true);
+                }
             }
-        }, shoot_interval);
+        }, shoot_interval - timer_next_run);
+        setCanShoot(player, false);
     }
 
     @SuppressWarnings("DataFlowIssue")

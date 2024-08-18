@@ -17,6 +17,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.time.Duration;
 import java.util.*;
@@ -34,6 +37,7 @@ public class Game {
     public final Player hunter;
     public final Map<ItemStack, Gun> guns = new HashMap<>();
     public final Map<Item, PickUp> items = new HashMap<>();
+    public final List<BlockDisplay> lifts = new ArrayList<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
@@ -108,14 +112,28 @@ public class Game {
             });
         }
 
+        //电梯
+        for (var s : new String[]{"4 -56.3 16"}) {
+            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+            lifts.add(world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
+                bd.setTransformation(new Transformation(
+                        new Vector3f(),
+                        new AxisAngle4f(),
+                        new Vector3f(2, 0.3f, 2),
+                        new AxisAngle4f()
+                ));
+                bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
+            }));
+        }
+
         //可拾取物品
         for (var s : new String[]{"2 -60 13"}) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            spawnItem(ChamberStandardCartridge.class, new Location(world, xyz[0], xyz[1], xyz[2]), PickUp.SURVIVOR);
+            spawnItem(ChamberStandardCartridge.class, new Location(world, xyz[0], xyz[1], xyz[2]), PickUp.SURVIVOR, 64);
         }
     }
 
-    public void spawnItem(Class<? extends GameItem> game_item, Location location, PickUp pickUp) {
+    public void spawnItem(Class<? extends GameItem> game_item, Location location, PickUp pickUp, int amount) {
         location.getWorld().spawn(location, Item.class, item1 -> {
             GameItem item = new Air();
             try {
@@ -123,7 +141,16 @@ public class Game {
             } catch (Exception e) {
                 plugin.getLogger().info(e.getLocalizedMessage());
             }
-            item1.setItemStack(ItemBuilder.material(item.material()).name(item.name()).data(item.customModelData()).lore(item.lore()).build());
+            var is = ItemBuilder
+                    .material(item.material())
+                    .name(item.name())
+                    .data(item.customModelData())
+                    .lore(item.lore())
+                    .amount(amount)
+                    .build();
+            item1.setItemStack(is);
+            item1.customName(is.displayName().append(rMsg("*%d".formatted(amount))));
+            item1.setCustomNameVisible(true);
             item1.setCanMobPickup(false);
             item1.setWillAge(false);
             items.put(item1, pickUp);
@@ -187,6 +214,7 @@ public class Game {
         fix_progress.keySet().forEach(Entity::remove);
         items.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
+        lifts.forEach(Entity::remove);
     }
 
     public int fix(ItemDisplay id, int amount) {

@@ -27,7 +27,7 @@ public class MainMenu extends SlotMenu {
 
         // 资料
         setSlot(11, ItemBuilder.material(Material.BOOK)
-                .name(rMsg("资料", NamedTextColor.AQUA))
+                .name(rMsg("<aqua>资料"))
                 .build(), (it, pl) -> {
             pl.setGameMode(GameMode.SPECTATOR);
             doc.add(pl);
@@ -42,8 +42,8 @@ public class MainMenu extends SlotMenu {
         // 加入游戏
         if (prepared.contains(p)) {
             setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
-                    .name(rMsg("点击取消准备", NamedTextColor.RED))
-                    .lore(Collections.singletonList(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY)))
+                    .name(rMsg("<red>点击取消准备"))
+                    .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared.size()))))
                     .build(), (it, pl) -> {
                 // 取消准备
                 prepared.remove(pl);
@@ -52,7 +52,7 @@ public class MainMenu extends SlotMenu {
             });
         } else {
             setSlot(15, ItemBuilder.material(Material.OBSIDIAN)
-                    .name(rMsg("点击准备", NamedTextColor.GREEN))
+                    .name(rMsg("<green>点击准备"))
                     .build(), (it, pl) -> {
                 // 准备
                 prepared.add(pl);
@@ -65,7 +65,7 @@ public class MainMenu extends SlotMenu {
         if (p.isOp()) {
             if (prepared.size() >= 2) {
                 setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
-                        .name(rMsg("开始游戏", NamedTextColor.GOLD))
+                        .name(rMsg("<gold>开始游戏"))
                         .build(), (it, pl) -> {
                     List<Player> l = new ArrayList<>(prepared);
                     Collections.shuffle(l);
@@ -74,7 +74,7 @@ public class MainMenu extends SlotMenu {
                 });
             } else {
                 setSlot(26, ItemBuilder.material(Material.BARRIER)
-                        .name(rMsg("人数不足", NamedTextColor.DARK_RED))
+                        .name(rMsg("<dark_red>人数不足"))
                         .build(), (it, pl) -> close = false);
             }
         }
@@ -85,8 +85,8 @@ public class MainMenu extends SlotMenu {
             if (player1.getOpenInventory().getTopInventory().getHolder() instanceof MainMenu m) {
                 if (prepared.contains(player1)) {
                     m.setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
-                            .name(rMsg("点击取消准备", NamedTextColor.RED))
-                            .lore(Collections.singletonList(rMsg("已准备人数：%d".formatted(prepared.size()), NamedTextColor.GRAY)))
+                            .name(rMsg("<red>点击取消准备"))
+                            .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared.size()))))
                             .build(), (it, pl) -> {
                         // 取消准备
                         prepared.remove(pl);
@@ -95,7 +95,7 @@ public class MainMenu extends SlotMenu {
                     });
                 } else {
                     m.setSlot(15, ItemBuilder.material(Material.OBSIDIAN)
-                            .name(rMsg("点击准备", NamedTextColor.GREEN))
+                            .name(rMsg("<green>点击准备"))
                             .build(), (it, pl) -> {
                         // 准备
                         prepared.add(pl);
@@ -107,7 +107,7 @@ public class MainMenu extends SlotMenu {
                 if (player1.isOp()) {
                     if (prepared.size() >= 2) {
                         m.setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
-                                .name(rMsg("开始游戏", NamedTextColor.GOLD))
+                                .name(rMsg("<gold>开始游戏"))
                                 .build(), (it, pl) -> {
                             List<Player> l = new ArrayList<>(prepared);
                             Collections.shuffle(l);
@@ -116,7 +116,7 @@ public class MainMenu extends SlotMenu {
                         });
                     } else {
                         m.setSlot(26, ItemBuilder.material(Material.BARRIER)
-                                .name(rMsg("人数不足", NamedTextColor.DARK_RED))
+                                .name(rMsg("<dark_red>人数不足"))
                                 .build(), (it, pl) -> close = false);
                     }
                 }

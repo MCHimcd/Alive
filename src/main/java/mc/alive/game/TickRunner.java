@@ -7,12 +7,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BoundingBox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,7 @@ import static mc.alive.util.Message.rMsg;
 
 public class TickRunner extends BukkitRunnable {
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
+    public static final Map<Player, BlockDisplay> player_in_lift = new HashMap<>();
     public static Location chosen_duct = null;
     public static boolean gameEnd = false;
 
@@ -84,6 +87,24 @@ public class TickRunner extends BukkitRunnable {
                     }
                 }
             }
+        });
+
+        //电梯
+        player_in_lift.clear();
+        game.lifts.forEach(bd -> {
+            bd.getWorld().getNearbyPlayers(bd.getLocation(), 3).forEach(player -> {
+                if (player.getBoundingBox().overlaps(new BoundingBox(
+                        bd.getX(), bd.getY() + 0.3, bd.getZ(),
+                        bd.getX() + 2, bd.getY() + 1.3, bd.getZ() + 3
+                ))) {
+                    player_in_lift.put(player, bd);
+                }
+            });
+        });
+
+        player_in_lift.forEach((player, blockDisplay) -> {
+            player.teleport(player.getLocation().add(0, 0.1, 0));
+            blockDisplay.teleport(blockDisplay.getLocation().add(0, 0.1, 0));
         });
 
         //管道

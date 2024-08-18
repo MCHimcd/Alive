@@ -1,11 +1,16 @@
 package mc.alive.util;
 
+import mc.alive.Alive;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Random;
 
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
@@ -31,7 +36,7 @@ public final class ItemBuilder {
             case 80001 -> text("霰弹枪");
             case 80002 -> text("冲锋枪");
             default -> empty();
-        }).build();
+        }).randomData().build();
     }
 
     public static ItemBuilder material(Material type, int data) {
@@ -49,6 +54,14 @@ public final class ItemBuilder {
 
     public ItemBuilder name(Component name) {
         item.editMeta(meta -> meta.displayName(name));
+        return this;
+    }
+
+    public ItemBuilder randomData() {
+        item.editMeta(meta -> {
+            meta.addAttributeModifier(Attribute.GENERIC_LUCK, new AttributeModifier(new NamespacedKey(Alive.plugin, String.valueOf(new Random().nextDouble())), 1, AttributeModifier.Operation.ADD_NUMBER));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        });
         return this;
     }
 
