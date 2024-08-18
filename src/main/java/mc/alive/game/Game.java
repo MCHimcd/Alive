@@ -47,13 +47,14 @@ import static org.bukkit.attribute.Attribute.*;
 public class Game {
     public static Team team_hunter;
     public static Team team_survivor;
-    public static Game instance = null;
+    public static Game game = null;
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Player hunter;
     public final Map<ItemStack, Gun> guns = new HashMap<>();
-    public final Map<Item, PickUp> item_onground = new HashMap<>();
-    public final List<BlockDisplay> lifts = new ArrayList<>();
+    public final Map<Item, PickUp> item_on_ground = new HashMap<>();
+    public final Map<BlockDisplay, Lift> lifts = new HashMap<>();
+    public final Map<Player, BlockDisplay> player_in_lift = new HashMap<>();
     private final List<Entity> markers = new LinkedList<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
@@ -76,7 +77,7 @@ public class Game {
     }
 
     public static boolean isStarted() {
-        return instance != null && instance.chooseRole == null;
+        return game != null && game.chooseRole == null;
     }
 
     public void start() {
@@ -135,7 +136,7 @@ public class Game {
         //电梯
         for (var s : new String[]{"4 -56.3 16"}) {
             var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            lifts.add(world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
+            var blockDisplay = world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
                 bd.setTransformation(new Transformation(
                         new Vector3f(),
                         new AxisAngle4f(),
@@ -143,7 +144,8 @@ public class Game {
                         new AxisAngle4f()
                 ));
                 bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
-            }));
+            });
+            lifts.put(blockDisplay, new Lift(blockDisplay));
         }
 
         //可拾取物品
@@ -184,13 +186,13 @@ public class Game {
             item_entity.setCustomNameVisible(true);
             item_entity.setCanMobPickup(false);
             item_entity.setWillAge(false);
-            item_onground.put(item_entity, pickUp);
+            item_on_ground.put(item_entity, pickUp);
         });
     }
 
     public void end() {
         destroy();
-        instance = null;
+        game = null;
         playerData.keySet().forEach(Game::resetPlayer);
         Bukkit.getScheduler().cancelTasks(plugin);
         new TickRunner().runTaskTimer(plugin, 0, 1);
@@ -227,7 +229,7 @@ public class Game {
         player.getInventory().clear();
         player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList());
 
-        if (instance == null) {
+        if (game == null) {
             player.getInventory().setItem(8, ItemBuilder
                     .material(Material.CLOCK)
                     .data(20000)
@@ -243,9 +245,9 @@ public class Game {
         }
         markers.forEach(Entity::remove);
         fix_progress.keySet().forEach(Entity::remove);
-        item_onground.keySet().forEach(Entity::remove);
+        item_on_ground.keySet().forEach(Entity::remove);
         guns.values().forEach(gun -> gun.stopShoot(null));
-        lifts.forEach(Entity::remove);
+        lifts.keySet().forEach(Entity::remove);
     }
 
     public int fix(ItemDisplay id, int amount) {
@@ -299,7 +301,7 @@ public class Game {
             if (role == null) return false;
 
             remainedId.remove(role);
-            instance.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
+            game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
             player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
             player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
             nextChoose();
@@ -319,13 +321,13 @@ public class Game {
             //结束判断
             if (choosing.isEmpty()) {
                 roles.keySet().forEach(Entity::remove);
-                instance.start();
+                game.start();
                 return;
             }
 
             //下一个
             currentPlayer = choosing.removeFirst();
-            summonItemDisplay(currentPlayer.equals(instance.hunter));
+            summonItemDisplay(currentPlayer.equals(game.hunter));
             currentPlayer.teleport(new Location(world, -4.5, -58, -1.5));
         }
 

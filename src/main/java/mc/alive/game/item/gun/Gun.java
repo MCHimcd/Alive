@@ -19,7 +19,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static mc.alive.Alive.plugin;
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 import static net.kyori.adventure.text.Component.text;
 
 public abstract class Gun extends GameItem {
@@ -173,7 +173,7 @@ public abstract class Gun extends GameItem {
                 FluidCollisionMode.NEVER,
                 true,
                 0.1,
-                entity -> entity instanceof Player p && p.equals(instance.hunter)
+                entity -> entity instanceof Player p && p.equals(game.hunter)
         );
         if (result != null) {
             var target = result.getHitEntity();

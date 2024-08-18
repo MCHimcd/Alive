@@ -32,8 +32,8 @@ public final class Alive extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        if (Game.instance == null) return;
-        Game.instance.destroy();
+        if (Game.game == null) return;
+        Game.game.destroy();
     }
 
     @Override
@@ -80,9 +80,9 @@ public final class Alive extends JavaPlugin implements Listener {
             cs.register(
                     Commands.literal("reset")
                             .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player && Game.instance != null) {
-                                    Game.instance.end();
-                                    Game.instance = null;
+                                if (ctx.getSource().getSender() instanceof Player && Game.game != null) {
+                                    Game.game.end();
+                                    Game.game = null;
                                     getOnlinePlayers().forEach(Game::resetPlayer);
                                 }
                                 return Command.SINGLE_SUCCESS;

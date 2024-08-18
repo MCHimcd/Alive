@@ -35,13 +35,13 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
         if (event.getEntityType() != EntityType.PLAYER) return;
-        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || Game.instance == null)
+        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || Game.game == null)
             event.setCancelled(true);
     }
 
     //    @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (Game.instance == null) return;
+        if (Game.game == null) return;
 
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             if (!(viewer instanceof Player player)) return Component.empty();
@@ -106,8 +106,8 @@ public class PlayerListener implements Listener {
         var player = event.getPlayer();
         doc.remove(player);
         prepared.remove(player);
-        if (Game.instance != null) {
-            Game.instance.end();
+        if (Game.game != null) {
+            Game.game.end();
         }
     }
 
@@ -131,7 +131,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
-        if (Game.instance == null || Game.instance.chooseRole != null) return;
+        if (Game.game == null || Game.game.chooseRole != null) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
             var pd_hurt = getPlayerData(player);
             var pd_damager = getPlayerData(damager);

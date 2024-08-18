@@ -15,7 +15,7 @@ public class GunListener implements Listener {
     public void onStopUsing(PlayerStopUsingItemEvent event) {
         if (!Game.isStarted()) return;
         var player = event.getPlayer();
-        var gun = Game.instance.guns.get(player.getInventory().getItemInMainHand());
+        var gun = Game.game.guns.get(player.getInventory().getItemInMainHand());
         if (gun != null) {
             gun.stopShoot(player);
         }
@@ -37,13 +37,13 @@ public class GunListener implements Listener {
         if (!ItemCheck.hasCustomModelData(pre_it)) return;
         var pre_data = pre_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(pre_data)) {
-            Game.instance.guns.get(pre_it).handleItemChange(player, true);
+            Game.game.guns.get(pre_it).handleItemChange(player, true);
         }
         var new_it = player.getInventory().getItem(event.getNewSlot());
         if (!ItemCheck.hasCustomModelData(new_it)) return;
         var new_data = new_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(new_data)) {
-            Game.instance.guns.get(new_it).handleItemChange(player, false);
+            Game.game.guns.get(new_it).handleItemChange(player, false);
         }
     }
 }

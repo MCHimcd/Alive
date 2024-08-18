@@ -31,7 +31,7 @@ import java.util.Random;
 
 import static java.util.Objects.requireNonNull;
 import static mc.alive.Alive.plugin;
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 import static mc.alive.tick.PlayerTickrunnable.chosen_duct;
 import static mc.alive.tick.PlayerTickrunnable.chosen_item_display;
 import static mc.alive.util.Message.rMsg;
@@ -125,11 +125,11 @@ public class PlayerData implements TickRunnable {
                 "去世了",
                 "离开了人间."
         ).get(new Random().nextInt(0, 2))))));
-        instance.spawnBody(player);
+        game.spawnBody(player);
         Game.resetPlayer(player);
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
-            instance.survivors.remove(player);
-            if (instance.survivors.isEmpty()) {
+            game.survivors.remove(player);
+            if (game.survivors.isEmpty()) {
                 TickRunner.gameEnd = true;
             }
         });
@@ -145,13 +145,13 @@ public class PlayerData implements TickRunnable {
     }
 
     public static PlayerData getPlayerData(Player player) {
-        assert instance != null;
-        return instance.playerData.get(player);
+        assert game != null;
+        return game.playerData.get(player);
     }
 
     public static void setSkillCD(Player player, int index, int amount) {
-        assert instance != null;
-        instance.playerData.get(player).skill_cd.set(index, amount);
+        assert game != null;
+        game.playerData.get(player).skill_cd.set(index, amount);
     }
 
     public Role getRole() {
@@ -209,7 +209,7 @@ public class PlayerData implements TickRunnable {
             if (--fix_tick == 0 && target != null) {
                 player.getLocation().getNearbyPlayers(20).forEach(player1 ->
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
-                instance.fix(target, role.getIntelligence());
+                game.fix(target, role.getIntelligence());
             }
         }
     }

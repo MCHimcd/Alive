@@ -33,7 +33,7 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (Game.isStarted()) {
-            var pd = Game.instance.playerData.get(event.getPlayer());
+            var pd = Game.game.playerData.get(event.getPlayer());
             ItemStack item = event.getOffHandItem();
 
             if (ItemCheck.hasCustomModelData(item)) {
@@ -45,7 +45,7 @@ public class ItemListener implements Listener {
                     event.setCancelled(true);
                 } else if (ItemCheck.isGun(data) && getPlayerData(event.getPlayer()).getRole() instanceof Survivor) {
                     //枪
-                    Game.instance.guns.get(item).reload(event.getPlayer());
+                    Game.game.guns.get(item).reload(event.getPlayer());
                     event.setCancelled(true);
                 }
             }
@@ -65,8 +65,8 @@ public class ItemListener implements Listener {
     public void onPickUp(PlayerAttemptPickupItemEvent event) {
         if (!Game.isStarted()) return;
         var item = event.getItem();
-        if (item.isOnGround() && Game.instance.item_onground.containsKey(item)) {
-            var pickUp = Game.instance.item_onground.get(item);
+        if (item.isOnGround() && Game.game.item_on_ground.containsKey(item)) {
+            var pickUp = Game.game.item_on_ground.get(item);
             var npl = item.getWorld().getNearbyPlayers(item.getLocation(), 1,
                     pl -> switch (pickUp) {
                         case BOTH -> true;
@@ -76,7 +76,7 @@ public class ItemListener implements Listener {
             if (npl.isPresent()) {
                 item.setPickupDelay(0);
                 item.setOwner(npl.get().getUniqueId());
-                Game.instance.item_onground.remove(item);
+                Game.game.item_on_ground.remove(item);
             } else {
                 item.setOwner(new UUID(0, 0));
             }
@@ -90,10 +90,10 @@ public class ItemListener implements Listener {
         ItemStack item = event.getItem();
         Player player = event.getPlayer();
 
-        if (Game.instance != null) {
-            if (Game.instance.chooseRole != null && Game.instance.chooseRole.handleEvent(player)) return;
-            if (Game.instance.chooseRole != null) return;
-            var pd = Game.instance.playerData.get(player);
+        if (Game.game != null) {
+            if (Game.game.chooseRole != null && Game.game.chooseRole.handleEvent(player)) return;
+            if (Game.game.chooseRole != null) return;
+            var pd = Game.game.playerData.get(player);
             //管道
             if (pd.getRole() instanceof Hunter) {
                 pd.tryIntoDuct();
@@ -117,7 +117,7 @@ public class ItemListener implements Listener {
         ) return;
 
         //使用物品
-        if (Game.instance != null) {
+        if (Game.game != null) {
             var data = item.getItemMeta().getCustomModelData();
 
             if (ItemCheck.isSkill(data)) {
@@ -126,7 +126,7 @@ public class ItemListener implements Listener {
                 event.setCancelled(true);
             } else if (ItemCheck.isGun(data) && getPlayerData(player).getRole() instanceof Survivor) {
                 //枪
-                Game.instance.guns.get(item).startShoot(player);
+                Game.game.guns.get(item).startShoot(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {
@@ -159,10 +159,10 @@ public class ItemListener implements Listener {
                 item.setWillAge(false);
                 item.setCanMobPickup(false);
                 PickUp pickUp = BOTH;
-                var pd = Game.instance.playerData.get(event.getPlayer());
+                var pd = Game.game.playerData.get(event.getPlayer());
                 if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;
                 else if (pd.getRole() instanceof Hunter) pickUp = HUNTER;
-                Game.instance.item_onground.put(item, pickUp);
+                Game.game.item_on_ground.put(item, pickUp);
             }
         }
     }

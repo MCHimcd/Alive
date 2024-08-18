@@ -5,7 +5,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.LinkedList;
 import java.util.List;
 
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 
 public class TickRunner extends BukkitRunnable {
     public static final List<TickRunnable> tickRunnable = new LinkedList<>();
@@ -18,9 +18,9 @@ public class TickRunner extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (instance == null) return;
+        if (game == null) return;
         if (gameEnd) {
-            instance.end();
+            game.end();
             gameEnd = false;
             return;
         }

@@ -15,7 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.PlayerData.setSkillCD;
 
@@ -72,7 +72,7 @@ public class Jack extends Survivor {
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().clone().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0, null, true);
 
         //在这里写一个清除jack 周围4格内  hunter的location
-        var locs = instance.playerData.get(instance.hunter).getRole().skill_locs;
+        var locs = game.playerData.get(game.hunter).getRole().skill_locs;
         var remove = new ArrayList<Location>();
         for (Location loc : locs.keySet()) {
             if (loc.distance(player.getLocation()) <= 4) {
@@ -107,8 +107,8 @@ public class Jack extends Survivor {
             public void run() {
                 if (time++ == 40) {
                     //noinspection UnstableApiUsage
-                    player.lookAt(instance.hunter.getLocation(), LookAnchor.EYES);
-                    Factory.line(player.getLocation(), instance.hunter.getLocation(), 0.5).forEach(location ->
+                    player.lookAt(game.hunter.getLocation(), LookAnchor.EYES);
+                    Factory.line(player.getLocation(), game.hunter.getLocation(), 0.5).forEach(location ->
                             player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.RED, 1f)));
                     cancel();
                 } else {

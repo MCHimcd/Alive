@@ -16,7 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.util.Message.rMsg;
 
@@ -42,20 +42,20 @@ public class PlayerTickrunnable implements TickRunnable {
             if (r != null) {
                 var td = (ItemDisplay) r.getHitEntity();
                 if (td != null) {
-                    if (instance.chooseRole != null) {
-                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(instance.chooseRole.roles.get(td)))));
+                    if (game.chooseRole != null) {
+                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(game.chooseRole.roles.get(td)))));
                         td.setGlowing(true);
-                    } else if (!player.equals(instance.hunter)) {
-                        double progress = (double) instance.fix(td, 0) / 400;
+                    } else if (!player.equals(game.hunter)) {
+                        double progress = (double) game.fix(td, 0) / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(instance.fix(td, 0))));
+                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
                 }
             }
 
             //playerData
-            if (instance.chooseRole != null) return;
+            if (game.chooseRole != null) return;
             var pd = getPlayerData(player);
             if (pd != null) {
                 if (pd.getRole() instanceof Hunter) {
@@ -78,7 +78,7 @@ public class PlayerTickrunnable implements TickRunnable {
 
         //管道
         chosen_duct = null;
-        var player = instance.hunter;
+        var player = game.hunter;
         @SuppressWarnings("UnstableApiUsage")
         var r = player.getWorld().rayTrace(
                 player.getEyeLocation(),

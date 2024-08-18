@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static mc.alive.game.Game.instance;
+import static mc.alive.game.Game.game;
 
 public abstract class Shotgun extends Gun {
     protected Shotgun(float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
@@ -27,8 +27,8 @@ public abstract class Shotgun extends Gun {
         for (List<Location> locations : shootPath_shotgun(player)) {
             for (Location location : locations) {
                 player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
-                if (instance.hunter.getBoundingBox().contains(location.toVector())) {
-                    PlayerData.getPlayerData(instance.hunter).damageOrHeal(damage);
+                if (game.hunter.getBoundingBox().contains(location.toVector())) {
+                    PlayerData.getPlayerData(game.hunter).damageOrHeal(damage);
                     break;
                 }
                 if (location.getBlock().isSolid()) break;
