@@ -15,8 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 
-import static mc.alive.Alive.game;
-import static mc.alive.Alive.plugin;
+import static mc.alive.game.Game.instance;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.PlayerData.setSkillCD;
 
@@ -26,18 +25,23 @@ public class Jack extends Survivor {
     }
 
     @Override
-    public void equip() {
-        player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND, 10200).name(Message.rMsg("<gold><bold>个人终端")).build());
+    public int getMaxShield() {
+        return 20;
     }
 
     @Override
-    public double getSpeed() {
-        return 0.1;
+    public int getStrength() {
+        return 10;
     }
 
     @Override
     public double getAttackCD() {
         return 0;
+    }
+
+    @Override
+    public double getSpeed() {
+        return 0.1;
     }
 
     @Override
@@ -51,13 +55,8 @@ public class Jack extends Survivor {
     }
 
     @Override
-    public int getMaxShield() {
-        return 20;
-    }
-
-    @Override
-    public int getStrength() {
-        return 10;
+    public void equip() {
+        player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND, 10200).name(Message.rMsg("<gold><bold>个人终端")).build());
     }
 
     @Override
@@ -73,14 +72,14 @@ public class Jack extends Survivor {
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().clone().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0, null, true);
 
         //在这里写一个清除jack 周围4格内  hunter的location
-        var locs = game.playerData.get(game.hunter).getRole().skill_locs;
+        var locs = instance.playerData.get(instance.hunter).getRole().skill_locs;
         var remove = new ArrayList<Location>();
         for (Location loc : locs.keySet()) {
             if (loc.distance(player.getLocation()) <= 4) {
-                Factory.line(player.getEyeLocation().subtract(0,1,0), loc, 0.5).forEach(location ->
+                Factory.line(player.getEyeLocation().subtract(0, 1, 0), loc, 0.5).forEach(location ->
                         player.spawnParticle(
                                 Particle.FLAME,
-                                location.subtract(0,1,0),
+                                location.subtract(0, 1, 0),
                                 1,
                                 0,
                                 0,
@@ -108,8 +107,8 @@ public class Jack extends Survivor {
             public void run() {
                 if (time++ == 40) {
                     //noinspection UnstableApiUsage
-                    player.lookAt(game.hunter.getLocation(), LookAnchor.EYES);
-                    Factory.line(player.getLocation(), game.hunter.getLocation(), 0.5).forEach(location ->
+                    player.lookAt(instance.hunter.getLocation(), LookAnchor.EYES);
+                    Factory.line(player.getLocation(), instance.hunter.getLocation(), 0.5).forEach(location ->
                             player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.RED, 1f)));
                     cancel();
                 } else {

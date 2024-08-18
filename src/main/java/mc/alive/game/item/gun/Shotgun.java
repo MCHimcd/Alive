@@ -1,4 +1,4 @@
-package mc.alive.game.gun;
+package mc.alive.game.item.gun;
 
 import mc.alive.game.PlayerData;
 import mc.alive.game.item.GameItem;
@@ -7,18 +7,17 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static mc.alive.Alive.game;
+import static mc.alive.game.Game.instance;
 
 public abstract class Shotgun extends Gun {
-    protected Shotgun(ItemStack item, float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
-        super(item, reactiveForce, bulletType, damage, capacity, shoot_interval, reload_time);
+    protected Shotgun(float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
+        super(reactiveForce, bulletType, damage, capacity, shoot_interval, reload_time);
     }
 
     @Override
@@ -28,8 +27,8 @@ public abstract class Shotgun extends Gun {
         for (List<Location> locations : shootPath_shotgun(player)) {
             for (Location location : locations) {
                 player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
-                if (game.hunter.getBoundingBox().contains(location.toVector())) {
-                    PlayerData.getPlayerData(game.hunter).damageOrHeal(damage);
+                if (instance.hunter.getBoundingBox().contains(location.toVector())) {
+                    PlayerData.getPlayerData(instance.hunter).damageOrHeal(damage);
                     break;
                 }
                 if (location.getBlock().isSolid()) break;

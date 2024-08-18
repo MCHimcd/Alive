@@ -16,6 +16,5 @@ public abstract class GameItem {
 
     public abstract PickUp pickUp();
 
-
 }
 

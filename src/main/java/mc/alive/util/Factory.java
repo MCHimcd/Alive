@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Factory {
+
     // 更改玩家视角
     static public void setYawPitch(float yaw, float pitch, Player player) {
         Location loc = player.getLocation();

@@ -1,4 +1,4 @@
-package mc.alive.game;
+package mc.alive.tick;
 
 import mc.alive.game.role.Role;
 import mc.alive.game.role.hunter.Hunter;
@@ -7,39 +7,26 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.BoundingBox;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static mc.alive.Alive.game;
+import static mc.alive.game.Game.instance;
 import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.util.Message.rMsg;
 
-public class TickRunner extends BukkitRunnable {
+public class PlayerTickrunnable implements TickRunnable {
+
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
-    public static final Map<Player, BlockDisplay> player_in_lift = new HashMap<>();
     public static Location chosen_duct = null;
-    public static boolean gameEnd = false;
 
     @Override
-    public void run() {
-        if (game == null) return;
-        if (gameEnd) {
-            game.end();
-            gameEnd = false;
-            return;
-        }
-
-        game.playerData.values().forEach(PlayerData::tick);
-        //player foreach
+    public void tick() {
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
         chosen_item_display.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {
@@ -55,20 +42,20 @@ public class TickRunner extends BukkitRunnable {
             if (r != null) {
                 var td = (ItemDisplay) r.getHitEntity();
                 if (td != null) {
-                    if (game.chooseRole != null) {
-                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(game.chooseRole.roles.get(td)))));
+                    if (instance.chooseRole != null) {
+                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(instance.chooseRole.roles.get(td)))));
                         td.setGlowing(true);
-                    } else if (!player.equals(game.hunter)) {
-                        double progress = (double) game.fix(td, 0) / 400;
+                    } else if (!player.equals(instance.hunter)) {
+                        double progress = (double) instance.fix(td, 0) / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
+                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(instance.fix(td, 0))));
                     }
                     chosen_item_display.put(player, td);
                 }
             }
 
             //playerData
-            if (game.chooseRole != null) return;
+            if (instance.chooseRole != null) return;
             var pd = getPlayerData(player);
             if (pd != null) {
                 if (pd.getRole() instanceof Hunter) {
@@ -89,27 +76,9 @@ public class TickRunner extends BukkitRunnable {
             }
         });
 
-        //电梯
-        player_in_lift.clear();
-        game.lifts.forEach(bd -> {
-            bd.getWorld().getNearbyPlayers(bd.getLocation(), 3).forEach(player -> {
-                if (player.getBoundingBox().overlaps(new BoundingBox(
-                        bd.getX(), bd.getY() + 0.3, bd.getZ(),
-                        bd.getX() + 2, bd.getY() + 1.3, bd.getZ() + 3
-                ))) {
-                    player_in_lift.put(player, bd);
-                }
-            });
-        });
-
-        player_in_lift.forEach((player, blockDisplay) -> {
-            player.teleport(player.getLocation().add(0, 0.1, 0));
-            blockDisplay.teleport(blockDisplay.getLocation().add(0, 0.1, 0));
-        });
-
         //管道
         chosen_duct = null;
-        var player = game.hunter;
+        var player = instance.hunter;
         @SuppressWarnings("UnstableApiUsage")
         var r = player.getWorld().rayTrace(
                 player.getEyeLocation(),

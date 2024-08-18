@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static mc.alive.Alive.game;
+import static mc.alive.game.Game.instance;
 import static mc.alive.util.Message.convertMsg;
 import static mc.alive.util.Message.rMsg;
 
@@ -69,8 +69,8 @@ public class MainMenu extends SlotMenu {
                         .build(), (it, pl) -> {
                     List<Player> l = new ArrayList<>(prepared);
                     Collections.shuffle(l);
-                    if (game != null) game.destroy();
-                    game = new Game(l);
+                    if (instance != null) instance.destroy();
+                    instance = new Game(l);
                 });
             } else {
                 setSlot(26, ItemBuilder.material(Material.BARRIER)
@@ -111,8 +111,8 @@ public class MainMenu extends SlotMenu {
                                 .build(), (it, pl) -> {
                             List<Player> l = new ArrayList<>(prepared);
                             Collections.shuffle(l);
-                            if (game != null) game.destroy();
-                            game = new Game(l);
+                            if (instance != null) instance.destroy();
+                            instance = new Game(l);
                         });
                     } else {
                         m.setSlot(26, ItemBuilder.material(Material.BARRIER)

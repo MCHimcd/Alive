@@ -1,15 +1,15 @@
-package mc.alive.game.gun;
+package mc.alive.game.item.gun;
 
 import mc.alive.Alive;
 import mc.alive.game.PlayerData;
 import mc.alive.game.item.GameItem;
+import mc.alive.game.item.PickUp;
 import mc.alive.util.Factory;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static mc.alive.Alive.game;
 import static mc.alive.Alive.plugin;
+import static mc.alive.game.Game.instance;
 import static net.kyori.adventure.text.Component.text;
 
-public abstract class Gun {
+public abstract class Gun extends GameItem {
 
     protected final float reactiveForce;
     protected final double damage;
@@ -30,7 +30,6 @@ public abstract class Gun {
     //mSec
     protected final long shoot_interval;
     private final Class<? extends GameItem> bulletType;
-    private final ItemStack item;
     //tick
     private final int reload_time;
     protected int remained_bullet = 0;
@@ -43,8 +42,7 @@ public abstract class Gun {
     //枪的数值 和 模型id
     //后坐力  子弹类型  伤害  最大容量 穿透力
 
-    protected Gun(ItemStack item, float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
-        this.item = item;
+    protected Gun(float reactiveForce, Class<? extends GameItem> bulletType, double damage, int capacity, long shoot_interval, int reload_time) {
         this.reactiveForce = reactiveForce;
         this.bulletType = bulletType;
         this.damage = damage;
@@ -61,8 +59,22 @@ public abstract class Gun {
         }, 0, 1);
     }
 
+    @Override
+    public Material material() {
+        return Material.HONEY_BOTTLE;
+    }
+
+    @Override
+    public PickUp pickUp() {
+        return PickUp.SURVIVOR;
+    }
+
     public void startShoot(Player player) {
         if (canShoot) {
+            if (reloading) {
+                reloading = false;
+                reload_task.cancel();
+            }
             timer.cancel();
             timer = new Timer();
             timer.schedule(new TimerTask() {
@@ -90,7 +102,6 @@ public abstract class Gun {
     protected boolean shoot(Player player) {
         if (cannotShoot(player)) return false;
 
-        var pd = PlayerData.getPlayerData(player);
         var result = shootPath(player);
 
         //粒子
@@ -162,7 +173,7 @@ public abstract class Gun {
                 FluidCollisionMode.NEVER,
                 true,
                 0.1,
-                entity -> entity instanceof Player p && p.equals(game.hunter)
+                entity -> entity instanceof Player p && p.equals(instance.hunter)
         );
         if (result != null) {
             var target = result.getHitEntity();
@@ -181,6 +192,7 @@ public abstract class Gun {
         reloading = true;
 
         if (findBullet(player, bulletType, capacity - remained_bullet, false) == 0) return;
+        timer.cancel();
 
         reload_task = new BukkitRunnable() {
             int re_time = 0;

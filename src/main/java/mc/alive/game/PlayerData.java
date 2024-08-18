@@ -5,6 +5,8 @@ import mc.alive.game.role.Role;
 import mc.alive.game.role.Skill;
 import mc.alive.game.role.hunter.Hunter;
 import mc.alive.game.role.survivor.Survivor;
+import mc.alive.tick.TickRunnable;
+import mc.alive.tick.TickRunner;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -28,13 +30,13 @@ import java.util.List;
 import java.util.Random;
 
 import static java.util.Objects.requireNonNull;
-import static mc.alive.Alive.game;
 import static mc.alive.Alive.plugin;
-import static mc.alive.game.TickRunner.chosen_duct;
-import static mc.alive.game.TickRunner.chosen_item_display;
+import static mc.alive.game.Game.instance;
+import static mc.alive.tick.PlayerTickrunnable.chosen_duct;
+import static mc.alive.tick.PlayerTickrunnable.chosen_item_display;
 import static mc.alive.util.Message.rMsg;
 
-public class PlayerData {
+public class PlayerData implements TickRunnable {
     private final List<Effect> effects = new ArrayList<>();
     private final Role role;
     private final Player player;
@@ -62,10 +64,10 @@ public class PlayerData {
         this.role = role;
         damageOrHeal(-role.getMaxHealth());
         if (role instanceof Survivor s) {
-            Game.t_survivor.addPlayer(player);
+            Game.team_survivor.addPlayer(player);
             shieldDamage(-s.getMaxShield());
         } else {
-            Game.t_hunter.addPlayer(player);
+            Game.team_hunter.addPlayer(player);
         }
         for (int i = 0; i < role.getSkillCount(); i++) {
             skill_cd.add(0);
@@ -73,75 +75,7 @@ public class PlayerData {
         var name = Component.text(role.toString());
         player.displayName(name);
         player.playerListName(name);
-    }
-
-    public static PlayerData getPlayerData(Player player) {
-        assert game != null;
-        return game.playerData.get(player);
-    }
-
-    public static void setSkillCD(Player player, int index, int amount) {
-        assert game != null;
-        game.playerData.get(player).skill_cd.set(index, amount);
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void addEffect(Effect effect) {
-        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
-        if (e.isPresent()) {
-            e.get().add(effect.tick);
-        } else {
-            effects.add(effect);
-        }
-    }
-
-    public boolean hasEffect(Class<? extends Effect> effect) {
-        return effects.stream().anyMatch(e -> e.getClass().equals(effect));
-    }
-
-    public void tick() {
-        //Effect
-        effects.removeIf(Effect::tick);
-        //普攻冷却
-        attack_cd = Math.max(0, attack_cd - 0.05);
-        if (attack_cd > 0) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
-        }
-        //技能冷却
-        for (int i = 0; i < skill_cd.size(); i++) {
-            if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
-        }
-        //技能选择
-        current_skill_reset_cd = Math.max(0, current_skill_reset_cd - 1);
-        if (current_skill_reset_cd == 0) {
-            current_skill_id = 0;
-        }
-        //护盾恢复
-        if (role instanceof Survivor s) {
-            if (shield_cd > 0) shield_cd--;
-            if (shield_tick > 0) shield_tick--;
-            if (shield_cd == 0 && shield_tick == 0 && shield < s.getMaxShield()) {
-                shieldDamage(-5);
-                shield_tick = 20;
-            }
-        }
-        //血量恢复
-        if (health_tick > 0) health_tick--;
-        if (role instanceof Hunter && health_tick == 0) {
-            damageOrHeal(-0.25);
-        }
-        //维修
-        var target = chosen_item_display.get(player);
-        if (fix_tick >= 0) {
-            if (--fix_tick == 0 && target != null) {
-                player.getLocation().getNearbyPlayers(20).forEach(player1 ->
-                        player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
-                game.fix(target, role.getIntelligence());
-            }
-        }
+        startTick();
     }
 
     /**
@@ -191,11 +125,11 @@ public class PlayerData {
                 "去世了",
                 "离开了人间."
         ).get(new Random().nextInt(0, 2))))));
-        game.spawnBody(player);
+        instance.spawnBody(player);
         Game.resetPlayer(player);
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
-            game.survivors.remove(player);
-            if (game.survivors.isEmpty()) {
+            instance.survivors.remove(player);
+            if (instance.survivors.isEmpty()) {
                 TickRunner.gameEnd = true;
             }
         });
@@ -208,6 +142,76 @@ public class PlayerData {
         var max = ((Survivor) role).getMaxShield();
         shield = Math.min(max, Math.max(0, shield - amount));
         player.setAbsorptionAmount(20 * shield / max);
+    }
+
+    public static PlayerData getPlayerData(Player player) {
+        assert instance != null;
+        return instance.playerData.get(player);
+    }
+
+    public static void setSkillCD(Player player, int index, int amount) {
+        assert instance != null;
+        instance.playerData.get(player).skill_cd.set(index, amount);
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void addEffect(Effect effect) {
+        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
+        if (e.isPresent()) {
+            e.get().add(effect.tick);
+        } else {
+            effects.add(effect);
+        }
+    }
+
+    public boolean hasEffect(Class<? extends Effect> effect) {
+        return effects.stream().anyMatch(e -> e.getClass().equals(effect));
+    }
+
+    @Override
+    public void tick() {
+        //Effect
+        effects.removeIf(Effect::tick);
+        //普攻冷却
+        attack_cd = Math.max(0, attack_cd - 0.05);
+        if (attack_cd > 0) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
+        }
+        //技能冷却
+        for (int i = 0; i < skill_cd.size(); i++) {
+            if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
+        }
+        //技能选择
+        current_skill_reset_cd = Math.max(0, current_skill_reset_cd - 1);
+        if (current_skill_reset_cd == 0) {
+            current_skill_id = 0;
+        }
+        //护盾恢复
+        if (role instanceof Survivor s) {
+            if (shield_cd > 0) shield_cd--;
+            if (shield_tick > 0) shield_tick--;
+            if (shield_cd == 0 && shield_tick == 0 && shield < s.getMaxShield()) {
+                shieldDamage(-5);
+                shield_tick = 20;
+            }
+        }
+        //血量恢复
+        if (health_tick > 0) health_tick--;
+        if (role instanceof Hunter && health_tick == 0) {
+            damageOrHeal(-0.25);
+        }
+        //维修
+        var target = chosen_item_display.get(player);
+        if (fix_tick >= 0) {
+            if (--fix_tick == 0 && target != null) {
+                player.getLocation().getNearbyPlayers(20).forEach(player1 ->
+                        player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
+                instance.fix(target, role.getIntelligence());
+            }
+        }
     }
 
     public void changeSkillValue() {
