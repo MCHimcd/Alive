@@ -147,8 +147,7 @@ public class ItemListener implements Listener {
         var itemStack = event.getItemDrop().getItemStack();
         if (ItemCheck.hasCustomModelData(itemStack)) {
             var data = itemStack.getItemMeta().getCustomModelData();
-            if (ItemCheck.isSkill(data) || data == 90000
-            ) {
+            if (ItemCheck.isSkill(data) || data == 90000 || data == 20000) {
                 event.setCancelled(true);
             } else if (ItemCheck.isPickable(data) && Game.isStarted()) {
                 var item = event.getItemDrop();

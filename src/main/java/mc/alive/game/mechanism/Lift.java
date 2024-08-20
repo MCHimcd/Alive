@@ -1,6 +1,7 @@
 package mc.alive.game.mechanism;
 
 import io.papermc.paper.entity.TeleportFlag;
+import mc.alive.game.Game;
 import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import org.bukkit.Material;
@@ -17,6 +18,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 import static mc.alive.Alive.plugin;
@@ -69,11 +71,16 @@ public class Lift {
     }
 
     /**
-     * @return 当前楼层是否与目标相符
+     * @return 到达下一层所需的时间(tick)
      */
-    public boolean changeFloor() {
-        floor += getTargetDirection();
-        return floor == target_floor;
+    public int getTargetTime() {
+        AtomicInteger y_f = new AtomicInteger();
+        AtomicInteger y_tf = new AtomicInteger();
+        Game.game.liftDoors.forEach((block, liftDoor) -> {
+            if (liftDoor.getFloor() == floor) y_f.set(block.getY());
+            if (liftDoor.getFloor() == floor + getTargetDirection()) y_tf.set(block.getY());
+        });
+        return Math.abs(y_f.get() - y_tf.get()) * 10;
     }
 
     /**
@@ -81,6 +88,14 @@ public class Lift {
      */
     public int getTargetDirection() {
         return Integer.compare(target_floor, floor);
+    }
+
+    /**
+     * @return 当前楼层是否与目标相符
+     */
+    public boolean changeFloor() {
+        floor += getTargetDirection();
+        return floor == target_floor;
     }
 
     public record Result(ItemStack item, BiConsumer<ItemStack, Player> function) {
@@ -92,6 +107,7 @@ public class Lift {
         private final BlockDisplay blockDisplay;
         private final Lift lift;
         private int t = 0;
+        private int target_time = 0;
 
         public RunnableTask(List<Player> players, BlockDisplay blockDisplay, Lift lift) {
             this.players = players;
@@ -101,9 +117,11 @@ public class Lift {
         }
 
         public void run() {
-            if (t == 0)
+            if (t == 0) {
                 lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::closeDoor);
-            if (t++ >= 30) {
+                target_time = lift.getTargetTime();
+            }
+            if (t++ >= target_time) {
                 if (lift.changeFloor()) {
                     //到达
                     Factory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
