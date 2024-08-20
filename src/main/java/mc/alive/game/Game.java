@@ -1,12 +1,8 @@
 package mc.alive.game;
 
 import mc.alive.game.item.Air;
-import mc.alive.game.item.ChamberStandardCartridge;
 import mc.alive.game.item.GameItem;
 import mc.alive.game.item.PickUp;
-import mc.alive.game.item.gun.CabinGuardian;
-import mc.alive.game.item.gun.ChamberPistol;
-import mc.alive.game.item.gun.ChamberShotgun;
 import mc.alive.game.item.gun.Gun;
 import mc.alive.game.mechanism.Lift;
 import mc.alive.game.mechanism.LiftDoor;
@@ -43,8 +39,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
-import static mc.alive.Alive.main_scoreboard;
-import static mc.alive.Alive.plugin;
+import static mc.alive.Alive.*;
 import static mc.alive.util.Message.rMsg;
 import static org.bukkit.attribute.Attribute.*;
 
@@ -119,31 +114,53 @@ public class Game {
         }.runTaskTimer(plugin, 0, 1);
     }
 
+    @SuppressWarnings({"DataFlowIssue", "unchecked"})
     private void summonEntities() {
         var world = Bukkit.getWorld("world");
         assert world != null;
 
         // 管道入口
-        for (var s : new String[]{"1.5 -58 1.5"}) {
-            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+        config.getList("ducts").forEach(duct -> {
+            var xyz = Arrays.stream(((String) duct).split(",")).mapToDouble(Double::parseDouble).toArray();
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, markers::add);
-        }
+        });
 
         // 维修
-        for (var s : new String[]{"5.5 -59 5.5"}) {
-            var xyz = Arrays.stream(s.split(" ")).mapToDouble(Double::parseDouble).toArray();
+        config.getList("fixes").forEach(fix -> {
+            var xyz = Arrays.stream(((String) fix).split(",")).mapToDouble(Double::parseDouble).toArray();
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), ItemDisplay.class, id -> {
                 id.setItemStack(new ItemStack(Material.FEATHER));
                 fix_progress.put(id, 0);
             });
+        });
+
+        //可拾取物品
+        var itemsInfo = (List<String>) config.getList("items");
+        for (String item : itemsInfo) {
+            var info = item.split(" ");
+            var x = Double.parseDouble(info[0]);
+            var y = Double.parseDouble(info[1]);
+            var z = Double.parseDouble(info[2]);
+            var a = Integer.parseInt(info[3]);
+            do {
+                int finalA = a;
+                Arrays.stream(info).skip(4).forEach(name -> {
+                    try {
+                        spawnItem((Class<? extends GameItem>) Class.forName("mc.alive.game.item." + name), new Location(world, x, y, z), Math.min(finalA, 64));
+                    } catch (ClassNotFoundException e) {
+                        plugin.getLogger().info(e.getLocalizedMessage());
+                    }
+                });
+                a -= 64;
+            } while (a >= 64);
         }
 
         //电梯
-        Map.of(
-                "4 -59.3 16", "3 -58 14,3 -55 14,3 -52 14,-2 -59 10,9 -59 12,5 -59 9"
-        ).forEach((l, ld) -> {
-            var xyz = Arrays.stream(l.split(" ")).mapToDouble(Double::parseDouble).toArray();
-            var blockDisplay = world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), BlockDisplay.class, bd -> {
+        var liftsInfo = (List<String>) config.getList("lifts");
+        for (String liftInfo : liftsInfo) {
+            var info = liftInfo.split(" ");
+            var xyz_lift = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
+            var blockDisplay = world.spawn(new Location(world, xyz_lift[0], xyz_lift[1], xyz_lift[2]), BlockDisplay.class, bd -> {
                 bd.setTransformation(new Transformation(
                         new Vector3f(),
                         new AxisAngle4f(),
@@ -155,28 +172,15 @@ public class Game {
             var lift = new Lift(blockDisplay, 3);
             lifts.put(blockDisplay, lift);
             //电梯门
-            var ss = ld.split(",");
-            for (int i = 0; i < ss.length; i++) {
-
-                var xyz1 = Arrays.stream(ss[i].split(" ")).mapToInt(Integer::parseInt).toArray();
-                var block = world.getBlockAt(xyz1[0], xyz1[1], xyz1[2]);
-                LiftDoor liftDoor = new LiftDoor(block, lift, i + 1);
-                if (i == 0) liftDoor.openDoor();
+            for (int i = 1; i < info.length; i++) {
+                var xyz_liftDoor = Arrays.stream(info[i].split(",")).mapToInt(Integer::parseInt).toArray();
+                var block = world.getBlockAt(xyz_liftDoor[0], xyz_liftDoor[1], xyz_liftDoor[2]);
+                LiftDoor liftDoor = new LiftDoor(block, lift, i);
+                if (i == 1) liftDoor.openDoor();
                 else liftDoor.closeDoor();
                 liftDoors.put(block, liftDoor);
             }
-        });
-
-        //可拾取物品
-        Map.of(
-                "2 -60 13 64", ChamberStandardCartridge.class,
-                "2 -60 13 1 ", ChamberPistol.class,
-                "2 -60 13 1  ", ChamberShotgun.class,
-                "2 -60 13 1   ", CabinGuardian.class
-        ).forEach((key, value) -> {
-            var xyz = Arrays.stream(key.strip().split(" ")).mapToDouble(Double::parseDouble).toArray();
-            spawnItem(value, new Location(world, xyz[0], xyz[1], xyz[2]), (int) xyz[3]);
-        });
+        }
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {

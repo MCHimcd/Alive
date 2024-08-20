@@ -4,6 +4,7 @@ import mc.alive.game.Game;
 import mc.alive.game.PlayerData;
 import mc.alive.game.mechanism.Lift;
 import mc.alive.game.mechanism.LiftDoor;
+import mc.alive.game.role.hunter.Hunter;
 import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.LiftMenu;
 import org.bukkit.entity.Player;
@@ -24,11 +25,12 @@ public class MechanismListener implements Listener {
         var action = event.getAction();
         if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) return;
         Player player = event.getPlayer();
+        var role = PlayerData.getPlayerData(player).getRole();
 
         //电梯
         for (Lift lift : game.lifts.values()) {
             if (lift.players.contains(player)) {
-                if (PlayerData.getPlayerData(player).getRole() instanceof Survivor) {
+                if (role instanceof Survivor) {
                     event.setCancelled(true);
                     player.openInventory(new LiftMenu(player, lift).getInventory());
                 }
@@ -40,7 +42,7 @@ public class MechanismListener implements Listener {
         if (action == Action.RIGHT_CLICK_BLOCK) {
             var block = event.getClickedBlock();
             LiftDoor liftDoor = game.liftDoors.get(block);
-            if (liftDoor == null) return;
+            if (liftDoor == null || role instanceof Hunter) return;
             liftDoor.callLift();
         }
 

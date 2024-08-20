@@ -13,6 +13,7 @@ import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Sound;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,6 +31,7 @@ import static org.bukkit.Bukkit.*;
 public final class Alive extends JavaPlugin implements Listener {
     public static Alive plugin;
     public static Scoreboard main_scoreboard;
+    public static YamlConfiguration config;
 
     @Override
     public void onDisable() {
@@ -40,6 +42,7 @@ public final class Alive extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         plugin = this;
+        config = (YamlConfiguration) getConfig();
         initScoreboard();
         registerCommands();
         registerListeners();
