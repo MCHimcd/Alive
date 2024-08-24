@@ -19,8 +19,8 @@ import static mc.alive.util.Message.convertMsg;
 import static mc.alive.util.Message.rMsg;
 
 public class MainMenu extends SlotMenu {
-    public static final List<Player> prepared = new ArrayList<>();
-    public static final List<Player> doc = new ArrayList<>();
+    public static final List<Player> prepared_players = new ArrayList<>();
+    public static final List<Player> players_looking_document = new ArrayList<>();
 
     public MainMenu(Player p) {
         super(27, Component.text("主菜单", NamedTextColor.GOLD), p);
@@ -30,7 +30,7 @@ public class MainMenu extends SlotMenu {
                 .name(rMsg("<aqua>资料"))
                 .build(), (it, pl) -> {
             pl.setGameMode(GameMode.SPECTATOR);
-            doc.add(pl);
+            players_looking_document.add(pl);
             pl.closeInventory();
             pl.openBook(Book.builder().pages(convertMsg(List.of(
                     "<blue>document"
@@ -40,13 +40,13 @@ public class MainMenu extends SlotMenu {
         });
 
         // 加入游戏
-        if (prepared.contains(p)) {
+        if (prepared_players.contains(p)) {
             setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                     .name(rMsg("<red>点击取消准备"))
-                    .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared.size()))))
+                    .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared_players.size()))))
                     .build(), (it, pl) -> {
                 // 取消准备
-                prepared.remove(pl);
+                prepared_players.remove(pl);
                 update();
                 close = false;
             });
@@ -55,7 +55,7 @@ public class MainMenu extends SlotMenu {
                     .name(rMsg("<green>点击准备"))
                     .build(), (it, pl) -> {
                 // 准备
-                prepared.add(pl);
+                prepared_players.add(pl);
                 update();
                 close = false;
             });
@@ -63,11 +63,11 @@ public class MainMenu extends SlotMenu {
 
         // 管理员选项
         if (p.isOp()) {
-            if (prepared.size() >= 2) {
+            if (prepared_players.size() >= 2) {
                 setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
                         .name(rMsg("<gold>开始游戏"))
                         .build(), (it, pl) -> {
-                    List<Player> l = new ArrayList<>(prepared);
+                    List<Player> l = new ArrayList<>(prepared_players);
                     Collections.shuffle(l);
                     if (game != null) game.destroy();
                     game = new Game(l);
@@ -83,13 +83,13 @@ public class MainMenu extends SlotMenu {
     private void update() {
         Bukkit.getOnlinePlayers().forEach(player1 -> {
             if (player1.getOpenInventory().getTopInventory().getHolder() instanceof MainMenu m) {
-                if (prepared.contains(player1)) {
+                if (prepared_players.contains(player1)) {
                     m.setSlot(15, ItemBuilder.material(Material.CRYING_OBSIDIAN)
                             .name(rMsg("<red>点击取消准备"))
-                            .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared.size()))))
+                            .lore(Collections.singletonList(rMsg("<gray>已准备人数：%d".formatted(prepared_players.size()))))
                             .build(), (it, pl) -> {
                         // 取消准备
-                        prepared.remove(pl);
+                        prepared_players.remove(pl);
                         update();
                         close = false;
                     });
@@ -98,18 +98,18 @@ public class MainMenu extends SlotMenu {
                             .name(rMsg("<green>点击准备"))
                             .build(), (it, pl) -> {
                         // 准备
-                        prepared.add(pl);
+                        prepared_players.add(pl);
                         update();
                         close = false;
                     });
                 }
 
                 if (player1.isOp()) {
-                    if (prepared.size() >= 2) {
+                    if (prepared_players.size() >= 2) {
                         m.setSlot(26, ItemBuilder.material(Material.NETHER_STAR)
                                 .name(rMsg("<gold>开始游戏"))
                                 .build(), (it, pl) -> {
-                            List<Player> l = new ArrayList<>(prepared);
+                            List<Player> l = new ArrayList<>(prepared_players);
                             Collections.shuffle(l);
                             if (game != null) game.destroy();
                             game = new Game(l);

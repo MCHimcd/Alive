@@ -60,7 +60,7 @@ public class Game {
     public ChooseRole chooseRole;
 
     public Game(List<Player> players) {
-        MainMenu.prepared.clear();
+        MainMenu.prepared_players.clear();
         chooseRole = new ChooseRole(players);
         players.forEach(player -> {
             player.getInventory().clear();
@@ -148,7 +148,7 @@ public class Game {
                     try {
                         spawnItem((Class<? extends GameItem>) Class.forName("mc.alive.game.item." + name), new Location(world, x, y, z), Math.min(finalA, 64));
                     } catch (ClassNotFoundException e) {
-                        plugin.getLogger().info(e.getLocalizedMessage());
+                        plugin.getLogger().warning(e.getLocalizedMessage());
                     }
                 });
                 a -= 64;
@@ -189,7 +189,7 @@ public class Game {
             try {
                 item = game_item.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                plugin.getLogger().info(e.getLocalizedMessage());
+                plugin.getLogger().warning(e.getLocalizedMessage());
             }
             var ib = ItemBuilder
                     .material(item.material())
@@ -229,7 +229,7 @@ public class Game {
                 GENERIC_MAX_ABSORPTION, 20.0,
                 GENERIC_ATTACK_SPEED, 255.0,
                 GENERIC_ATTACK_KNOCKBACK, -1.0,
-                GENERIC_JUMP_STRENGTH, .0
+                GENERIC_JUMP_STRENGTH, .42
         ).forEach((key, value) -> {
             var a = player.getAttribute(key);
             assert a != null;
@@ -243,14 +243,15 @@ public class Game {
 
         player.playerListName(player.name());
         player.displayName(player.name());
-        player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
         player.setHealth(20);
         player.setAbsorptionAmount(0);
         player.setFoodLevel(20);
+        player.setLevel(0);
+        player.setExp(0);
         player.setGameMode(GameMode.ADVENTURE);
+        player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
         player.clearActivePotionEffects();
         player.getInventory().clear();
-        player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList());
 
         if (game == null) {
             player.getInventory().setItem(8, ItemBuilder

@@ -40,7 +40,7 @@ public class Dealt extends Survivor{
     }
 
     @Override
-    public int getIntelligence() {
+    public int getFixSpeed() {
         return 5;
     }
 

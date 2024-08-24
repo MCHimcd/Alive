@@ -60,6 +60,9 @@ public class LiftDoor {
         Game.game.markers.add(blockDisplay_left);
     }
 
+    /**
+     * @return 方块面对的方向
+     */
     private BlockFace getFace() {
         return ((Directional) block.getBlockData()).getFacing();
     }
@@ -68,6 +71,9 @@ public class LiftDoor {
         return floor;
     }
 
+    /**
+     * 呼叫电梯到对应的楼层
+     */
     public void callLift() {
         if (lift.players.isEmpty())
             lift.changeFloorTo(floor);

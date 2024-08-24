@@ -58,6 +58,10 @@ public class PlayerData implements TickRunnable {
     private int shield_cd = 0;
     //回护盾cd
     private int shield_tick = 0;
+    //体力值
+    private int stamina = 0;
+    //回体力cd
+    private int stamina_tick = 0;
 
     public PlayerData(Player player, Role role) {
         this.player = player;
@@ -75,6 +79,7 @@ public class PlayerData implements TickRunnable {
         var name = Component.text(role.toString());
         player.displayName(name);
         player.playerListName(name);
+        addStamina(100);
         startTick();
     }
 
@@ -175,11 +180,13 @@ public class PlayerData implements TickRunnable {
     public void tick() {
         //Effect
         effects.removeIf(Effect::tick);
+
         //普攻冷却
         attack_cd = Math.max(0, attack_cd - 0.05);
         if (attack_cd > 0) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
         }
+
         //技能冷却
         for (int i = 0; i < skill_cd.size(); i++) {
             if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
@@ -189,6 +196,7 @@ public class PlayerData implements TickRunnable {
         if (current_skill_reset_cd == 0) {
             current_skill_id = 0;
         }
+
         //护盾恢复
         if (role instanceof Survivor s) {
             if (shield_cd > 0) shield_cd--;
@@ -198,20 +206,42 @@ public class PlayerData implements TickRunnable {
                 shield_tick = 20;
             }
         }
+
         //血量恢复
         if (health_tick > 0) health_tick--;
         if (role instanceof Hunter && health_tick == 0) {
             damageOrHeal(-0.25);
         }
+
+        //体力回复
+        if (stamina_tick > 0) stamina_tick--;
+        if (stamina_tick == 0) {
+            addStamina(2);
+        }
+
         //维修
         var target = chosen_item_display.get(player);
         if (fix_tick >= 0) {
             if (--fix_tick == 0 && target != null) {
                 player.getLocation().getNearbyPlayers(20).forEach(player1 ->
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
-                game.fix(target, role.getIntelligence());
+                if (role instanceof Survivor survivor) {
+                    game.fix(target, survivor.getFixSpeed());
+                }
             }
         }
+    }
+
+    public boolean addStamina(int amount) {
+        if (amount < 0) {
+            if (-amount > stamina) return false;
+            stamina_tick = 40;
+        }
+        stamina = Math.min(stamina + amount, 100);
+        if (stamina == 0) player.setSprinting(false);
+        player.setLevel(stamina);
+        player.setExp((float) stamina / 100);
+        return true;
     }
 
     public void changeSkillValue() {

@@ -47,11 +47,6 @@ public class Alien extends Hunter {
     }
 
     @Override
-    public int getIntelligence() {
-        return 1;
-    }
-
-    @Override
     public int getStrength() {
         return 20;
     }
@@ -72,7 +67,7 @@ public class Alien extends Hunter {
             }
         }.runTaskTimer(plugin, 0, 1);
 
-        skill_locs.put(location, task);
+        skill_locations.put(location, task);
 
 
     }

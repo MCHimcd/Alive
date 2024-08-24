@@ -12,8 +12,11 @@ public class TickRunner extends BukkitRunnable {
     public static boolean gameEnd = false;
 
     public TickRunner() {
-        tickRunnable.add(new PlayerTickrunnable());
-        tickRunnable.add(new MechanismTickrunnable());
+        tickRunnable.addAll(List.of(
+                new PlayerTickrunnable(),
+                new MechanismTickrunnable(),
+                new StaminaTickrunnable()
+        ));
     }
 
     @Override

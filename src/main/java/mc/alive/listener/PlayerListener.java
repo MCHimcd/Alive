@@ -8,6 +8,7 @@ import mc.alive.game.role.hunter.Hunter;
 import mc.alive.menu.SlotMenu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -23,13 +24,14 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import static mc.alive.game.PlayerData.getPlayerData;
-import static mc.alive.menu.MainMenu.doc;
-import static mc.alive.menu.MainMenu.prepared;
+import static mc.alive.menu.MainMenu.players_looking_document;
+import static mc.alive.menu.MainMenu.prepared_players;
 
 public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Game.resetPlayer(event.getPlayer());
+        setAtChatCompletions();
     }
 
     @EventHandler
@@ -73,9 +75,9 @@ public class PlayerListener implements Listener {
     public void onMove(PlayerMoveEvent event) {
         var player = event.getPlayer();
 
-        if (doc.contains(player)) {
+        if (players_looking_document.contains(player)) {
             player.setGameMode(GameMode.ADVENTURE);
-            doc.remove(player);
+            players_looking_document.remove(player);
         }
 
         if (!Game.isStarted()) return;
@@ -104,11 +106,12 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         var player = event.getPlayer();
-        doc.remove(player);
-        prepared.remove(player);
+        players_looking_document.remove(player);
+        prepared_players.remove(player);
         if (Game.game != null) {
             Game.game.end();
         }
+        setAtChatCompletions();
     }
 
     @EventHandler
@@ -142,10 +145,15 @@ public class PlayerListener implements Listener {
             pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
             if (pd_damager.getRole() instanceof Hunter) {
                 pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
+                pd_damager.addStamina(-50);
             } else {
                 event.setCancelled(true);
             }
             event.setDamage(0);
         }
+    }
+
+    private void setAtChatCompletions(){
+        Bukkit.getOnlinePlayers().forEach(player -> player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList()));
     }
 }

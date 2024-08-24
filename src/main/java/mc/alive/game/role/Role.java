@@ -20,7 +20,7 @@ public abstract class Role {
             202, "§a德尔塔"
     );
     //技能location
-    public final Map<Location, BukkitTask> skill_locs = new HashMap<>();
+    public final Map<Location, BukkitTask> skill_locations = new HashMap<>();
     protected final Player player;
     protected int level = 0;
 
@@ -46,24 +46,35 @@ public abstract class Role {
         return player;
     }
 
-    //力量
+    /**
+     * @return 力量
+     */
     abstract public int getStrength();
 
-    //攻击间隔
+    /**
+     * @return 攻击间隔
+     */
     abstract public double getAttackCD();
 
-    //速度
+    /**
+     * @return 移动速度
+     */
     abstract public double getSpeed();
 
-    //最大生命
+    /**
+     * @return 最大生命
+     */
     abstract public double getMaxHealth();
 
-    //智力
-    abstract public int getIntelligence();
 
-    //初始物品给予
+    /**
+     * 初始物品给予
+     */
     abstract public void equip();
 
+    /**
+     * @return 技能数量
+     */
     public int getSkillCount() {
         return Math.max(2, (int) Arrays.stream(getClass().getMethods())
                 .filter(m -> m.isAnnotationPresent(Skill.class))

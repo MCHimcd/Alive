@@ -9,7 +9,14 @@ abstract public class Survivor extends Role {
         super(pl);
     }
 
-    //护盾
+    /**
+     * @return 最大护盾
+     */
     abstract public int getMaxShield();
+
+    /**
+     * @return 维修速度
+     */
+    abstract public int getFixSpeed();
 
 }

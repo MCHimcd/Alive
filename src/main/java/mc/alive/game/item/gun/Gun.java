@@ -225,7 +225,7 @@ public abstract class Gun extends GameItem {
             try {
                 if (data != bulletType.getDeclaredConstructor().newInstance().customModelData()) continue;
             } catch (Exception e) {
-                plugin.getLogger().info(e.getLocalizedMessage());
+                plugin.getLogger().warning(e.getLocalizedMessage());
             }
             if (it.getAmount() > count) {
                 finalCount += count;

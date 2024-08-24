@@ -5,10 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.game.Game;
-import mc.alive.listener.GunListener;
-import mc.alive.listener.ItemListener;
-import mc.alive.listener.MechanismListener;
-import mc.alive.listener.PlayerListener;
+import mc.alive.listener.*;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -51,12 +48,14 @@ public final class Alive extends JavaPlugin implements Listener {
     }
 
     private void registerListeners() {
-        var manager = getPluginManager();
-        manager.registerEvents(this, this);
-        manager.registerEvents(new ItemListener(), this);
-        manager.registerEvents(new PlayerListener(), this);
-        manager.registerEvents(new GunListener(), this);
-        manager.registerEvents(new MechanismListener(), this);
+        List.of(
+                this,
+                new ItemListener(),
+                new PlayerListener(),
+                new GunListener(),
+                new MechanismListener(),
+                new StaminaListener()
+        ).forEach(l -> getPluginManager().registerEvents(l, plugin));
     }
 
     private void initScoreboard() {

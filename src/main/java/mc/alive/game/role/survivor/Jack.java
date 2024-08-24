@@ -50,7 +50,7 @@ public class Jack extends Survivor {
     }
 
     @Override
-    public int getIntelligence() {
+    public int getFixSpeed() {
         return 5;
     }
 
@@ -72,7 +72,7 @@ public class Jack extends Survivor {
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().clone().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0, null, true);
 
         //在这里写一个清除jack 周围4格内  hunter的location
-        var locs = game.playerData.get(game.hunter).getRole().skill_locs;
+        var locs = game.playerData.get(game.hunter).getRole().skill_locations;
         var remove = new ArrayList<Location>();
         for (Location loc : locs.keySet()) {
             if (loc.distance(player.getLocation()) <= 4) {
