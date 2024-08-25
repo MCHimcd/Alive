@@ -129,7 +129,7 @@ public class ItemListener implements Listener {
                 //枪
                 Game.game.usable_items.get(item).handleItemUse(player);
             } else if (ItemCheck.isUsable(data)) {
-                Game.game.usable_items.get(data).handleItemUse(player);
+                Game.game.usable_items.get(item).handleItemUse(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {

@@ -22,7 +22,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -167,9 +166,8 @@ public class PlayerData implements TickRunnable {
     /**
      * @return 玩家对应的PlayerData，若游戏未开始则返回null
      */
-    public static @Nullable PlayerData of(Player player) {
-        if (Game.isStarted()) return game.playerData.get(player);
-        return null;
+    public static PlayerData of(Player player) {
+        return game.playerData.get(player);
     }
 
     public static void setSkillCD(Player player, int index, int amount) {

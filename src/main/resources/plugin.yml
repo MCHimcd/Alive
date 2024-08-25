@@ -1,4 +1,4 @@
 name: alive
 version: '${version}'
 main: mc.alive.Alive
-api-version: '1.21'
+api-version: '1.21.1'

@@ -45,7 +45,6 @@ public final class Alive extends JavaPlugin implements Listener {
     public void onEnable() {
         plugin = this;
         config = (YamlConfiguration) getConfig();
-        saveConfig();
         initScoreboard();
         registerCommands();
         registerListeners();
