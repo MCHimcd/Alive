@@ -2,6 +2,7 @@ package mc.alive.listener;
 
 import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
 import mc.alive.game.Game;
+import mc.alive.game.item.usable.gun.Gun;
 import mc.alive.util.ItemCheck;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -15,7 +16,7 @@ public class GunListener implements Listener {
     public void onStopUsing(PlayerStopUsingItemEvent event) {
         if (!Game.isStarted()) return;
         var player = event.getPlayer();
-        var gun = Game.game.guns.get(player.getInventory().getItemInMainHand());
+        var gun = ((Gun) Game.game.usable_items.get(player.getInventory().getItemInMainHand()));
         if (gun != null) {
             gun.stopShoot(player);
         }
@@ -37,13 +38,13 @@ public class GunListener implements Listener {
         if (!ItemCheck.hasCustomModelData(pre_it)) return;
         var pre_data = pre_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(pre_data)) {
-            Game.game.guns.get(pre_it).handleItemChange(player, true);
+            ((Gun) Game.game.usable_items.get(pre_it)).handleItemChange(player, true);
         }
         var new_it = player.getInventory().getItem(event.getNewSlot());
         if (!ItemCheck.hasCustomModelData(new_it)) return;
         var new_data = new_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(new_data)) {
-            Game.game.guns.get(new_it).handleItemChange(player, false);
+            ((Gun) Game.game.usable_items.get(new_it)).handleItemChange(player, false);
         }
     }
 }

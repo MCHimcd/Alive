@@ -16,7 +16,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 
 import static mc.alive.game.Game.game;
-import static mc.alive.game.PlayerData.getPlayerData;
 import static mc.alive.game.PlayerData.setSkillCD;
 
 public class Jack extends Survivor {
@@ -117,7 +116,7 @@ public class Jack extends Survivor {
             }
         }.runTaskTimer(Alive.plugin, 0, 1);
         player.playSound(player, Sound.BLOCK_BEACON_ACTIVATE, 1f, .5f);
-        getPlayerData(player).addEffect(Effect.giddy(player, 40));
+        getPlayerData().addEffect(Effect.giddy(player, 40));
         setSkillCD(player, 2, 140);
     }
 }

@@ -19,6 +19,6 @@ items:
   - 2 -60 13 256
     ChamberStandardCartridge
   - 2 -60 13 1
-    gun.ChamberPistol
-    gun.ChamberShotgun
-    gun.CabinGuardian
+    ChamberPistol
+    ChamberShotgun
+    CabinGuardian

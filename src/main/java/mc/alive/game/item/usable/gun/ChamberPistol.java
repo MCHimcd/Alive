@@ -1,4 +1,4 @@
-package mc.alive.game.item.gun;
+package mc.alive.game.item.usable.gun;
 
 import mc.alive.game.item.ChamberStandardCartridge;
 import net.kyori.adventure.text.Component;
@@ -7,36 +7,26 @@ import java.util.List;
 
 import static mc.alive.util.Message.rMsg;
 
-public class ChamberShotgun extends Shotgun {
-    public ChamberShotgun() {
+public class ChamberPistol extends Gun {
+    public ChamberPistol() {
         super(
-                15f,
+                2f,
                 ChamberStandardCartridge.class,
-                5,
-                5,
-                1000,
-                60
+                10,
+                10,
+                500,
+                20
         );
     }
 
     @Override
-    double getSpread() {
-        return 0.2;
-    }
-
-    @Override
-    int getBulletsCount() {
-        return 8;
-    }
-
-    @Override
     public int customModelData() {
-        return 80002;
+        return 80001;
     }
 
     @Override
     public Component name() {
-        return rMsg("霰弹枪");
+        return rMsg("<red>标准舱室手枪");
     }
 
     @Override

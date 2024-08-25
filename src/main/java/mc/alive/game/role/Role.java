@@ -1,5 +1,6 @@
 package mc.alive.game.role;
 
+import mc.alive.game.PlayerData;
 import mc.alive.game.role.hunter.Alien;
 import mc.alive.game.role.survivor.Dealt;
 import mc.alive.game.role.survivor.Jack;
@@ -79,5 +80,9 @@ public abstract class Role {
         return Math.max(2, (int) Arrays.stream(getClass().getMethods())
                 .filter(m -> m.isAnnotationPresent(Skill.class))
                 .count());
+    }
+
+    protected PlayerData getPlayerData() {
+        return PlayerData.of(player);
     }
 }

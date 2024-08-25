@@ -25,7 +25,7 @@ public class MechanismListener implements Listener {
         var action = event.getAction();
         if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) return;
         Player player = event.getPlayer();
-        var role = PlayerData.getPlayerData(player).getRole();
+        var role = PlayerData.of(player).getRole();
 
         //电梯
         for (Lift lift : game.lifts.values()) {

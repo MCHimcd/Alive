@@ -33,5 +33,4 @@ public class ChamberStandardCartridge extends GameItem {
         return PickUp.SURVIVOR;
     }
 
-
 }

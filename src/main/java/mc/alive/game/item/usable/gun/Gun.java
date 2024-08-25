@@ -1,9 +1,11 @@
-package mc.alive.game.item.gun;
+package mc.alive.game.item.usable.gun;
 
 import mc.alive.Alive;
 import mc.alive.game.PlayerData;
 import mc.alive.game.item.GameItem;
 import mc.alive.game.item.PickUp;
+import mc.alive.game.item.usable.UsableGameItem;
+import mc.alive.game.role.survivor.Survivor;
 import mc.alive.util.Factory;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
@@ -20,9 +22,10 @@ import java.util.TimerTask;
 
 import static mc.alive.Alive.plugin;
 import static mc.alive.game.Game.game;
+import static mc.alive.game.PlayerData.of;
 import static net.kyori.adventure.text.Component.text;
 
-public abstract class Gun extends GameItem {
+public abstract class Gun extends UsableGameItem {
 
     protected final float reactiveForce;
     protected final double damage;
@@ -69,7 +72,9 @@ public abstract class Gun extends GameItem {
         return PickUp.SURVIVOR;
     }
 
-    public void startShoot(Player player) {
+    @Override
+    public void handleItemUse(Player player) {
+        if (!(of(player).getRole() instanceof Survivor)) return;
         if (canShoot) {
             if (reloading) {
                 reloading = false;
@@ -111,7 +116,7 @@ public abstract class Gun extends GameItem {
 
         //伤害
         if (result.target() != null) {
-            PlayerData.getPlayerData(result.target()).damageOrHeal(damage);
+            PlayerData.of(result.target()).damageOrHeal(damage);
         }
 
         applyRecoil(player);

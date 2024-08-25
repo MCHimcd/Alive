@@ -1,4 +1,4 @@
-package mc.alive.game.item.gun;
+package mc.alive.game.item.usable.gun;
 
 import mc.alive.game.PlayerData;
 import mc.alive.game.item.GameItem;
@@ -28,7 +28,7 @@ public abstract class Shotgun extends Gun {
             for (Location location : locations) {
                 player.getWorld().spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 1f), true);
                 if (game.hunter.getBoundingBox().contains(location.toVector())) {
-                    PlayerData.getPlayerData(game.hunter).damageOrHeal(damage);
+                    PlayerData.of(game.hunter).damageOrHeal(damage);
                     break;
                 }
                 if (location.getBlock().isSolid()) break;

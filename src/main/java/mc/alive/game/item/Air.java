@@ -30,4 +30,5 @@ public class Air extends GameItem {
     public PickUp pickUp() {
         return PickUp.BOTH;
     }
+
 }

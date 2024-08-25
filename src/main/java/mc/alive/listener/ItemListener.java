@@ -4,6 +4,7 @@ import mc.alive.game.Game;
 import mc.alive.game.PlayerData;
 import mc.alive.game.effect.Giddy;
 import mc.alive.game.item.PickUp;
+import mc.alive.game.item.usable.gun.Gun;
 import mc.alive.game.role.hunter.Hunter;
 import mc.alive.game.role.survivor.Survivor;
 import mc.alive.menu.MainMenu;
@@ -23,7 +24,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
-import static mc.alive.game.PlayerData.getPlayerData;
+import static mc.alive.game.PlayerData.of;
 import static mc.alive.game.item.PickUp.*;
 import static mc.alive.tick.PlayerTickrunnable.chosen_item_display;
 import static mc.alive.util.Message.rMsg;
@@ -41,11 +42,11 @@ public class ItemListener implements Listener {
 
                 if (ItemCheck.isSkill(data)) {
                     //技能
-                    PlayerData.getPlayerData(event.getPlayer()).changeSkillValue();
+                    PlayerData.of(event.getPlayer()).changeSkillValue();
                     event.setCancelled(true);
-                } else if (ItemCheck.isGun(data) && getPlayerData(event.getPlayer()).getRole() instanceof Survivor) {
+                } else if (ItemCheck.isGun(data) && of(event.getPlayer()).getRole() instanceof Survivor) {
                     //枪
-                    Game.game.guns.get(item).reload(event.getPlayer());
+                    ((Gun) Game.game.usable_items.get(item)).reload(event.getPlayer());
                     event.setCancelled(true);
                 }
             }
@@ -70,8 +71,8 @@ public class ItemListener implements Listener {
             var npl = item.getWorld().getNearbyPlayers(item.getLocation(), 1,
                     pl -> switch (pickUp) {
                         case BOTH -> true;
-                        case HUNTER -> getPlayerData(pl).getRole() instanceof Hunter;
-                        case SURVIVOR -> getPlayerData(pl).getRole() instanceof Survivor;
+                        case HUNTER -> of(pl).getRole() instanceof Hunter;
+                        case SURVIVOR -> of(pl).getRole() instanceof Survivor;
                     }).stream().findAny();
             if (npl.isPresent()) {
                 item.setPickupDelay(0);
@@ -122,11 +123,13 @@ public class ItemListener implements Listener {
 
             if (ItemCheck.isSkill(data)) {
                 //技能
-                PlayerData.getPlayerData(player).useSkill();
+                PlayerData.of(player).useSkill();
                 event.setCancelled(true);
-            } else if (ItemCheck.isGun(data) && getPlayerData(player).getRole() instanceof Survivor) {
+            } else if (ItemCheck.isGun(data) && of(player).getRole() instanceof Survivor) {
                 //枪
-                Game.game.guns.get(item).startShoot(player);
+                Game.game.usable_items.get(item).handleItemUse(player);
+            } else if (ItemCheck.isUsable(data)) {
+                Game.game.usable_items.get(data).handleItemUse(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {
@@ -149,7 +152,7 @@ public class ItemListener implements Listener {
             var data = itemStack.getItemMeta().getCustomModelData();
             if (ItemCheck.isSkill(data) || data == 90000 || data == 20000) {
                 event.setCancelled(true);
-            } else if (ItemCheck.isPickable(data) && Game.isStarted()) {
+            } else if (ItemCheck.isGameItem(data) && Game.isStarted()) {
                 var item = event.getItemDrop();
                 ItemStack is = item.getItemStack();
                 item.customName(is.displayName().append(is.getAmount() == 1 ? Component.empty() : rMsg("*%d".formatted(is.getAmount()))));

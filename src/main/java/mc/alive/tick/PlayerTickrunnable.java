@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static mc.alive.game.Game.game;
-import static mc.alive.game.PlayerData.getPlayerData;
+import static mc.alive.game.PlayerData.of;
 import static mc.alive.util.Message.rMsg;
 
 public class PlayerTickrunnable implements TickRunnable {
@@ -56,7 +56,7 @@ public class PlayerTickrunnable implements TickRunnable {
 
             //playerData
             if (game.chooseRole != null) return;
-            var pd = getPlayerData(player);
+            var pd = of(player);
             if (pd != null) {
                 if (pd.getRole() instanceof Hunter) {
                     //hunter

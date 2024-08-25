@@ -8,6 +8,10 @@ public final class ItemCheck {
     }
 
     public static boolean isGun(int data) {
+        return data >= 80000 && data < 80100;
+    }
+
+    public static boolean isUsable(int data) {
         return data >= 80000 && data < 90000;
     }
 
@@ -15,7 +19,7 @@ public final class ItemCheck {
         return data >= 10000 && data < 20000;
     }
 
-    public static boolean isPickable(int data) {
+    public static boolean isGameItem(int data) {
         return data >= 80000 && data < 100000;
     }
 }

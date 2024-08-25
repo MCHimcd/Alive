@@ -4,7 +4,12 @@ import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import mc.alive.api.Registries;
 import mc.alive.game.Game;
+import mc.alive.game.item.ChamberStandardCartridge;
+import mc.alive.game.item.usable.gun.CabinGuardian;
+import mc.alive.game.item.usable.gun.ChamberPistol;
+import mc.alive.game.item.usable.gun.ChamberShotgun;
 import mc.alive.listener.*;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
@@ -40,11 +45,22 @@ public final class Alive extends JavaPlugin implements Listener {
     public void onEnable() {
         plugin = this;
         config = (YamlConfiguration) getConfig();
+        saveConfig();
         initScoreboard();
         registerCommands();
         registerListeners();
+        registerGameItems();
         new TickRunner().runTaskTimer(this, 0, 1);
         getOnlinePlayers().forEach(Game::resetPlayer);
+    }
+
+    private void registerGameItems() {
+        List.of(
+                ChamberStandardCartridge.class,
+                CabinGuardian.class,
+                ChamberPistol.class,
+                ChamberShotgun.class
+        ).forEach(Registries::registerGameItem);
     }
 
     private void registerListeners() {

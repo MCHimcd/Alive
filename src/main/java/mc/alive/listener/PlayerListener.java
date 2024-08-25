@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import static mc.alive.game.PlayerData.getPlayerData;
+import static mc.alive.game.PlayerData.of;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
 
@@ -32,6 +32,10 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Game.resetPlayer(event.getPlayer());
         setAtChatCompletions();
+    }
+
+    private void setAtChatCompletions() {
+        Bukkit.getOnlinePlayers().forEach(player -> player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList()));
     }
 
     @EventHandler
@@ -48,8 +52,8 @@ public class PlayerListener implements Listener {
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             if (!(viewer instanceof Player player)) return Component.empty();
 
-            var ps = PlayerData.getPlayerData(source);
-            var pv = PlayerData.getPlayerData(player);
+            var ps = PlayerData.of(source);
+            var pv = PlayerData.of(player);
             if (ps == null || pv == null) return Component.empty();
 
             if (ps.getRole() instanceof Hunter) {
@@ -82,7 +86,7 @@ public class PlayerListener implements Listener {
 
         if (!Game.isStarted()) return;
 
-        var pd = getPlayerData(player);
+        var pd = of(player);
         if (pd.hasEffect(Giddy.class)) {
             event.setCancelled(true);
             return;
@@ -136,8 +140,8 @@ public class PlayerListener implements Listener {
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
         if (Game.game == null || Game.game.chooseRole != null) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
-            var pd_hurt = getPlayerData(player);
-            var pd_damager = getPlayerData(damager);
+            var pd_hurt = of(player);
+            var pd_damager = of(damager);
             if (pd_damager.attack_cd > 0) {
                 event.setCancelled(true);
                 return;
@@ -151,9 +155,5 @@ public class PlayerListener implements Listener {
             }
             event.setDamage(0);
         }
-    }
-
-    private void setAtChatCompletions(){
-        Bukkit.getOnlinePlayers().forEach(player -> player.setCustomChatCompletions(Bukkit.getOnlinePlayers().stream().map(player1 -> "@" + player1.getName()).toList()));
     }
 }

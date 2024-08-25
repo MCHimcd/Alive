@@ -3,7 +3,8 @@ package mc.alive.game;
 import mc.alive.game.item.Air;
 import mc.alive.game.item.GameItem;
 import mc.alive.game.item.PickUp;
-import mc.alive.game.item.gun.Gun;
+import mc.alive.game.item.usable.UsableGameItem;
+import mc.alive.game.item.usable.gun.Gun;
 import mc.alive.game.mechanism.Lift;
 import mc.alive.game.mechanism.LiftDoor;
 import mc.alive.game.role.Role;
@@ -51,7 +52,7 @@ public class Game {
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Player hunter;
-    public final Map<ItemStack, Gun> guns = new HashMap<>();
+    public final Map<ItemStack, UsableGameItem> usable_items = new HashMap<>();
     public final Map<Item, PickUp> item_on_ground = new HashMap<>();
     public final Map<BlockDisplay, Lift> lifts = new HashMap<>();
     public final Map<Block, LiftDoor> liftDoors = new HashMap<>();
@@ -145,11 +146,9 @@ public class Game {
             do {
                 int finalA = a;
                 Arrays.stream(info).skip(4).forEach(name -> {
-                    try {
-                        spawnItem((Class<? extends GameItem>) Class.forName("mc.alive.game.item." + name), new Location(world, x, y, z), Math.min(finalA, 64));
-                    } catch (ClassNotFoundException e) {
-                        plugin.getLogger().warning(e.getLocalizedMessage());
-                    }
+                    var clazz = GameItem.registries.get(name);
+                    if (clazz == null) return;
+                    spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64));
                 });
                 a -= 64;
             } while (a >= 64);
@@ -191,6 +190,7 @@ public class Game {
             } catch (Exception e) {
                 plugin.getLogger().warning(e.getLocalizedMessage());
             }
+
             var ib = ItemBuilder
                     .material(item.material())
                     .name(item.name())
@@ -198,12 +198,18 @@ public class Game {
                     .lore(item.lore())
                     .amount(amount);
             ItemStack is;
-            if (item instanceof Gun gun) {
+
+            if (item instanceof UsableGameItem usableGameItem) {
                 is = ib.unique().build();
-                guns.put(is, gun);
+                usable_items.put(is, usableGameItem);
             } else {
                 is = ib.build();
             }
+
+            if (item instanceof UsableGameItem gun) {
+                usable_items.put(is, gun);
+            }
+
             item_entity.setItemStack(is);
             item_entity.customName(is.displayName().append(amount == 1 ? Component.empty() : rMsg("*%d".formatted(amount))));
             item_entity.setCustomNameVisible(true);
@@ -269,7 +275,11 @@ public class Game {
         }
         fix_progress.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
-        guns.values().forEach(gun -> gun.stopShoot(null));
+        for (UsableGameItem usableGameItem : usable_items.values()) {
+            if (usableGameItem instanceof Gun gun) {
+                gun.stopShoot(null);
+            }
+        }
         for (BlockDisplay blockDisplay : lifts.keySet()) {
             Factory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
             blockDisplay.remove();
