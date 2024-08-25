@@ -2,7 +2,7 @@ package mc.alive.tick;
 
 import org.bukkit.util.BoundingBox;
 
-import static mc.alive.game.Game.game;
+import static mc.alive.Game.game;
 
 public class MechanismTickrunnable implements TickRunnable {
 

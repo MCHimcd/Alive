@@ -1,6 +1,6 @@
 package mc.alive.menu;
 
-import mc.alive.game.Game;
+import mc.alive.Game;
 import mc.alive.util.ItemBuilder;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static mc.alive.game.Game.game;
+import static mc.alive.Game.game;
 import static mc.alive.util.Message.convertMsg;
 import static mc.alive.util.Message.rMsg;
 

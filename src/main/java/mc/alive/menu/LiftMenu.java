@@ -1,6 +1,6 @@
 package mc.alive.menu;
 
-import mc.alive.game.mechanism.Lift;
+import mc.alive.mechanism.Lift;
 import org.bukkit.entity.Player;
 
 import java.util.List;

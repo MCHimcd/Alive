@@ -1,8 +1,6 @@
 package mc.alive.tick;
 
-import mc.alive.game.role.Role;
-import mc.alive.game.role.hunter.Hunter;
-import net.kyori.adventure.text.Component;
+import mc.alive.role.hunter.Hunter;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -16,8 +14,9 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static mc.alive.game.Game.game;
-import static mc.alive.game.PlayerData.of;
+import static mc.alive.Alive.roles_config;
+import static mc.alive.Game.game;
+import static mc.alive.PlayerData.of;
 import static mc.alive.util.Message.rMsg;
 
 public class PlayerTickrunnable implements TickRunnable {
@@ -43,8 +42,11 @@ public class PlayerTickrunnable implements TickRunnable {
                 var td = (ItemDisplay) r.getHitEntity();
                 if (td != null) {
                     if (game.chooseRole != null) {
-                        player.sendActionBar(Component.text("你当前选择的角色为: %s ".formatted(Role.names.get(game.chooseRole.roles.get(td)))));
-                        td.setGlowing(true);
+                        var name = (String) roles_config.get(String.valueOf(game.chooseRole.roles.get(td)));
+                        if (name != null) {
+                            player.sendActionBar(rMsg("你当前选择的角色为: %s ".formatted(name.split(" ")[1])));
+                            td.setGlowing(true);
+                        }
                     } else if (!player.equals(game.hunter)) {
                         double progress = (double) game.fix(td, 0) / 400;
                         int a = (int) (progress * 40);
@@ -62,16 +64,6 @@ public class PlayerTickrunnable implements TickRunnable {
                     //hunter
                     player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 1, 0, false, false));
                     player.setFoodLevel(20);
-                } else {
-                    //幸存者
-                    var itemMeta = player.getInventory().getItemInMainHand().getItemMeta();
-                    if (itemMeta != null && itemMeta.hasCustomModelData() && itemMeta.getCustomModelData() == 10200) {
-                        if (player.getPitch() >= 0) {
-                            player.sendActionBar(rMsg(""));
-                        } else {
-                            player.sendActionBar(rMsg(""));
-                        }
-                    }
                 }
             }
         });

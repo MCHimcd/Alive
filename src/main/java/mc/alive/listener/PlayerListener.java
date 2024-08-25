@@ -1,11 +1,11 @@
 package mc.alive.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import mc.alive.game.Game;
-import mc.alive.game.PlayerData;
-import mc.alive.game.effect.Giddy;
-import mc.alive.game.role.hunter.Hunter;
+import mc.alive.Game;
+import mc.alive.PlayerData;
+import mc.alive.effect.Giddy;
 import mc.alive.menu.SlotMenu;
+import mc.alive.role.hunter.Hunter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import static mc.alive.game.PlayerData.of;
+import static mc.alive.PlayerData.of;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
 

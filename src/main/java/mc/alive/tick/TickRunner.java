@@ -5,9 +5,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.LinkedList;
 import java.util.List;
 
-import static mc.alive.game.Game.game;
+import static mc.alive.Game.game;
 
-public class TickRunner extends BukkitRunnable {
+public final class TickRunner extends BukkitRunnable {
     public static final List<TickRunnable> tickRunnable = new LinkedList<>();
     public static boolean gameEnd = false;
 

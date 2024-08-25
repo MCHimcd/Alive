@@ -12,7 +12,7 @@ public final class ItemCheck {
     }
 
     public static boolean isUsable(int data) {
-        return data >= 80000 && data < 90000;
+        return data >= 80000 && data < 85000;
     }
 
     public static boolean isSkill(int data) {

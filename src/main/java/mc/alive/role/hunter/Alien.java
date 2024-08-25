@@ -1,0 +1,92 @@
+package mc.alive.role.hunter;
+
+import mc.alive.role.Skill;
+import mc.alive.util.ItemBuilder;
+import mc.alive.util.Message;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import static mc.alive.Alive.plugin;
+
+public class Alien extends Hunter {
+    public Alien(Player pl) {
+        super(pl);
+    }
+
+    @Override
+    public int getId() {
+        return 100;
+    }
+
+    @Override
+    public int getStrength() {
+        return 20;
+    }
+
+    @Override
+    public double getAttackCD() {
+        return 1.8;
+    }
+
+    @Override
+    public double getSpeed() {
+        return 0.1;
+    }
+
+    @Override
+    public double getMaxHealth() {
+        return 50;
+    }
+
+    @Override
+    public void equip() {
+        player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND_HOE, 10100).name(Message.rMsg("<red><bold>手镰")).build());
+    }
+
+    @Override
+    public double getRange() {
+        return 3;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return 6;
+    }
+
+    /**
+     * 吐出一滩粘液 减速范围内的人
+     */
+    @Skill(id = 1, name = "粘液")
+    public void slime() {
+        Location location = player.getEyeLocation();
+        var task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.getWorld().spawnParticle(Particle.END_ROD, location, 0);
+            }
+        }.runTaskTimer(plugin, 0, 1);
+
+        skill_locations.put(location, task);
+
+    }
+
+    @Skill(id = 2, name = "粘液")
+    public void a() {
+        //todo
+    }
+
+    @Skill(id = 3, name = "粘液", minLevel = 1)
+    public void b() {
+        //todo
+    }
+
+    @Skill(id = 4, name = "粘液", minLevel = 2)
+    public void c() {
+        //todo
+    }
+
+
+}

@@ -4,12 +4,12 @@ import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import mc.alive.api.Registries;
-import mc.alive.game.Game;
-import mc.alive.game.item.ChamberStandardCartridge;
-import mc.alive.game.item.usable.gun.CabinGuardian;
-import mc.alive.game.item.usable.gun.ChamberPistol;
-import mc.alive.game.item.usable.gun.ChamberShotgun;
+import mc.alive.item.ChamberStandardCartridge;
+import mc.alive.item.GameItem;
+import mc.alive.item.pickup.LevelUp;
+import mc.alive.item.usable.gun.CabinGuardian;
+import mc.alive.item.usable.gun.ChamberPistol;
+import mc.alive.item.usable.gun.ChamberShotgun;
 import mc.alive.listener.*;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
@@ -24,16 +24,19 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static mc.alive.game.Game.team_hunter;
-import static mc.alive.game.Game.team_survivor;
+import static mc.alive.Game.team_hunter;
+import static mc.alive.Game.team_survivor;
+import static mc.alive.util.Message.rMsg;
 import static org.bukkit.Bukkit.*;
 
 public final class Alive extends JavaPlugin implements Listener {
     public static Alive plugin;
     public static Scoreboard main_scoreboard;
-    public static YamlConfiguration config;
+    public static YamlConfiguration locations_config, roles_config;
 
     @Override
     public void onDisable() {
@@ -41,14 +44,18 @@ public final class Alive extends JavaPlugin implements Listener {
         Game.game.destroy();
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public void onEnable() {
+        locations_config = YamlConfiguration.loadConfiguration(new InputStreamReader(getResource("locations.yml"), StandardCharsets.UTF_8));
+        roles_config = YamlConfiguration.loadConfiguration(new InputStreamReader(getResource("roles.yml"), StandardCharsets.UTF_8));
+
         plugin = this;
-        config = (YamlConfiguration) getConfig();
         initScoreboard();
         registerCommands();
         registerListeners();
         registerGameItems();
+
         new TickRunner().runTaskTimer(this, 0, 1);
         getOnlinePlayers().forEach(Game::resetPlayer);
     }
@@ -58,8 +65,9 @@ public final class Alive extends JavaPlugin implements Listener {
                 ChamberStandardCartridge.class,
                 CabinGuardian.class,
                 ChamberPistol.class,
-                ChamberShotgun.class
-        ).forEach(Registries::registerGameItem);
+                ChamberShotgun.class,
+                LevelUp.class
+        ).forEach(GameItem::register);
     }
 
     private void registerListeners() {
@@ -135,7 +143,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     }.runTaskTimer(plugin, 0, 1);
                 }
                 event.setCancelled(true);
-                broadcast(Message.rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), player.getName())));
+                broadcast(rMsg("<%s> <aqua>%s".formatted(event.getPlayer().getName(), player.getName())));
             }
         });
     }

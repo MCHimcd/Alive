@@ -1,12 +1,12 @@
 package mc.alive.listener;
 
-import mc.alive.game.Game;
-import mc.alive.game.PlayerData;
-import mc.alive.game.effect.Giddy;
-import mc.alive.game.item.PickUp;
-import mc.alive.game.item.usable.gun.Gun;
-import mc.alive.game.role.hunter.Hunter;
-import mc.alive.game.role.survivor.Survivor;
+import mc.alive.Game;
+import mc.alive.PlayerData;
+import mc.alive.effect.Giddy;
+import mc.alive.item.PickUp;
+import mc.alive.item.usable.gun.Gun;
+import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Survivor;
 import mc.alive.menu.MainMenu;
 import mc.alive.util.ItemCheck;
 import net.kyori.adventure.text.Component;
@@ -24,8 +24,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
-import static mc.alive.game.PlayerData.of;
-import static mc.alive.game.item.PickUp.*;
+import static mc.alive.Game.game;
+import static mc.alive.item.PickUp.*;
 import static mc.alive.tick.PlayerTickrunnable.chosen_item_display;
 import static mc.alive.util.Message.rMsg;
 
@@ -34,7 +34,7 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (Game.isStarted()) {
-            var pd = Game.game.playerData.get(event.getPlayer());
+            var pd = game.playerData.get(event.getPlayer());
             ItemStack item = event.getOffHandItem();
 
             if (ItemCheck.hasCustomModelData(item)) {
@@ -44,9 +44,9 @@ public class ItemListener implements Listener {
                     //技能
                     PlayerData.of(event.getPlayer()).changeSkillValue();
                     event.setCancelled(true);
-                } else if (ItemCheck.isGun(data) && of(event.getPlayer()).getRole() instanceof Survivor) {
+                } else if (ItemCheck.isGun(data) && PlayerData.of(event.getPlayer()).getRole() instanceof Survivor) {
                     //枪
-                    ((Gun) Game.game.usable_items.get(item)).reload(event.getPlayer());
+                    ((Gun) game.usable_items.get(item)).reload(event.getPlayer());
                     event.setCancelled(true);
                 }
             }
@@ -66,18 +66,27 @@ public class ItemListener implements Listener {
     public void onPickUp(PlayerAttemptPickupItemEvent event) {
         if (!Game.isStarted()) return;
         var item = event.getItem();
-        if (item.isOnGround() && Game.game.item_on_ground.containsKey(item)) {
-            var pickUp = Game.game.item_on_ground.get(item);
+        if (item.isOnGround() && game.item_on_ground.containsKey(item)) {
+            var pickUp = game.item_on_ground.get(item);
             var npl = item.getWorld().getNearbyPlayers(item.getLocation(), 1,
                     pl -> switch (pickUp) {
                         case BOTH -> true;
-                        case HUNTER -> of(pl).getRole() instanceof Hunter;
-                        case SURVIVOR -> of(pl).getRole() instanceof Survivor;
+                        case HUNTER -> PlayerData.of(pl).getRole() instanceof Hunter;
+                        case SURVIVOR -> PlayerData.of(pl).getRole() instanceof Survivor;
                     }).stream().findAny();
             if (npl.isPresent()) {
+                var ph = game.pickup_items.get(item.getItemStack());
+                if (ph != null) {
+                    if (ph.handlePickUp(event.getPlayer())) {
+                        game.item_on_ground.remove(item);
+                        item.remove();
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
                 item.setPickupDelay(0);
                 item.setOwner(npl.get().getUniqueId());
-                Game.game.item_on_ground.remove(item);
+                game.item_on_ground.remove(item);
             } else {
                 item.setOwner(new UUID(0, 0));
             }
@@ -91,10 +100,10 @@ public class ItemListener implements Listener {
         ItemStack item = event.getItem();
         Player player = event.getPlayer();
 
-        if (Game.game != null) {
-            if (Game.game.chooseRole != null && Game.game.chooseRole.handleEvent(player)) return;
-            if (Game.game.chooseRole != null) return;
-            var pd = Game.game.playerData.get(player);
+        if (game != null) {
+            if (game.chooseRole != null && game.chooseRole.handleEvent(player)) return;
+            if (game.chooseRole != null) return;
+            var pd = game.playerData.get(player);
             //管道
             if (pd.getRole() instanceof Hunter) {
                 pd.tryIntoDuct();
@@ -118,18 +127,15 @@ public class ItemListener implements Listener {
         ) return;
 
         //使用物品
-        if (Game.game != null) {
+        if (game != null) {
             var data = item.getItemMeta().getCustomModelData();
 
             if (ItemCheck.isSkill(data)) {
                 //技能
                 PlayerData.of(player).useSkill();
                 event.setCancelled(true);
-            } else if (ItemCheck.isGun(data) && of(player).getRole() instanceof Survivor) {
-                //枪
-                Game.game.usable_items.get(item).handleItemUse(player);
             } else if (ItemCheck.isUsable(data)) {
-                Game.game.usable_items.get(item).handleItemUse(player);
+                game.usable_items.get(item).handleItemUse(player);
             }
         } else {
             switch (item.getItemMeta().getCustomModelData()) {
@@ -161,10 +167,10 @@ public class ItemListener implements Listener {
                 item.setWillAge(false);
                 item.setCanMobPickup(false);
                 PickUp pickUp = BOTH;
-                var pd = Game.game.playerData.get(event.getPlayer());
+                var pd = game.playerData.get(event.getPlayer());
                 if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;
                 else if (pd.getRole() instanceof Hunter) pickUp = HUNTER;
-                Game.game.item_on_ground.put(item, pickUp);
+                game.item_on_ground.put(item, pickUp);
             }
         }
     }

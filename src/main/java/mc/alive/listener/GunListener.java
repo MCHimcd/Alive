@@ -1,8 +1,8 @@
 package mc.alive.listener;
 
 import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
-import mc.alive.game.Game;
-import mc.alive.game.item.usable.gun.Gun;
+import mc.alive.Game;
+import mc.alive.item.usable.gun.Gun;
 import mc.alive.util.ItemCheck;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -16,9 +16,9 @@ public class GunListener implements Listener {
     public void onStopUsing(PlayerStopUsingItemEvent event) {
         if (!Game.isStarted()) return;
         var player = event.getPlayer();
-        var gun = ((Gun) Game.game.usable_items.get(player.getInventory().getItemInMainHand()));
+        var gun = Game.game.usable_items.get(player.getInventory().getItemInMainHand());
         if (gun != null) {
-            gun.stopShoot(player);
+            ((Gun) gun).stopShoot(player);
         }
     }
 

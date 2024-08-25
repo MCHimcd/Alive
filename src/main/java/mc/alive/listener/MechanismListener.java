@@ -1,11 +1,11 @@
 package mc.alive.listener;
 
-import mc.alive.game.Game;
-import mc.alive.game.PlayerData;
-import mc.alive.game.mechanism.Lift;
-import mc.alive.game.mechanism.LiftDoor;
-import mc.alive.game.role.hunter.Hunter;
-import mc.alive.game.role.survivor.Survivor;
+import mc.alive.Game;
+import mc.alive.PlayerData;
+import mc.alive.mechanism.Lift;
+import mc.alive.mechanism.LiftDoor;
+import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Survivor;
 import mc.alive.menu.LiftMenu;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,7 +14,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-import static mc.alive.game.Game.game;
+import static mc.alive.Game.game;
 
 public class MechanismListener implements Listener {
 

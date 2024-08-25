@@ -1,6 +1,6 @@
 package mc.alive.tick;
 
-import mc.alive.game.Game;
+import mc.alive.Game;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 
