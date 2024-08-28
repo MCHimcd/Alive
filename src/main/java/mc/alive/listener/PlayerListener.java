@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
+import mc.alive.effect.Invisibility;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
 import net.kyori.adventure.text.Component;
@@ -147,12 +148,15 @@ public class PlayerListener implements Listener {
                 return;
             }
             pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
+
             if (pd_damager.getRole() instanceof Hunter && pd_damager.getStamina() >= 50) {
+                if (pd_damager.hasEffect(Invisibility.class)) pd_damager.removeEffect(Invisibility.class);
                 pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
                 pd_damager.addStamina(-50);
             } else {
                 event.setCancelled(true);
             }
+
             event.setDamage(0);
         }
     }

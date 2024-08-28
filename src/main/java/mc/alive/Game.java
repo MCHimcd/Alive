@@ -11,6 +11,7 @@ import mc.alive.mechanism.LiftDoor;
 import mc.alive.menu.MainMenu;
 import mc.alive.role.ChooseRole;
 import mc.alive.role.Role;
+import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Factory;
@@ -103,7 +104,7 @@ public final class Game {
                         Role role = playerData1.getRole();
                         role.equip();
                         if (role instanceof Hunter h) //noinspection DataFlowIssue
-                            player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getRange());
+                            player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
                     });
                     summonEntities();
                     cancel();
@@ -257,6 +258,8 @@ public final class Game {
             team.removePlayer(player);
         }
 
+        Bukkit.getOnlinePlayers().forEach(player1 -> player1.showEntity(plugin, player));
+
         player.playerListName(player.name());
         player.displayName(player.name());
         player.setHealth(20);
@@ -264,7 +267,6 @@ public final class Game {
         player.setFoodLevel(20);
         player.setLevel(0);
         player.setExp(0);
-        player.setGameMode(GameMode.ADVENTURE);
         player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
         player.clearActivePotionEffects();
         player.getInventory().clear();
@@ -276,6 +278,9 @@ public final class Game {
                     .name(Component.text("主菜单", NamedTextColor.GOLD))
                     .build()
             );
+            player.setGameMode(GameMode.ADVENTURE);
+        } else {
+            player.setGameMode(GameMode.SPECTATOR);
         }
     }
 
@@ -319,6 +324,22 @@ public final class Game {
             armorStand.getEquipment().setHelmet(new ItemStack(Material.PLAYER_HEAD) {{
                 editMeta(meta -> ((SkullMeta) meta).setOwningPlayer(player));
             }});
+            armorStand.addScoreboardTag("body");
+            //alien技能
+            if (playerData.get(hunter).getRole() instanceof Alien alien) {
+                Location location = armorStand.getLocation();
+                alien.skill_locations.put(location, new BukkitRunnable() {
+                    private int t = 0;
+
+                    @Override
+                    public void run() {
+                        armorStand.getWorld().spawnParticle(Particle.DUST, location.clone().add(0, 2, 0), 100, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.RED, 1f), true);
+                        if (t++ == 300) {
+                            alien.removeSkillLocation(location);
+                        }
+                    }
+                }.runTaskTimer(plugin, 0, 1));
+            }
         }));
     }
 

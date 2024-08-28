@@ -21,9 +21,12 @@ public abstract class Effect {
 
     public boolean tick() {
         remained_tick--;
-        return remained_tick <= 0 || !run();
+        return !run() || remained_tick <= 0;
     }
 
+    /**
+     * @return false则清除此效果
+     */
     abstract protected boolean run();
 
 }

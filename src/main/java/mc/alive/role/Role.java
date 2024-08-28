@@ -46,6 +46,12 @@ public abstract class Role {
         return null;
     }
 
+    public void removeSkillLocation(final Location location) {
+        BukkitTask bukkitTask = skill_locations.get(location);
+        if (bukkitTask != null && !bukkitTask.isCancelled()) bukkitTask.cancel();
+        skill_locations.remove(location);
+    }
+
     public abstract int getId();
 
     public int getLevel() {

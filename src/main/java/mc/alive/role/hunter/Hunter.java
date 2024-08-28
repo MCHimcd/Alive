@@ -10,7 +10,7 @@ abstract public class Hunter extends Role {
         super(pl);
     }
 
-    abstract public double getRange();
+    abstract public double getAttackRange();
 
     public void levelUp() {
         player.sendMessage(rMsg("你升级了"));

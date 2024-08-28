@@ -1,17 +1,24 @@
 package mc.alive.role.hunter;
 
+import mc.alive.effect.Invisibility;
 import mc.alive.role.Skill;
+import mc.alive.util.Factory;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.List;
 
 import static mc.alive.Alive.plugin;
 
 public class Alien extends Hunter {
+    private boolean choosing_effect = false;
+    private Location choose_location;
+
     public Alien(Player pl) {
         super(pl);
     }
@@ -47,7 +54,7 @@ public class Alien extends Hunter {
     }
 
     @Override
-    public double getRange() {
+    public double getAttackRange() {
         return 3;
     }
 
@@ -59,23 +66,44 @@ public class Alien extends Hunter {
     /**
      * 吐出一滩粘液 减速范围内的人
      */
-    @Skill(id = 1, name = "粘液")
-    public void slime() {
-        Location location = player.getEyeLocation();
-        var task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                player.getWorld().spawnParticle(Particle.END_ROD, location, 0);
-            }
-        }.runTaskTimer(plugin, 0, 1);
+    @Skill(id = 1, name = "噬尽")
+    public void curing() {
+        if (choosing_effect) {
+            player.playSound(player, Sound.ENTITY_WANDERING_TRADER_DRINK_POTION, 1f, 1f);
+            Location loc = choose_location.clone();
+            new BukkitRunnable() {
+                int t = 0;
 
-        skill_locations.put(location, task);
-
+                @Override
+                public void run() {
+                    if (t++ >= 40) {
+                        cancel();
+                    } else {
+                        getPlayerData().damageOrHeal(-2);
+                        List<Location> line = Factory.line(player.getLocation(), loc.clone().add(0, 1, 0), 1);
+                        line.forEach(location -> player.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION,
+                                location,
+                                1, 0, 0, 0, 0,
+                                new Particle.DustTransition(Color.RED, Color.PURPLE, 1f)));
+                    }
+                }
+            }.runTaskTimer(plugin, 0, 1);
+            removeSkillLocation(choose_location);
+        } else {
+            player.sendMessage(Message.rMsg("- <color:#7a00e6>附近无可用灵魂</color>"));
+        }
     }
 
-    @Skill(id = 2, name = "粘液")
-    public void a() {
-        //todo
+    @Skill(id = 2, name = "灭绝")
+    public void speed() {
+        if (choosing_effect) {
+            player.playSound(player, Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1, false, false));
+            getPlayerData().addEffect(new Invisibility(player, 100));
+            removeSkillLocation(choose_location);
+        } else {
+            player.sendMessage(Message.rMsg("- <color:#7a00e6>附近无可用灵魂</color>"));
+        }
     }
 
     @Skill(id = 3, name = "粘液", minLevel = 1)
@@ -89,4 +117,8 @@ public class Alien extends Hunter {
     }
 
 
+    public void setChoosingEffect(boolean choosing_effect, Location loc) {
+        this.choosing_effect = choosing_effect;
+        choose_location = loc;
+    }
 }

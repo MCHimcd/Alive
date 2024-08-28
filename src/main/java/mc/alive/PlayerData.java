@@ -12,10 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.data.BlockData;
@@ -114,9 +111,9 @@ public final class PlayerData implements TickRunnable {
                     return;
                 }
             } else health = Math.max(-5, health);
-            if (health < 0) Bukkit.broadcast(rMsg(String.valueOf(health)));
         } else health = Math.min(health - amount, role.getMaxHealth());
-        player.setHealth(Math.max(0.1, 20 * health / role.getMaxHealth()));
+        if (health < 0) player.setHealth(0.1);
+        else player.setHealth(Math.max(0.1, 20 * health / role.getMaxHealth()));
         //减速
         AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
         if (health <= role.getMaxHealth() * 0.5) {
@@ -127,12 +124,13 @@ public final class PlayerData implements TickRunnable {
     }
 
     private void die() {
-        Bukkit.broadcast(player.displayName().append(rMsg("%s".formatted(List.of(
+        player.getWorld().sendMessage(player.displayName().append(rMsg("%s".formatted(List.of(
                 "去世了",
                 "离开了人间."
         ).get(new Random().nextInt(0, 2))))));
         game.spawnBody(player);
         Game.resetPlayer(player);
+        player.setGameMode(GameMode.SPECTATOR);
         Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
             game.survivors.remove(player);
             if (game.survivors.isEmpty()) {
@@ -199,6 +197,10 @@ public final class PlayerData implements TickRunnable {
 
     public boolean hasEffect(Class<? extends Effect> effect) {
         return effects.stream().anyMatch(e -> e.getClass().equals(effect));
+    }
+
+    public void removeEffect(Class<? extends Effect> effect) {
+        effects.stream().filter(effect::isInstance).findFirst().ifPresent(effect1 -> effect1.addTime(-1000000000));
     }
 
     @Override
