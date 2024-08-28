@@ -118,9 +118,17 @@ public final class Game {
         assert world != null;
 
         // 管道入口
-        locations_config.getList("ducts").forEach(duct -> {
+        locations_config.getList("ducts.entrance").forEach(duct -> {
             var xyz = Arrays.stream(((String) duct).split(",")).mapToDouble(Double::parseDouble).toArray();
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, markers::add);
+        });
+        //垂直管道
+        locations_config.getList("ducts.vertical").forEach(duct -> {
+            var xyz = Arrays.stream(((String) duct).split(",")).mapToDouble(Double::parseDouble).toArray();
+            world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), Marker.class, e -> {
+                markers.add(e);
+                e.addScoreboardTag("vertical_duct");
+            });
         });
 
         // 维修

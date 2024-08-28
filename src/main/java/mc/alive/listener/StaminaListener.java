@@ -11,6 +11,10 @@ public class StaminaListener implements Listener {
     public void onJump(PlayerJumpEvent event) {
         if (!Game.isStarted()) return;
         var pd = PlayerData.of(event.getPlayer());
+        if (pd.getStamina() < 25) {
+            event.setCancelled(true);
+            return;
+        }
         pd.addStamina(-25);
     }
 

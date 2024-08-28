@@ -5,8 +5,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Marker;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -24,6 +26,7 @@ public class PlayerTickrunnable implements TickRunnable {
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
     public static Location chosen_duct = null;
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public void tick() {
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
@@ -87,6 +90,12 @@ public class PlayerTickrunnable implements TickRunnable {
             if (m != null) {
                 chosen_duct = m.getLocation();
             }
+        }
+
+        if (!player.getLocation().getNearbyEntitiesByType(Marker.class, 1, m -> m.getScoreboardTags().contains("vertical_duct")).isEmpty()) {
+            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(100);
+        } else {
+            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(.42);
         }
     }
 }

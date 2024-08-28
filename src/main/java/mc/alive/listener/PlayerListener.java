@@ -147,7 +147,7 @@ public class PlayerListener implements Listener {
                 return;
             }
             pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
-            if (pd_damager.getRole() instanceof Hunter) {
+            if (pd_damager.getRole() instanceof Hunter && pd_damager.getStamina() >= 50) {
                 pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
                 pd_damager.addStamina(-50);
             } else {

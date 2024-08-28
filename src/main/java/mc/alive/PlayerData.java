@@ -176,6 +176,10 @@ public final class PlayerData implements TickRunnable {
         game.playerData.get(player).skill_cd.set(index, amount);
     }
 
+    public int getStamina() {
+        return stamina;
+    }
+
     public Role getRole() {
         return role;
     }
