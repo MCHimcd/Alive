@@ -14,7 +14,7 @@ public class Dealt extends Survivor {
     }
 
     @Override
-    public int getId() {
+    public int getRoleID() {
         return 202;
     }
 

@@ -114,7 +114,7 @@ public class PlayerListener implements Listener {
         players_looking_document.remove(player);
         prepared_players.remove(player);
         if (Game.game != null) {
-            Game.game.end();
+            Game.game.end(player);
         }
         setAtChatCompletions();
     }

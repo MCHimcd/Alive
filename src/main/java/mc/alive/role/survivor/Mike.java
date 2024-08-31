@@ -14,7 +14,7 @@ public class Mike extends Survivor {
     }
 
     @Override
-    public int getId() {
+    public int getRoleID() {
         return 201;
     }
 

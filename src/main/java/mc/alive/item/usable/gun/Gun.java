@@ -6,7 +6,7 @@ import mc.alive.item.GameItem;
 import mc.alive.item.PickUp;
 import mc.alive.item.usable.Usable;
 import mc.alive.role.survivor.Survivor;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
@@ -188,11 +188,11 @@ public abstract class Gun extends GameItem implements Usable {
             var target = result.getHitEntity();
             if (target != null) {
                 var position = result.getHitPosition();
-                return new ResultPath(Factory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
+                return new ResultPath(LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
             }
         }
         var end = player.getEyeLocation().add(player.getLocation().getDirection().normalize().multiply(100));
-        return new ResultPath(Factory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));
+        return new ResultPath(LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));
     }
 
     public void reload(Player player) {

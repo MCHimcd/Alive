@@ -107,8 +107,8 @@ public final class Alive extends JavaPlugin implements Listener {
             cs.register(
                     Commands.literal("reset")
                             .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player && Game.game != null) {
-                                    Game.game.end();
+                                if (ctx.getSource().getSender() instanceof Player player && Game.game != null) {
+                                    Game.game.end(player);
                                     Game.game = null;
                                     getOnlinePlayers().forEach(Game::resetPlayer);
                                 }

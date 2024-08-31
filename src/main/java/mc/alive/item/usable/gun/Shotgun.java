@@ -2,7 +2,7 @@ package mc.alive.item.usable.gun;
 
 import mc.alive.PlayerData;
 import mc.alive.item.GameItem;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -52,7 +52,7 @@ public abstract class Shotgun extends Gun {
                     (random.nextDouble() - 0.5) * spread,
                     (random.nextDouble() - 0.5) * spread
             ));
-            locations.add(Factory.line(
+            locations.add(LocationFactory.line(
                     player.getEyeLocation().subtract(0, 1, 0),
                     player.getEyeLocation().add(newDirection.normalize().multiply(20)).subtract(0, 1, 0),
                     0.5

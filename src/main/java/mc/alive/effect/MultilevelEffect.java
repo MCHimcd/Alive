@@ -10,5 +10,9 @@ public abstract class MultilevelEffect extends Effect {
         this.level = level;
     }
 
+    public int getLevel() {
+        return level;
+    }
+
     protected abstract boolean run();
 }

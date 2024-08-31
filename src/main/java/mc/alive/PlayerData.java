@@ -22,10 +22,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static mc.alive.Alive.plugin;
@@ -74,7 +72,7 @@ public final class PlayerData implements TickRunnable {
         for (int i = 0; i < role.getSkillCount(); i++) {
             skill_cd.add(0);
         }
-        @SuppressWarnings("DataFlowIssue") var name = rMsg(((String) Alive.roles_config.get(String.valueOf(role.getId()))).split(" ")[1]);
+        @SuppressWarnings("DataFlowIssue") var name = rMsg(((String) Alive.roles_config.get(String.valueOf(role.getRoleID()))).split(" ")[1]);
         player.displayName(name);
         player.playerListName(name);
         addStamina(100);
@@ -206,7 +204,17 @@ public final class PlayerData implements TickRunnable {
     @Override
     public void tick() {
         //Effect
-        effects.removeIf(Effect::tick);
+        effects.stream()
+                .filter(effect -> effect instanceof MultilevelEffect)
+                .map(e -> (MultilevelEffect) e)
+                .collect(Collectors.groupingBy(
+                        Object::getClass,
+                        Collectors.maxBy(Comparator.comparingInt(MultilevelEffect::getLevel))
+                ))
+                .forEach((_, effect) -> effect.ifPresent(effect1 -> {
+                    if (effect1.shouldRemove()) effects.remove(effect1);
+                }));
+        effects.removeIf(effect -> !(effect instanceof MultilevelEffect) && effect.shouldRemove());
 
         //普攻冷却
         attack_cd = Math.max(0, attack_cd - 0.05);

@@ -2,7 +2,7 @@ package mc.alive.mechanism;
 
 import io.papermc.paper.entity.TeleportFlag;
 import mc.alive.Game;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -36,7 +36,7 @@ public class Lift {
     public Lift(BlockDisplay blockDisplay, int max_floor) {
         this.blockDisplay = blockDisplay;
         this.max_floor = max_floor;
-        Factory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
+        LocationFactory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
     }
 
     /**
@@ -113,7 +113,7 @@ public class Lift {
             this.players = players;
             this.blockDisplay = blockDisplay;
             this.lift = lift;
-            Factory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
+            LocationFactory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
         }
 
         public void run() {
@@ -124,7 +124,7 @@ public class Lift {
             if (t++ >= target_time) {
                 if (lift.changeFloor()) {
                     //到达
-                    Factory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
+                    LocationFactory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
                     players.forEach(player -> player.teleport(
                             player.getLocation().add(0, 0.3, 0),
                             TeleportFlag.Relative.YAW,

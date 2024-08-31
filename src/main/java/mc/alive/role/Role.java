@@ -52,7 +52,7 @@ public abstract class Role {
         skill_locations.remove(location);
     }
 
-    public abstract int getId();
+    public abstract int getRoleID();
 
     public int getLevel() {
         return level;

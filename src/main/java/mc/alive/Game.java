@@ -14,7 +14,7 @@ import mc.alive.role.Role;
 import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.tick.TickRunner;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -229,13 +229,16 @@ public final class Game {
         });
     }
 
-    public void end() {
+    public void end(Player ender) {
         destroy();
         game = null;
         playerData.keySet().forEach(Game::resetPlayer);
         Bukkit.getScheduler().cancelTasks(plugin);
         new TickRunner().runTaskTimer(plugin, 0, 1);
-        Bukkit.broadcast(Component.text("end"));
+        var world = Bukkit.getWorld("world");
+        assert world != null;
+        if (ender != null) world.sendMessage(ender.name().append(rMsg("强制结束了游戏")));
+        else world.sendMessage(rMsg("游戏结束"));
     }
 
     public static void resetPlayer(Player player) {
@@ -267,6 +270,7 @@ public final class Game {
         player.setFoodLevel(20);
         player.setLevel(0);
         player.setExp(0);
+        player.setViewDistance(1);
         player.teleport(new Location(player.getWorld(), -7.5, -59, 11.5));
         player.clearActivePotionEffects();
         player.getInventory().clear();
@@ -296,7 +300,7 @@ public final class Game {
             }
         }
         for (BlockDisplay blockDisplay : lifts.keySet()) {
-            Factory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
+            LocationFactory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
             blockDisplay.remove();
         }
         markers.forEach(Entity::remove);

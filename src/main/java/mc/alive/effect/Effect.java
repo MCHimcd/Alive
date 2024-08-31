@@ -1,14 +1,16 @@
 package mc.alive.effect;
 
+import mc.alive.tick.TickRunnable;
 import org.bukkit.entity.Player;
 
-public abstract class Effect {
+public abstract class Effect implements TickRunnable {
     protected Player player;
     protected int remained_tick;
 
     public Effect(Player player, int tick) {
         this.player = player;
         this.remained_tick = tick;
+        startTick();
     }
 
     public int getTime() {
@@ -19,8 +21,7 @@ public abstract class Effect {
         this.remained_tick += tick;
     }
 
-    public boolean tick() {
-        remained_tick--;
+    public boolean shouldRemove() {
         return !run() || remained_tick <= 0;
     }
 
@@ -28,6 +29,11 @@ public abstract class Effect {
      * @return false则清除此效果
      */
     abstract protected boolean run();
+
+    @Override
+    public void tick() {
+        remained_tick--;
+    }
 
 }
 

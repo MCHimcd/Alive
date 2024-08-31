@@ -11,7 +11,7 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Factory {
+public final class LocationFactory {
     public static Vector3f getTranslation(BlockFace face) {
         return switch (face) {
             case NORTH, EAST -> new Vector3f(-1, -1, 1);

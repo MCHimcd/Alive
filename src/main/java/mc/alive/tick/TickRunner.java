@@ -24,7 +24,7 @@ public final class TickRunner extends BukkitRunnable {
     public void run() {
         if (game == null) return;
         if (gameEnd) {
-            game.end();
+            game.end(null);
             gameEnd = false;
             return;
         }

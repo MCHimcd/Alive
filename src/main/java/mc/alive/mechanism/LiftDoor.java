@@ -1,7 +1,7 @@
 package mc.alive.mechanism;
 
 import mc.alive.Game;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -39,7 +39,7 @@ public class LiftDoor {
 
         blockDisplay_right = block.getWorld().spawn(block.getLocation(), BlockDisplay.class, bd -> {
             bd.setTransformation(new Transformation(
-                    Factory.getTranslation(getFace()),
+                    LocationFactory.getTranslation(getFace()),
                     q,
                     new Vector3f(2, 2, 1),
                     new Quaternionf()
@@ -50,7 +50,7 @@ public class LiftDoor {
 
         blockDisplay_left = block.getWorld().spawn(block.getLocation(), BlockDisplay.class, bd -> {
             bd.setTransformation(new Transformation(
-                    new Vector3f(move_dir_right).mulAdd(4, Factory.getTranslation(getFace())),
+                    new Vector3f(move_dir_right).mulAdd(4, LocationFactory.getTranslation(getFace())),
                     q,
                     new Vector3f(2, 2, 1),
                     new Quaternionf()
@@ -82,7 +82,7 @@ public class LiftDoor {
     public void openDoor() {
         var tr1 = blockDisplay_right.getTransformation();
         blockDisplay_right.setTransformation(new Transformation(
-                Factory.getTranslation(getFace()),
+                LocationFactory.getTranslation(getFace()),
                 tr1.getLeftRotation(),
                 tr1.getScale(),
                 tr1.getRightRotation()
@@ -92,7 +92,7 @@ public class LiftDoor {
 
         var tr2 = blockDisplay_left.getTransformation();
         blockDisplay_left.setTransformation(new Transformation(
-                new Vector3f(move_dir_right).mulAdd(4, Factory.getTranslation(getFace())),
+                new Vector3f(move_dir_right).mulAdd(4, LocationFactory.getTranslation(getFace())),
                 tr2.getLeftRotation(),
                 tr2.getScale(),
                 tr2.getRightRotation()
@@ -100,13 +100,13 @@ public class LiftDoor {
         blockDisplay_left.setInterpolationDelay(0);
         blockDisplay_left.setInterpolationDuration(20);
 
-        Factory.replace2x2(block.getLocation(), Material.AIR, getFace());
+        LocationFactory.replace2x2(block.getLocation(), Material.AIR, getFace());
     }
 
     public void closeDoor() {
         var tr1 = blockDisplay_right.getTransformation();
         blockDisplay_right.setTransformation(new Transformation(
-                Factory.getTranslation(getFace()).add(move_dir_right),
+                LocationFactory.getTranslation(getFace()).add(move_dir_right),
                 tr1.getLeftRotation(),
                 tr1.getScale(),
                 tr1.getRightRotation()
@@ -116,7 +116,7 @@ public class LiftDoor {
 
         var tr2 = blockDisplay_left.getTransformation();
         blockDisplay_left.setTransformation(new Transformation(
-                new Vector3f(move_dir_right).mulAdd(4, Factory.getTranslation(getFace())).add(move_dir_left),
+                new Vector3f(move_dir_right).mulAdd(4, LocationFactory.getTranslation(getFace())).add(move_dir_left),
                 tr2.getLeftRotation(),
                 tr2.getScale(),
                 tr2.getRightRotation()
@@ -124,6 +124,6 @@ public class LiftDoor {
         blockDisplay_left.setInterpolationDelay(0);
         blockDisplay_left.setInterpolationDuration(20);
 
-        Factory.replace2x2(block.getLocation(), Material.BARRIER, getFace());
+        LocationFactory.replace2x2(block.getLocation(), Material.BARRIER, getFace());
     }
 }

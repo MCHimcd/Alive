@@ -2,7 +2,7 @@ package mc.alive.role.hunter;
 
 import mc.alive.effect.Invisibility;
 import mc.alive.role.Skill;
-import mc.alive.util.Factory;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.Message;
 import org.bukkit.*;
@@ -24,7 +24,7 @@ public class Alien extends Hunter {
     }
 
     @Override
-    public int getId() {
+    public int getRoleID() {
         return 100;
     }
 
@@ -64,10 +64,10 @@ public class Alien extends Hunter {
     }
 
     /**
-     * 吐出一滩粘液 减速范围内的人
+     * 捡尸体回血
      */
     @Skill(id = 1, name = "噬尽")
-    public void curing() {
+    public void health() {
         if (choosing_effect) {
             player.playSound(player, Sound.ENTITY_WANDERING_TRADER_DRINK_POTION, 1f, 1f);
             Location loc = choose_location.clone();
@@ -80,7 +80,7 @@ public class Alien extends Hunter {
                         cancel();
                     } else {
                         getPlayerData().damageOrHeal(-2);
-                        List<Location> line = Factory.line(player.getLocation(), loc.clone().add(0, 1, 0), 1);
+                        List<Location> line = LocationFactory.line(player.getLocation(), loc.clone().add(0, 1, 0), 1);
                         line.forEach(location -> player.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION,
                                 location,
                                 1, 0, 0, 0, 0,
@@ -94,6 +94,9 @@ public class Alien extends Hunter {
         }
     }
 
+    /**
+     * 捡尸体加速隐身
+     */
     @Skill(id = 2, name = "灭绝")
     public void speed() {
         if (choosing_effect) {
@@ -116,9 +119,12 @@ public class Alien extends Hunter {
         //todo
     }
 
-
-    public void setChoosingEffect(boolean choosing_effect, Location loc) {
+    /**
+     * @param choosing_effect 准星是否对着可作为技能选择的尸体
+     * @param target          目标位置
+     */
+    public void setChoosingEffect(boolean choosing_effect, Location target) {
         this.choosing_effect = choosing_effect;
-        choose_location = loc;
+        choose_location = target;
     }
 }
