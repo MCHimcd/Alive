@@ -23,9 +23,9 @@ public class ChamberStandardCartridge extends GameItem {
         return Message.convertMsg(List.of(
                 " ",
                 "<aqua><bold>         船室标准弹",
-                " ",
                 "<gray>飞船上大多数枪通用的子弹,适用范围非常广",
-                " "));
+                "",
+                "<gray> [弹药]"));
     }
 
     @Override

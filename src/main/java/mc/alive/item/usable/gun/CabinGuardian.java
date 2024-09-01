@@ -29,9 +29,11 @@ public class CabinGuardian extends Gun {
     @Override
     public List<Component> lore() {
         return Message.convertMsg(List.of(
-                "1",
-                "2"
-        ));
+                " ",
+                "<aqua><bold>         冲锋枪",
+                "<gray>",
+                "",
+                "<gray> [枪械]"));
     }
 
 }
