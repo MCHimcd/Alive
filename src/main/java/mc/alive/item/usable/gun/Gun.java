@@ -190,6 +190,11 @@ public abstract class Gun extends GameItem implements Usable {
                 var position = result.getHitPosition();
                 return new ResultPath(LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
             }
+            var block = result.getHitBlock();
+            if (block != null) {
+                var position = result.getHitPosition();
+                return new ResultPath(LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), position.toLocation(player.getWorld()).subtract(0, 1, 0), 0.5), (Player) target);
+            }
         }
         var end = player.getEyeLocation().add(player.getLocation().getDirection().normalize().multiply(100));
         return new ResultPath(LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), end, 0.5));

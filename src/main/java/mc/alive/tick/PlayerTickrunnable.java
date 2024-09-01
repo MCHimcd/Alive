@@ -1,15 +1,16 @@
 package mc.alive.tick;
 
+import mc.alive.Game;
+import mc.alive.PlayerData;
+import mc.alive.item.PickUp;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Survivor;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Marker;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -24,11 +25,13 @@ import static mc.alive.util.Message.rMsg;
 public class PlayerTickrunnable implements TickRunnable {
 
     public static final Map<Player, ItemDisplay> chosen_item_display = new HashMap<>();
+    public static final Map<Player, Item> chosen_item = new HashMap<>();
     public static Location chosen_duct = null;
 
     @SuppressWarnings("DataFlowIssue")
     @Override
     public void tick() {
+        //选择item_display
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
         chosen_item_display.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {
@@ -70,6 +73,39 @@ public class PlayerTickrunnable implements TickRunnable {
                 }
             }
         });
+
+        //选择item
+        chosen_item.clear();
+        if (Game.isStarted()) {
+            game.playerData.keySet().forEach(player -> {
+                var r = player.getWorld().rayTrace(
+                        player.getEyeLocation(),
+                        player.getLocation().getDirection(),
+                        2,
+                        FluidCollisionMode.NEVER,
+                        true,
+                        0.5,
+                        entity -> {
+                            if (entity.getType() != EntityType.ITEM) return false;
+                            var item = (Item) entity;
+                            PickUp pickUp = game.item_on_ground.get(item);
+                            var pd = PlayerData.of(player);
+                            return pickUp != null && switch (pickUp) {
+                                case SURVIVOR -> pd.getRole() instanceof Survivor;
+                                case HUNTER -> pd.getRole() instanceof Hunter;
+                                default -> true;
+                            };
+                        }
+                );
+                if (r != null) {
+                    var item = (Item) r.getHitEntity();
+                    if (item != null) {
+                        chosen_item.put(player, item);
+                    }
+                }
+            });
+
+        }
 
         //管道
         chosen_duct = null;

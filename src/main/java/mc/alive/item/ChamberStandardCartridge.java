@@ -20,7 +20,12 @@ public class ChamberStandardCartridge extends GameItem {
 
     @Override
     public List<Component> lore() {
-        return List.of(Message.rMsg(""), Message.rMsg("<aqua><bold>船室标准弹"), Message.rMsg(" "), Message.rMsg("<gray>飞船上大多数枪通用的子弹,适用范围非常广"));
+        return Message.convertMsg(List.of(
+                " ",
+                "<aqua><bold>         船室标准弹",
+                " ",
+                "<gray>飞船上大多数枪通用的子弹,适用范围非常广",
+                " "));
     }
 
     @Override

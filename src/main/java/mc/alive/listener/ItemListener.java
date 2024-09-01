@@ -5,23 +5,25 @@ import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
 import mc.alive.item.PickUp;
 import mc.alive.item.usable.gun.Gun;
+import mc.alive.menu.MainMenu;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
-import mc.alive.menu.MainMenu;
+import mc.alive.tick.PlayerTickrunnable;
 import mc.alive.util.ItemCheck;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Sound;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.UUID;
 
 import static mc.alive.Game.game;
@@ -63,36 +65,22 @@ public class ItemListener implements Listener {
     }
 
     @EventHandler
-    public void onPickUp(PlayerAttemptPickupItemEvent event) {
-        if (!Game.isStarted()) return;
-        var item = event.getItem();
-        if (item.isOnGround() && game.item_on_ground.containsKey(item)) {
-            var pickUp = game.item_on_ground.get(item);
-            var npl = item.getWorld().getNearbyPlayers(item.getLocation(), 1,
-                    pl -> switch (pickUp) {
-                        case BOTH -> true;
-                        case HUNTER -> PlayerData.of(pl).getRole() instanceof Hunter;
-                        case SURVIVOR -> PlayerData.of(pl).getRole() instanceof Survivor;
-                    }).stream().findAny();
-            if (npl.isPresent()) {
-                var ph = game.pickup_items.get(item.getItemStack());
-                if (ph != null) {
-                    if (ph.handlePickUp(event.getPlayer())) {
-                        game.item_on_ground.remove(item);
-                        item.remove();
-                        event.setCancelled(true);
-                        return;
-                    }
-                }
-                item.setPickupDelay(0);
-                item.setOwner(npl.get().getUniqueId());
-                game.item_on_ground.remove(item);
-            } else {
-                item.setOwner(new UUID(0, 0));
+    public void tryPickup(PlayerInteractEvent event) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND || !List.of(Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK).contains(event.getAction()) || !Game.isStarted())
+            return;
+        var player = event.getPlayer();
+        Item item = PlayerTickrunnable.chosen_item.get(player);
+        if (item != null) {
+            //可拾取
+            var ph = game.pickup_items.get(item.getItemStack());
+            if (ph == null || !ph.handlePickUp(player)) {
+                player.getInventory().addItem(item.getItemStack());
             }
+            item.remove();
+            game.item_on_ground.remove(item);
         }
     }
-
+    
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
@@ -125,6 +113,8 @@ public class ItemListener implements Listener {
                         || event.getAction() == Action.LEFT_CLICK_AIR
                         || event.getAction() == Action.LEFT_CLICK_BLOCK
         ) return;
+
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) return;
 
         //使用物品
         if (game != null) {
@@ -166,6 +156,7 @@ public class ItemListener implements Listener {
                 item.setCanMobPickup(false);
                 item.setWillAge(false);
                 item.setCanMobPickup(false);
+                item.setOwner(new UUID(0, 0));
                 PickUp pickUp = BOTH;
                 var pd = game.playerData.get(event.getPlayer());
                 if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;

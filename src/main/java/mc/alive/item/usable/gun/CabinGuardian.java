@@ -1,6 +1,7 @@
 package mc.alive.item.usable.gun;
 
 import mc.alive.item.ChamberStandardCartridge;
+import mc.alive.util.Message;
 import net.kyori.adventure.text.Component;
 
 import java.util.List;
@@ -22,12 +23,15 @@ public class CabinGuardian extends Gun {
 
     @Override
     public Component name() {
-        return rMsg("冲锋枪");
+        return rMsg("<red>冲锋枪");
     }
 
     @Override
     public List<Component> lore() {
-        return List.of();
+        return Message.convertMsg(List.of(
+                "1",
+                "2"
+        ));
     }
 
 }

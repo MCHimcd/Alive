@@ -14,8 +14,8 @@ import mc.alive.role.Role;
 import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.tick.TickRunner;
-import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
+import mc.alive.util.LocationFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -225,6 +225,7 @@ public final class Game {
             item_entity.setCustomNameVisible(true);
             item_entity.setCanMobPickup(false);
             item_entity.setWillAge(false);
+            item_entity.setOwner(new UUID(0, 0));
             item_on_ground.put(item_entity, item.pickUp());
         });
     }
