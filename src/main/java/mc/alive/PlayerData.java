@@ -268,6 +268,12 @@ public final class PlayerData implements TickRunnable {
     }
 
     public void changeSkillValue() {
+        //蓄力技能取消
+        role.skill_locations.forEach((loc, task) -> {
+            if (loc.equals(Role.ZERO_LOC) && task != null && !task.isCancelled()) task.cancel();
+        });
+        role.skill_locations.remove(Role.ZERO_LOC);
+
         ++current_skill_id;
         Arrays.stream(role.getClass().getMethods())
                 .forEach(m -> {

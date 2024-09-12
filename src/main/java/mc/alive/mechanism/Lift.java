@@ -2,8 +2,8 @@ package mc.alive.mechanism;
 
 import io.papermc.paper.entity.TeleportFlag;
 import mc.alive.Game;
-import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
+import mc.alive.util.LocationFactory;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
@@ -125,11 +125,6 @@ public class Lift {
                 if (lift.changeFloor()) {
                     //到达
                     LocationFactory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
-                    players.forEach(player -> player.teleport(
-                            player.getLocation().add(0, 0.3, 0),
-                            TeleportFlag.Relative.YAW,
-                            TeleportFlag.Relative.PITCH
-                    ));
                     lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::openDoor);
                     cancel();
                 } else {
@@ -137,11 +132,13 @@ public class Lift {
                 }
             } else {
                 var dy = lift.getTargetDirection() * 0.1;
-                players.forEach(player -> player.teleport(
-                        player.getLocation().add(0, dy, 0),
-                        TeleportFlag.Relative.YAW,
-                        TeleportFlag.Relative.PITCH
-                ));
+                players.forEach(player -> {
+                    player.teleport(
+                            player.getLocation().add(0, dy, 0),
+                            TeleportFlag.Relative.YAW,
+                            TeleportFlag.Relative.PITCH
+                    );
+                });
                 blockDisplay.teleport(blockDisplay.getLocation().add(0, dy, 0));
             }
         }

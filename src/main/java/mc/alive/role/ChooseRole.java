@@ -31,7 +31,8 @@ import static mc.alive.Game.game;
 
 public final class ChooseRole {
     public final Map<ItemDisplay, Integer> roles = new HashMap<>();
-    public final List<Integer> remainedId = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
+    public final List<Integer> remainedId_S = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
+    public final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 101).boxed().toList());
     private final List<Player> choosing = new ArrayList<>();
     public Player currentPlayer;
 
@@ -54,7 +55,7 @@ public final class ChooseRole {
         var role = roles.get(td);
         if (role == null) return false;
 
-        remainedId.remove(role);
+        remainedId_S.remove(role);
         game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
         player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
         player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
@@ -119,13 +120,20 @@ public final class ChooseRole {
 
         if (isHunter) {
             // 狩猎者
-            world.spawn(location.get(), ItemDisplay.class, id -> {
-                init.accept(id, ItemBuilder.material(Material.DIAMOND_HOE, 200).build());
-                roles.put(id, 100);
+            remainedId_H.forEach(rid -> {
+                Material material = switch (rid) {
+                    case 100 -> Material.DIAMOND_HOE;
+                    case 101 -> Material.DIAMOND_HOE;
+                    default -> throw new IllegalArgumentException("Unexpected value: " + rid);
+                };
+                world.spawn(location.get(), ItemDisplay.class, id -> {
+                    init.accept(id, ItemBuilder.material(material, rid).build());
+                    roles.put(id, rid);
+                });
             });
         } else {
             // 幸存者
-            remainedId.forEach(rid -> {
+            remainedId_S.forEach(rid -> {
                 Material material = switch (rid) {
                     case 200 -> Material.DIAMOND;
                     case 201 -> Material.IRON_INGOT;

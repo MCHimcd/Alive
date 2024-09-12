@@ -2,6 +2,7 @@ package mc.alive.role;
 
 import mc.alive.Alive;
 import mc.alive.PlayerData;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -13,6 +14,7 @@ import java.util.Map;
 import static mc.alive.Alive.plugin;
 
 public abstract class Role {
+    public static final Location ZERO_LOC = new Location(Bukkit.getWorld("world"), 0, 0, 0);
     /**
      * 与技能相关的locations
      */

@@ -2,7 +2,9 @@ package mc.alive.listener;
 
 import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
 import mc.alive.Game;
+import mc.alive.PlayerData;
 import mc.alive.item.usable.gun.Gun;
+import mc.alive.role.Role;
 import mc.alive.util.ItemCheck;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -32,6 +34,14 @@ public class GunListener implements Listener {
     public void onChangeMainHandItem(PlayerItemHeldEvent event) {
         if (!Game.isStarted()) return;
         var player = event.getPlayer();
+
+        //蓄力技能取消
+        PlayerData pd = PlayerData.of(player);
+        pd.getRole().skill_locations.forEach((loc, task) -> {
+            if (loc.equals(Role.ZERO_LOC) && task != null && !task.isCancelled()) task.cancel();
+        });
+        pd.getRole().skill_locations.remove(Role.ZERO_LOC);
+
         //noinspection DataFlowIssue
         player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
         var pre_it = player.getInventory().getItem(event.getPreviousSlot());

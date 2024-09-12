@@ -2,8 +2,8 @@ package mc.alive.role.hunter;
 
 import mc.alive.effect.Invisibility;
 import mc.alive.role.Skill;
-import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.Message;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -60,7 +60,7 @@ public class Alien extends Hunter {
 
     @Override
     public int getMaxLevel() {
-        return 6;
+        return 1;
     }
 
     /**
@@ -97,7 +97,7 @@ public class Alien extends Hunter {
     /**
      * 捡尸体加速隐身
      */
-    @Skill(id = 2, name = "灭绝")
+    @Skill(id = 2, name = "灭绝", minLevel = 1)
     public void speed() {
         if (choosing_effect) {
             player.playSound(player, Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
@@ -107,16 +107,6 @@ public class Alien extends Hunter {
         } else {
             player.sendMessage(Message.rMsg("- <color:#7a00e6>附近无可用灵魂</color>"));
         }
-    }
-
-    @Skill(id = 3, name = "粘液", minLevel = 1)
-    public void b() {
-        //todo
-    }
-
-    @Skill(id = 4, name = "粘液", minLevel = 2)
-    public void c() {
-        //todo
     }
 
     /**
