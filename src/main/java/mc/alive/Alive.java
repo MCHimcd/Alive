@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import mc.alive.item.ChamberStandardCartridge;
+import mc.alive.item.DoorCard;
 import mc.alive.item.GameItem;
 import mc.alive.item.pickup.LevelUp;
 import mc.alive.item.usable.gun.CabinGuardian;
@@ -66,7 +67,8 @@ public final class Alive extends JavaPlugin implements Listener {
                 CabinGuardian.class,
                 ChamberPistol.class,
                 ChamberShotgun.class,
-                LevelUp.class
+                LevelUp.class,
+                DoorCard.class
         ).forEach(GameItem::register);
     }
 

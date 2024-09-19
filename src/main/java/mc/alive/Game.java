@@ -6,6 +6,7 @@ import mc.alive.item.PickUp;
 import mc.alive.item.pickup.PickUpHandler;
 import mc.alive.item.usable.Usable;
 import mc.alive.item.usable.gun.Gun;
+import mc.alive.mechanism.Door;
 import mc.alive.mechanism.Lift;
 import mc.alive.mechanism.LiftDoor;
 import mc.alive.menu.MainMenu;
@@ -23,8 +24,10 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
@@ -43,6 +46,7 @@ public final class Game {
     public static Team team_hunter;
     public static Team team_survivor;
     public static Game game = null;
+    public final Map<Block, Door> doors = new HashMap<>();
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Player hunter;
@@ -52,6 +56,7 @@ public final class Game {
     public final Map<BlockDisplay, Lift> lifts = new HashMap<>();
     public final Map<Block, LiftDoor> liftDoors = new HashMap<>();
     public final List<Entity> markers = new LinkedList<>();
+    public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
     public ChooseRole chooseRole;
 
@@ -152,12 +157,30 @@ public final class Game {
             do {
                 int finalA = a;
                 Arrays.stream(info).skip(4).forEach(name -> {
+                    int key_id = -1;
+                    if (name.startsWith("DoorCard")) {
+                        key_id = Integer.parseInt(name.substring(8));
+                        name = "DoorCard";
+                    }
                     var clazz = GameItem.registries.get(name);
-                    if (clazz == null) return;
-                    spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64));
+                    if (clazz != null) {
+                        if (key_id != -1) spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64), key_id);
+                        else spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64));
+                    }
                 });
                 a -= 64;
             } while (a >= 64);
+        }
+
+        //密码门
+        var doorsInfo = (List<String>) locations_config.getList("doors");
+        int id_g = 0;
+        for (String doorInfo : doorsInfo) {
+            var info = doorInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
+            var block = world.getBlockAt(xyz[0], xyz[1], xyz[2]);
+            Door door = new Door(block, id_g++);
+            doors.put(block, door);
         }
 
         //电梯
@@ -186,10 +209,22 @@ public final class Game {
                 liftDoors.put(block, liftDoor);
             }
         }
+
+        //尸体
+        var bodiesInfo = (List<String>) locations_config.getList("bodies");
+        for (String bodyInfo : bodiesInfo) {
+            var info = bodyInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
+            spawnPickableBody(new Location(world, xyz[0], xyz[1], xyz[2]), Arrays.stream(info).skip(1).toList());
+        }
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
-        location.getWorld().spawn(location, Item.class, item_entity -> {
+        spawnItem(game_item, location, amount, null);
+    }
+
+    public Item spawnItem(Class<? extends GameItem> game_item, Location location, int amount, Integer data) {
+        return location.getWorld().spawn(location, Item.class, item_entity -> {
             GameItem item = new Air();
             try {
                 item = game_item.getDeclaredConstructor().newInstance();
@@ -212,6 +247,9 @@ public final class Game {
                 is = ib.build();
             }
 
+            if (data != null)
+                is.getItemMeta().getPersistentDataContainer().set(Door.key_id, PersistentDataType.INTEGER, data);
+
             if (item instanceof PickUpHandler pickUpHandler) {
                 pickup_items.put(is, pickUpHandler);
             }
@@ -228,6 +266,15 @@ public final class Game {
             item_entity.setOwner(new UUID(0, 0));
             item_on_ground.put(item_entity, item.pickUp());
         });
+    }
+
+    public void spawnPickableBody(Location location, List<String> item_name) {
+        pickable_bodies.put(location.getWorld().spawn(location, ArmorStand.class, ar -> {
+            ar.setVisible(false);
+            ar.setInvulnerable(true);
+            ar.setDisabledSlots(EquipmentSlot.values());
+            //todo
+        }), item_name);
     }
 
     public void end(Player ender) {
@@ -322,7 +369,7 @@ public final class Game {
         return finalAmount;
     }
 
-    public void spawnBody(Player player) {
+    public void spawnPlayerBody(Player player) {
         markers.add(player.getWorld().spawn(player.getLocation().add(0, -1.5, 0), ArmorStand.class, armorStand -> {
             armorStand.setInvisible(true);
             armorStand.setMarker(true);
@@ -330,6 +377,7 @@ public final class Game {
                 editMeta(meta -> ((SkullMeta) meta).setOwningPlayer(player));
             }});
             armorStand.addScoreboardTag("body");
+            armorStand.setDisabledSlots(EquipmentSlot.values());
             //alien技能
             if (playerData.get(hunter).getRole() instanceof Alien alien) {
                 Location location = armorStand.getLocation();

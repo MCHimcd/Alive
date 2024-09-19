@@ -77,7 +77,14 @@ public final class LocationFactory {
     }
 
     public static void replace2x2(Location loc, Material material, BlockFace face) {
-        int[][] offsets = getOffsets(face);
+        int[][] offsets = switch (face) {
+            case SELF -> new int[][]{{0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}};
+            case NORTH -> new int[][]{{1, 0, 1}, {1, -1, 1}, {2, -1, 1}, {2, 0, 1}};
+            case EAST -> new int[][]{{-1, 0, 1}, {-1, -1, 1}, {-1, -1, 2}, {-1, 0, 2}};
+            case WEST -> new int[][]{{1, 0, -1}, {1, -1, -1}, {1, -1, -2}, {1, 0, -2}};
+            case SOUTH -> new int[][]{{-1, 0, -1}, {-1, -1, -1}, {-2, -1, -1}, {-2, 0, -1}};
+            default -> throw new IllegalArgumentException("Unsupported BlockFace: " + face);
+        };
         Location[] corners = new Location[4];
 
         for (int i = 0; i < offsets.length; i++) {
@@ -101,16 +108,5 @@ public final class LocationFactory {
                 player.teleport(loc);
             }
         }
-    }
-
-    private static int[][] getOffsets(BlockFace face) {
-        return switch (face) {
-            case SELF -> new int[][]{{0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}};
-            case NORTH -> new int[][]{{1, 0, 1}, {1, -1, 1}, {2, -1, 1}, {2, 0, 1}};
-            case EAST -> new int[][]{{-1, 0, 1}, {-1, -1, 1}, {-1, -1, 2}, {-1, 0, 2}};
-            case WEST -> new int[][]{{1, 0, -1}, {1, -1, -1}, {1, -1, -2}, {1, 0, -2}};
-            case SOUTH -> new int[][]{{-1, 0, -1}, {-1, -1, -1}, {-2, -1, -1}, {-2, 0, -1}};
-            default -> throw new IllegalArgumentException("Unsupported BlockFace: " + face);
-        };
     }
 }

@@ -2,6 +2,8 @@ package mc.alive;
 
 import mc.alive.effect.Effect;
 import mc.alive.effect.MultilevelEffect;
+import mc.alive.item.DoorCard;
+import mc.alive.item.GameItem;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import mc.alive.role.hunter.Hunter;
@@ -19,6 +21,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -58,6 +61,8 @@ public final class PlayerData implements TickRunnable {
     private int stamina = 0;
     //回体力cd
     private int stamina_tick = 0;
+    //捡尸体计时
+    private int pickup_body_tick = 0;
 
     public PlayerData(Player player, Role role) {
         this.player = player;
@@ -126,7 +131,7 @@ public final class PlayerData implements TickRunnable {
                 "去世了",
                 "离开了人间."
         ).get(new Random().nextInt(0, 2))))));
-        game.spawnBody(player);
+        game.spawnPlayerBody(player);
         Game.resetPlayer(player);
         player.setGameMode(GameMode.SPECTATOR);
         Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
@@ -265,6 +270,33 @@ public final class PlayerData implements TickRunnable {
                 }
             }
         }
+
+        //捡尸体
+        if (player.isSneaking()) {
+            var body = game.pickable_bodies.keySet().stream()
+                    .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation(), 1).contains(player))
+                    .findFirst().orElseGet(() -> null);
+            if (body != null && ++pickup_body_tick == 60) {
+                Random r = new Random();
+                game.pickable_bodies.get(body).forEach(name -> {
+                    int key_id = 0, count = 1;
+                    var c_index = name.indexOf("*");
+                    if (c_index != -1) {
+                        count = Integer.parseInt(name.substring(c_index) + 1);
+                        name = name.substring(0, c_index);
+                    }
+                    if (name.startsWith("DoorCard")) {
+                        key_id = Integer.parseInt(name.substring(8));
+                        name = "DoorCard";
+                    }
+                    var clazz = GameItem.registries.get(name);
+                    if (clazz != null) {
+                        var it = game.spawnItem(clazz, player.getLocation(), count, clazz.equals(DoorCard.class) ? key_id : null);
+                        it.setVelocity(new Vector(r.nextDouble(), 1, r.nextDouble()));
+                    }
+                });
+            }
+        } else pickup_body_tick = 0;
     }
 
     public void changeSkillValue() {
@@ -353,4 +385,5 @@ public final class PlayerData implements TickRunnable {
     public boolean canMove() {
         return health > role.getMaxHealth() * 0.2;
     }
+
 }

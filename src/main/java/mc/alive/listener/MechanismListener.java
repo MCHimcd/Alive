@@ -2,11 +2,12 @@ package mc.alive.listener;
 
 import mc.alive.Game;
 import mc.alive.PlayerData;
+import mc.alive.mechanism.Door;
 import mc.alive.mechanism.Lift;
 import mc.alive.mechanism.LiftDoor;
+import mc.alive.menu.LiftMenu;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
-import mc.alive.menu.LiftMenu;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,12 +39,19 @@ public class MechanismListener implements Listener {
             }
         }
 
-        //呼叫电梯
         if (action == Action.RIGHT_CLICK_BLOCK) {
             var block = event.getClickedBlock();
+            //呼叫电梯
             LiftDoor liftDoor = game.liftDoors.get(block);
-            if (liftDoor == null || role instanceof Hunter) return;
-            liftDoor.callLift();
+            if (liftDoor != null && !(role instanceof Hunter)) {
+                liftDoor.callLift();
+            }
+            //开门
+            Door door = game.doors.get(block);
+            if (door != null) {
+                door.tryOpen(player);
+            }
+
         }
 
     }

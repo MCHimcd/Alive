@@ -19,6 +19,14 @@ lifts:
     3,-55,14
     3,-51,14
 
+#密码门坐标
+doors:
+  - 1,1,1
+
+#尸体
+bodies:
+  - 1,1,1 DoorCard1 ChamberStandardCartridge*10
+
 #可拾取物品
 # x y z 数量 类名
 items:
