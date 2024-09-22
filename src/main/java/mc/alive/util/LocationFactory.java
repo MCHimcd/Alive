@@ -76,7 +76,20 @@ public final class LocationFactory {
         return new Location(player.getWorld(), newX, y1, newZ);
     }
 
-    public static void replace2x2(Location loc, Material material, BlockFace face) {
+    public static void replace2x2Door(Location start, BlockFace face, Material material) {
+        int[][] offsets = switch (face) {
+            case NORTH, SOUTH -> new int[][]{{0, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 1, 1}};
+            case EAST, WEST -> new int[][]{{1, 0, 0}, {1, 1, 0}, {0, 0, 0}, {0, 1, 0}};
+            default -> throw new IllegalArgumentException("Unsupported BlockFace: " + face);
+        };
+        Location[] corners = new Location[4];
+
+        for (int[] offset : offsets) {
+            start.clone().add(offset[0], offset[1], offset[2]).getBlock().setType(material);
+        }
+    }
+
+    public static void replace2x2Lift(Location loc, Material material, BlockFace face) {
         int[][] offsets = switch (face) {
             case SELF -> new int[][]{{0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}};
             case NORTH -> new int[][]{{1, 0, 1}, {1, -1, 1}, {2, -1, 1}, {2, 0, 1}};

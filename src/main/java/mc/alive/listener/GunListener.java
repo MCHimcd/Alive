@@ -13,12 +13,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 
+import static mc.alive.Game.game;
+
 public class GunListener implements Listener {
     @EventHandler
     public void onStopUsing(PlayerStopUsingItemEvent event) {
         if (!Game.isStarted()) return;
         var player = event.getPlayer();
-        var gun = Game.game.usable_items.get(player.getInventory().getItemInMainHand());
+        var gun = game.usable_items.get(player.getInventory().getItemInMainHand());
         if (gun != null) {
             ((Gun) gun).stopShoot(player);
         }
@@ -33,6 +35,10 @@ public class GunListener implements Listener {
     @EventHandler
     public void onChangeMainHandItem(PlayerItemHeldEvent event) {
         if (!Game.isStarted()) return;
+        if (game.isPaused) {
+            event.setCancelled(true);
+            return;
+        }
         var player = event.getPlayer();
 
         //蓄力技能取消
@@ -48,13 +54,13 @@ public class GunListener implements Listener {
         if (!ItemCheck.hasCustomModelData(pre_it)) return;
         var pre_data = pre_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(pre_data)) {
-            ((Gun) Game.game.usable_items.get(pre_it)).handleItemChange(player, true);
+            ((Gun) game.usable_items.get(pre_it)).handleItemChange(player, true);
         }
         var new_it = player.getInventory().getItem(event.getNewSlot());
         if (!ItemCheck.hasCustomModelData(new_it)) return;
         var new_data = new_it.getItemMeta().getCustomModelData();
         if (ItemCheck.isGun(new_data)) {
-            ((Gun) Game.game.usable_items.get(new_it)).handleItemChange(player, false);
+            ((Gun) game.usable_items.get(new_it)).handleItemChange(player, false);
         }
     }
 }

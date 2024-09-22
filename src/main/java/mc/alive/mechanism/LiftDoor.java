@@ -100,7 +100,7 @@ public class LiftDoor {
         blockDisplay_left.setInterpolationDelay(0);
         blockDisplay_left.setInterpolationDuration(20);
 
-        LocationFactory.replace2x2(block.getLocation(), Material.AIR, getFace());
+        LocationFactory.replace2x2Lift(block.getLocation(), Material.AIR, getFace());
     }
 
     public void closeDoor() {
@@ -124,6 +124,6 @@ public class LiftDoor {
         blockDisplay_left.setInterpolationDelay(0);
         blockDisplay_left.setInterpolationDuration(20);
 
-        LocationFactory.replace2x2(block.getLocation(), Material.BARRIER, getFace());
+        LocationFactory.replace2x2Lift(block.getLocation(), Material.BARRIER, getFace());
     }
 }

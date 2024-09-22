@@ -31,6 +31,7 @@ public class PlayerTickrunnable implements TickRunnable {
     @SuppressWarnings("DataFlowIssue")
     @Override
     public void tick() {
+        if (game.isPaused) return;
         //选择item_display
         chosen_item_display.values().forEach(e -> e.setGlowing(false));
         chosen_item_display.clear();
@@ -76,7 +77,7 @@ public class PlayerTickrunnable implements TickRunnable {
 
         //选择item
         chosen_item.clear();
-        if (Game.isStarted()) {
+        if (Game.isRunning()) {
             game.playerData.keySet().forEach(player -> {
                 var r = player.getWorld().rayTrace(
                         player.getEyeLocation(),

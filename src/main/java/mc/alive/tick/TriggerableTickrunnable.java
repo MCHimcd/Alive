@@ -13,7 +13,7 @@ public class TriggerableTickrunnable implements TickRunnable {
     @SuppressWarnings("DataFlowIssue")
     @Override
     public void tick() {
-        if (!Game.isStarted()) return;
+        if (!Game.isRunning()) return;
 
         var hunter = game.hunter;
         var pd_hunter = PlayerData.of(hunter);

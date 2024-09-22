@@ -208,6 +208,7 @@ public final class PlayerData implements TickRunnable {
 
     @Override
     public void tick() {
+        if (game.isPaused) return;
         //Effect
         effects.stream()
                 .filter(effect -> effect instanceof MultilevelEffect)
@@ -275,7 +276,7 @@ public final class PlayerData implements TickRunnable {
         if (player.isSneaking()) {
             var body = game.pickable_bodies.keySet().stream()
                     .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation(), 1).contains(player))
-                    .findFirst().orElseGet(() -> null);
+                    .findFirst().orElse(null);
             if (body != null && ++pickup_body_tick == 60) {
                 Random r = new Random();
                 game.pickable_bodies.get(body).forEach(name -> {

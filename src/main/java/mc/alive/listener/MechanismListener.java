@@ -8,6 +8,7 @@ import mc.alive.mechanism.LiftDoor;
 import mc.alive.menu.LiftMenu;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
+import mc.alive.tick.MechanismTickrunnable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +22,7 @@ public class MechanismListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (!Game.isStarted()) return;
+        if (!Game.isRunning()) return;
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
         var action = event.getAction();
         if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) return;
@@ -46,13 +47,12 @@ public class MechanismListener implements Listener {
             if (liftDoor != null && !(role instanceof Hunter)) {
                 liftDoor.callLift();
             }
-            //开门
-            Door door = game.doors.get(block);
-            if (door != null) {
-                door.tryOpen(player);
-            }
-
         }
 
+        //开门
+        Door door = MechanismTickrunnable.chosenDoors.get(player);
+        if (door != null) {
+            door.tryOpen(player);
+        }
     }
 }

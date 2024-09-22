@@ -36,26 +36,28 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (Game.isStarted()) {
-            var pd = game.playerData.get(event.getPlayer());
-            ItemStack item = event.getOffHandItem();
+            if (Game.isRunning()) {
+                var pd = game.playerData.get(event.getPlayer());
+                ItemStack item = event.getOffHandItem();
 
-            if (ItemCheck.hasCustomModelData(item)) {
-                var data = item.getItemMeta().getCustomModelData();
+                if (ItemCheck.hasCustomModelData(item)) {
+                    var data = item.getItemMeta().getCustomModelData();
 
-                if (ItemCheck.isSkill(data)) {
-                    //技能
-                    PlayerData.of(event.getPlayer()).changeSkillValue();
-                    event.setCancelled(true);
-                } else if (ItemCheck.isGun(data) && PlayerData.of(event.getPlayer()).getRole() instanceof Survivor) {
-                    //枪
-                    ((Gun) game.usable_items.get(item)).reload(event.getPlayer());
+                    if (ItemCheck.isSkill(data)) {
+                        //技能
+                        PlayerData.of(event.getPlayer()).changeSkillValue();
+                        event.setCancelled(true);
+                    } else if (ItemCheck.isGun(data) && PlayerData.of(event.getPlayer()).getRole() instanceof Survivor) {
+                        //枪
+                        ((Gun) game.usable_items.get(item)).reload(event.getPlayer());
+                        event.setCancelled(true);
+                    }
+                }
+
+                if (pd.hasEffect(Giddy.class)) {
                     event.setCancelled(true);
                 }
-            }
-
-            if (pd.hasEffect(Giddy.class)) {
-                event.setCancelled(true);
-            }
+            } else event.setCancelled(true);
         }
 
         ItemStack item = event.getOffHandItem();
@@ -66,7 +68,7 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void tryPickup(PlayerInteractEvent event) {
-        if (event.getHand() == EquipmentSlot.OFF_HAND || !List.of(Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK).contains(event.getAction()) || !Game.isStarted())
+        if (event.getHand() == EquipmentSlot.OFF_HAND || !List.of(Action.RIGHT_CLICK_AIR, Action.RIGHT_CLICK_BLOCK).contains(event.getAction()) || !Game.isRunning())
             return;
         var player = event.getPlayer();
         Item item = PlayerTickrunnable.chosen_item.get(player);
@@ -80,7 +82,7 @@ public class ItemListener implements Listener {
             game.item_on_ground.remove(item);
         }
     }
-    
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
@@ -149,19 +151,23 @@ public class ItemListener implements Listener {
             if (ItemCheck.isSkill(data) || data == 90000 || data == 20000) {
                 event.setCancelled(true);
             } else if (ItemCheck.isGameItem(data) && Game.isStarted()) {
-                var item = event.getItemDrop();
-                ItemStack is = item.getItemStack();
-                item.customName(is.displayName().append(is.getAmount() == 1 ? Component.empty() : rMsg("*%d".formatted(is.getAmount()))));
-                item.setCustomNameVisible(true);
-                item.setCanMobPickup(false);
-                item.setWillAge(false);
-                item.setCanMobPickup(false);
-                item.setOwner(new UUID(0, 0));
-                PickUp pickUp = BOTH;
-                var pd = game.playerData.get(event.getPlayer());
-                if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;
-                else if (pd.getRole() instanceof Hunter) pickUp = HUNTER;
-                game.item_on_ground.put(item, pickUp);
+                if (Game.isRunning()) {
+                    var item = event.getItemDrop();
+                    ItemStack is = item.getItemStack();
+                    item.customName(is.displayName().append(is.getAmount() == 1 ? Component.empty() : rMsg("*%d".formatted(is.getAmount()))));
+                    item.setCustomNameVisible(true);
+                    item.setCanMobPickup(false);
+                    item.setWillAge(false);
+                    item.setCanMobPickup(false);
+                    item.setOwner(new UUID(0, 0));
+                    PickUp pickUp = BOTH;
+                    var pd = game.playerData.get(event.getPlayer());
+                    if (pd.getRole() instanceof Survivor) pickUp = SURVIVOR;
+                    else if (pd.getRole() instanceof Hunter) pickUp = HUNTER;
+                    game.item_on_ground.put(item, pickUp);
+                } else {
+                    event.setCancelled(true);
+                }
             }
         }
     }

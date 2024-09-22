@@ -1,6 +1,7 @@
 package mc.alive.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import mc.alive.Alive;
 import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
@@ -23,7 +24,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import static mc.alive.Game.game;
 import static mc.alive.PlayerData.of;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
@@ -31,7 +37,21 @@ import static mc.alive.menu.MainMenu.prepared_players;
 public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Game.resetPlayer(event.getPlayer());
+        Player player = event.getPlayer();
+        AtomicReference<PlayerData> pd = new AtomicReference<>();
+        if (Game.isStarted()) {
+            game.playerData.forEach((p, d) -> {
+                if (p.getName().equals(player.getName())) {
+                    pd.set(d);
+                }
+            });
+        }
+        if (pd.get() != null) {
+            game.playerData.put(player, pd.get());
+            game.isPaused = false;
+        } else {
+            Game.resetPlayer(player);
+        }
         setAtChatCompletions();
     }
 
@@ -42,13 +62,13 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void avoidDamage(EntityDamageEvent event) {
         if (event.getEntityType() != EntityType.PLAYER) return;
-        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || Game.game == null)
+        if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || game == null)
             event.setCancelled(true);
     }
 
     //    @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (Game.game == null) return;
+        if (game == null) return;
 
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             if (!(viewer instanceof Player player)) return Component.empty();
@@ -85,7 +105,8 @@ public class PlayerListener implements Listener {
             players_looking_document.remove(player);
         }
 
-        if (!Game.isStarted()) return;
+        if (game.isPaused) event.setCancelled(true);
+        if (!Game.isRunning()) return;
 
         var pd = of(player);
         if (pd.hasEffect(Giddy.class)) {
@@ -113,8 +134,14 @@ public class PlayerListener implements Listener {
         var player = event.getPlayer();
         players_looking_document.remove(player);
         prepared_players.remove(player);
-        if (Game.game != null) {
-            Game.game.end(player);
+        if (Game.isRunning()) {
+            game.pause();
+            game.pause_task = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    game.end(null);
+                }
+            }.runTaskLater(Alive.plugin, 1200);
         }
         setAtChatCompletions();
     }
@@ -139,7 +166,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
-        if (Game.game == null || Game.game.chooseRole != null) return;
+        if (game == null || game.chooseRole != null) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
             var pd_hurt = of(player);
             var pd_damager = of(damager);
@@ -158,6 +185,13 @@ public class PlayerListener implements Listener {
             }
 
             event.setDamage(0);
+        }
+    }
+
+    @EventHandler
+    void onToggleSnake(PlayerToggleSneakEvent event) {
+        if (Game.isStarted() && game.isPaused) {
+            event.setCancelled(true);
         }
     }
 }

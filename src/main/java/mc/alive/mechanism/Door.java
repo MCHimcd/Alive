@@ -1,10 +1,10 @@
 package mc.alive.mechanism;
 
 import mc.alive.util.LocationFactory;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.Directional;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -17,12 +17,18 @@ import static mc.alive.util.Message.rMsg;
 public class Door {
     public static final NamespacedKey key_id = new NamespacedKey("alive", "key_id");
     private final int id;
-    private final Block block;
+    private final Location start;
+    private final BlockFace face;
 
-    public Door(Block block, int id) {
+    public Door(Location start, BlockFace face, int id) {
         this.id = id;
-        this.block = block;
-        LocationFactory.replace2x2(block.getLocation(), Material.BARRIER, ((Directional) block.getBlockData()).getFacing());
+        this.start = start;
+        this.face = face;
+        LocationFactory.replace2x2Door(start, face, Material.BARRIER);
+    }
+
+    public BlockFace getFace() {
+        return face;
     }
 
     public void tryOpen(Player p) {
@@ -33,7 +39,7 @@ public class Door {
         }).findFirst();
         if (key.isPresent()) {
             p.getInventory().removeItem(key.get());
-            LocationFactory.replace2x2(block.getLocation(), Material.AIR, ((Directional) block.getBlockData()).getFacing());
+            LocationFactory.replace2x2Door(start, face, Material.AIR);
         } else {
             p.sendMessage(rMsg("无卡"));
         }

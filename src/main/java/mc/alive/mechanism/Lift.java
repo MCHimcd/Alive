@@ -36,7 +36,7 @@ public class Lift {
     public Lift(BlockDisplay blockDisplay, int max_floor) {
         this.blockDisplay = blockDisplay;
         this.max_floor = max_floor;
-        LocationFactory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
+        LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
     }
 
     /**
@@ -113,7 +113,7 @@ public class Lift {
             this.players = players;
             this.blockDisplay = blockDisplay;
             this.lift = lift;
-            LocationFactory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
+            LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
         }
 
         public void run() {
@@ -124,7 +124,7 @@ public class Lift {
             if (t++ >= target_time) {
                 if (lift.changeFloor()) {
                     //到达
-                    LocationFactory.replace2x2(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
+                    LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
                     lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::openDoor);
                     cancel();
                 } else {

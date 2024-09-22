@@ -16,6 +16,7 @@ import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.ItemBuilder;
+import mc.alive.util.ItemCheck;
 import mc.alive.util.LocationFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -29,6 +30,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
@@ -46,7 +48,7 @@ public final class Game {
     public static Team team_hunter;
     public static Team team_survivor;
     public static Game game = null;
-    public final Map<Block, Door> doors = new HashMap<>();
+    public final Map<Location, Door> doors = new HashMap<>();
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Player hunter;
@@ -58,6 +60,8 @@ public final class Game {
     public final List<Entity> markers = new LinkedList<>();
     public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
+    public BukkitTask pause_task = null;
+    public boolean isPaused = false;
     public ChooseRole chooseRole;
 
     public Game(List<Player> players) {
@@ -75,6 +79,10 @@ public final class Game {
                 chooseRole.nextChoose();
             }
         }.runTaskLater(plugin, 1);
+    }
+
+    public static boolean isRunning() {
+        return isStarted() && !game.isPaused;
     }
 
     public static boolean isStarted() {
@@ -153,23 +161,24 @@ public final class Game {
             var x = Double.parseDouble(info[0]);
             var y = Double.parseDouble(info[1]);
             var z = Double.parseDouble(info[2]);
-            var a = Integer.parseInt(info[3]);
-            do {
-                int finalA = a;
-                Arrays.stream(info).skip(4).forEach(name -> {
-                    int key_id = -1;
-                    if (name.startsWith("DoorCard")) {
-                        key_id = Integer.parseInt(name.substring(8));
-                        name = "DoorCard";
-                    }
-                    var clazz = GameItem.registries.get(name);
-                    if (clazz != null) {
-                        if (key_id != -1) spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64), key_id);
-                        else spawnItem(clazz, new Location(world, x, y, z), Math.min(finalA, 64));
-                    }
-                });
-                a -= 64;
-            } while (a >= 64);
+            Arrays.stream(info).skip(3).forEach(name -> {
+                int i = name.indexOf("*");
+                int amount = i == -1 ? 1 : Integer.parseInt(name.substring(i + 1));
+                name = i == -1 ? name : name.substring(0, i);
+                int key_id = -1;
+                if (name.startsWith("DoorCard")) {
+                    key_id = Integer.parseInt(name.substring(8));
+                    name = "DoorCard";
+                }
+                var clazz = GameItem.registries.get(name);
+                if (clazz != null) {
+                    do {
+                        if (key_id != -1) spawnItem(clazz, new Location(world, x, y, z), Math.min(amount, 64), key_id);
+                        else spawnItem(clazz, new Location(world, x, y, z), Math.min(amount, 64));
+                        amount -= 64;
+                    } while (amount > 64);
+                }
+            });
         }
 
         //密码门
@@ -178,9 +187,9 @@ public final class Game {
         for (String doorInfo : doorsInfo) {
             var info = doorInfo.split(" ");
             var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
-            var block = world.getBlockAt(xyz[0], xyz[1], xyz[2]);
-            Door door = new Door(block, id_g++);
-            doors.put(block, door);
+            Location start = new Location(world, xyz[0], xyz[1], xyz[2]);
+            Door door = new Door(start, info[1].equals("N") ? BlockFace.NORTH : BlockFace.EAST, id_g++);
+            doors.put(start, door);
         }
 
         //电梯
@@ -348,10 +357,21 @@ public final class Game {
             }
         }
         for (BlockDisplay blockDisplay : lifts.keySet()) {
-            LocationFactory.replace2x2(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
+            LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
             blockDisplay.remove();
         }
         markers.forEach(Entity::remove);
+    }
+
+    public void pause() {
+        isPaused = true;
+        playerData.keySet().forEach(player -> {
+            var item = player.getInventory().getItemInMainHand();
+            if (ItemCheck.hasCustomModelData(item) && ItemCheck.isGun(item.getItemMeta().getCustomModelData())) {
+                ((Gun) usable_items.get(item)).stopShoot(player);
+            }
+            player.sendActionBar(rMsg("游戏暂停"));
+        });
     }
 
     public int fix(ItemDisplay id, int amount) {
