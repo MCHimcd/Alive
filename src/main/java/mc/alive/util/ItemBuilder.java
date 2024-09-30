@@ -28,10 +28,10 @@ public final class ItemBuilder {
     }
 
     public static ItemBuilder material(Material type, int data) {
-        return new ItemBuilder(type).data(data);
+        return new ItemBuilder(type).modelData(data);
     }
 
-    public ItemBuilder data(int data) {
+    public ItemBuilder modelData(int data) {
         item.editMeta(meta -> meta.setCustomModelData(data));
         return this;
     }

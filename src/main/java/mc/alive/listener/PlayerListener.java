@@ -40,11 +40,21 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         AtomicReference<PlayerData> pd = new AtomicReference<>();
         if (Game.isStarted()) {
+            AtomicReference<Player> found = new AtomicReference<>();
             game.playerData.forEach((p, d) -> {
                 if (p.getName().equals(player.getName())) {
                     pd.set(d);
+                    found.set(p);
                 }
             });
+            if (found.get() != null) {
+                game.playerData.remove(found.get());
+                if (player.getName().equals(game.hunter.getName())) game.hunter = player;
+                else {
+                    game.survivors.remove(found.get());
+                    game.survivors.add(player);
+                }
+            }
         }
         if (pd.get() != null) {
             game.playerData.put(player, pd.get());
@@ -66,9 +76,9 @@ public class PlayerListener implements Listener {
             event.setCancelled(true);
     }
 
-    //    @EventHandler
+    @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (game == null) return;
+        if (!Game.isRunning() || game.isDebuging) return;
 
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             if (!(viewer instanceof Player player)) return Component.empty();
@@ -135,13 +145,19 @@ public class PlayerListener implements Listener {
         players_looking_document.remove(player);
         prepared_players.remove(player);
         if (Game.isRunning()) {
-            game.pause();
-            game.pause_task = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    game.end(null);
+            if (game.playerData.containsKey(player)) {
+                game.end(null);
+                //todo 不会修
+                if (false) {
+                    game.pause();
+                    game.pause_task = new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            game.end(null);
+                        }
+                    }.runTaskLater(Alive.plugin, 1200);
                 }
-            }.runTaskLater(Alive.plugin, 1200);
+            }
         }
         setAtChatCompletions();
     }

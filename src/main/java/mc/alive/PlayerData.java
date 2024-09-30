@@ -273,7 +273,7 @@ public final class PlayerData implements TickRunnable {
         }
 
         //捡尸体
-        if (player.isSneaking()) {
+        if (role instanceof Survivor && player.isSneaking()) {
             var body = game.pickable_bodies.keySet().stream()
                     .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation(), 1).contains(player))
                     .findFirst().orElse(null);
@@ -283,7 +283,7 @@ public final class PlayerData implements TickRunnable {
                     int key_id = 0, count = 1;
                     var c_index = name.indexOf("*");
                     if (c_index != -1) {
-                        count = Integer.parseInt(name.substring(c_index) + 1);
+                        count = Integer.parseInt(name.substring(c_index + 1));
                         name = name.substring(0, c_index);
                     }
                     if (name.startsWith("DoorCard")) {
@@ -293,9 +293,15 @@ public final class PlayerData implements TickRunnable {
                     var clazz = GameItem.registries.get(name);
                     if (clazz != null) {
                         var it = game.spawnItem(clazz, player.getLocation(), count, clazz.equals(DoorCard.class) ? key_id : null);
-                        it.setVelocity(new Vector(r.nextDouble(), 1, r.nextDouble()));
+                        it.setVelocity(new Vector(
+                                (r.nextBoolean() ? 1 : -1) * r.nextDouble() * 0.3,
+                                0.2,
+                                (r.nextBoolean() ? 1 : -1) * r.nextDouble() * 0.3
+                        ));
                     }
                 });
+                game.pickable_bodies.remove(body);
+                body.remove();
             }
         } else pickup_body_tick = 0;
     }

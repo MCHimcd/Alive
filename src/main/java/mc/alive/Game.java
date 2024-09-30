@@ -14,6 +14,7 @@ import mc.alive.role.ChooseRole;
 import mc.alive.role.Role;
 import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Mike;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.ItemCheck;
@@ -22,13 +23,14 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
@@ -51,7 +53,6 @@ public final class Game {
     public final Map<Location, Door> doors = new HashMap<>();
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
-    public final Player hunter;
     public final Map<ItemStack, Usable> usable_items = new HashMap<>();
     public final Map<ItemStack, PickUpHandler> pickup_items = new HashMap<>();
     public final Map<Item, PickUp> item_on_ground = new HashMap<>();
@@ -60,70 +61,97 @@ public final class Game {
     public final List<Entity> markers = new LinkedList<>();
     public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
+    public boolean isDebuging = false;
+    public Player hunter;
     public BukkitTask pause_task = null;
     public boolean isPaused = false;
     public ChooseRole chooseRole;
 
     public Game(List<Player> players) {
+        this(players, false);
+    }
+
+    public Game(List<Player> players, boolean debug) {
         MainMenu.prepared_players.clear();
-        chooseRole = new ChooseRole(players);
-        players.forEach(player -> {
-            player.getInventory().clear();
-            player.closeInventory();
-        });
-        hunter = players.removeFirst();
-        survivors = players;
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                chooseRole.nextChoose();
-            }
-        }.runTaskLater(plugin, 1);
-    }
-
-    public static boolean isRunning() {
-        return isStarted() && !game.isPaused;
-    }
-
-    public static boolean isStarted() {
-        return game != null && game.chooseRole == null;
-    }
-
-    public void start() {
-        new BukkitRunnable() {
-            int t = 99;
-
-            @Override
-            public void run() {
-                t++;
-                if (t % 10 == 0) {
-                    Component progressBar = rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
-                    Title title = Title.title(
-                            rMsg("<rainbow> --游戏加载中--"),
-                            progressBar,
-                            Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
-                    );
-                    playerData.keySet().forEach(player -> {
-                        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-                        player.showTitle(title);
-                    });
+        if (debug) {
+            isDebuging = true;
+            Player p1 = players.getFirst();
+            playerData.put(p1, new PlayerData(p1, new Alien(p1)));
+            hunter = p1;
+            Player p2 = players.get(1);
+            playerData.put(p2, new PlayerData(p2, new Mike(p2)));
+            survivors = new ArrayList<>();
+            survivors.add(p2);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    start(true);
                 }
-                if (t >= 100) {
-                    chooseRole.roles.keySet().forEach(Entity::remove);
-                    chooseRole = null;
-                    playerData.forEach((player, playerData1) -> {
-                        player.clearActivePotionEffects();
-                        player.setHealth(20);
-                        Role role = playerData1.getRole();
-                        role.equip();
-                        if (role instanceof Hunter h) //noinspection DataFlowIssue
-                            player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
-                    });
-                    summonEntities();
-                    cancel();
+            }.runTaskLater(plugin, 1);
+        } else {
+            chooseRole = new ChooseRole(players);
+            players.forEach(player -> {
+                player.getInventory().clear();
+                player.closeInventory();
+            });
+            hunter = players.removeFirst();
+            survivors = players;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    chooseRole.nextChoose();
                 }
-            }
-        }.runTaskTimer(plugin, 0, 1);
+            }.runTaskLater(plugin, 1);
+        }
+    }
+
+    public void start(boolean debug) {
+        if (debug) {
+            playerData.forEach((player, playerData1) -> {
+                player.clearActivePotionEffects();
+                player.setHealth(20);
+                Role role = playerData1.getRole();
+                role.equip();
+                if (role instanceof Hunter h) //noinspection DataFlowIssue
+                    player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
+            });
+            summonEntities();
+        } else {
+            new BukkitRunnable() {
+                int t = 0;
+
+                @Override
+                public void run() {
+                    t++;
+                    if (t % 10 == 0) {
+                        Component progressBar = rMsg("<gold>" + "■".repeat(t / 10) + "<white>" + "□".repeat(10 - t / 10));
+                        Title title = Title.title(
+                                rMsg("<rainbow> --游戏加载中--"),
+                                progressBar,
+                                Title.Times.times(Duration.ZERO, Duration.ofMillis(1100), Duration.ZERO)
+                        );
+                        playerData.keySet().forEach(player -> {
+                            player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                            player.showTitle(title);
+                        });
+                    }
+                    if (t >= 100) {
+                        chooseRole.roles.keySet().forEach(Entity::remove);
+                        chooseRole = null;
+                        playerData.forEach((player, playerData1) -> {
+                            player.clearActivePotionEffects();
+                            player.setHealth(20);
+                            Role role = playerData1.getRole();
+                            role.equip();
+                            if (role instanceof Hunter h) //noinspection DataFlowIssue
+                                player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
+                        });
+                        summonEntities();
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(plugin, 0, 1);
+        }
     }
 
     @SuppressWarnings({"DataFlowIssue", "unchecked"})
@@ -188,7 +216,7 @@ public final class Game {
             var info = doorInfo.split(" ");
             var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
             Location start = new Location(world, xyz[0], xyz[1], xyz[2]);
-            Door door = new Door(start, info[1].equals("N") ? BlockFace.NORTH : BlockFace.EAST, id_g++);
+            Door door = new Door(start, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH, ++id_g);
             doors.put(start, door);
         }
 
@@ -223,7 +251,7 @@ public final class Game {
         var bodiesInfo = (List<String>) locations_config.getList("bodies");
         for (String bodyInfo : bodiesInfo) {
             var info = bodyInfo.split(" ");
-            var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
+            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
             spawnPickableBody(new Location(world, xyz[0], xyz[1], xyz[2]), Arrays.stream(info).skip(1).toList());
         }
     }
@@ -244,7 +272,7 @@ public final class Game {
             var ib = ItemBuilder
                     .material(item.material())
                     .name(item.name())
-                    .data(item.customModelData())
+                    .modelData(item.customModelData())
                     .lore(item.lore())
                     .amount(amount);
             ItemStack is;
@@ -256,8 +284,13 @@ public final class Game {
                 is = ib.build();
             }
 
-            if (data != null)
-                is.getItemMeta().getPersistentDataContainer().set(Door.key_id, PersistentDataType.INTEGER, data);
+            if (data != null) {
+                is.editMeta(meta -> {
+                    meta.addAttributeModifier(Attribute.GENERIC_LUCK, new AttributeModifier(Door.key_id, data, AttributeModifier.Operation.ADD_NUMBER));
+                    //noinspection DataFlowIssue
+                    meta.displayName(meta.displayName().append(rMsg(" #%d".formatted(data))));
+                });
+            }
 
             if (item instanceof PickUpHandler pickUpHandler) {
                 pickup_items.put(is, pickUpHandler);
@@ -282,8 +315,21 @@ public final class Game {
             ar.setVisible(false);
             ar.setInvulnerable(true);
             ar.setDisabledSlots(EquipmentSlot.values());
+            ar.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
             //todo
         }), item_name);
+    }
+
+    public static boolean isRunning() {
+        return isStarted() && !game.isPaused;
+    }
+
+    public static boolean isStarted() {
+        return game != null && game.chooseRole == null;
+    }
+
+    public void start() {
+        start(false);
     }
 
     public void end(Player ender) {
@@ -335,7 +381,7 @@ public final class Game {
         if (game == null) {
             player.getInventory().setItem(8, ItemBuilder
                     .material(Material.CLOCK)
-                    .data(20000)
+                    .modelData(20000)
                     .name(Component.text("主菜单", NamedTextColor.GOLD))
                     .build()
             );
@@ -351,6 +397,7 @@ public final class Game {
         }
         fix_progress.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
+        pickable_bodies.keySet().forEach(Entity::remove);
         for (Usable usableGameItem : usable_items.values()) {
             if (usableGameItem instanceof Gun gun) {
                 gun.stopShoot(null);

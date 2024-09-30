@@ -1,13 +1,14 @@
 package mc.alive.mechanism;
 
+import mc.alive.Game;
 import mc.alive.util.LocationFactory;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -24,7 +25,7 @@ public class Door {
         this.id = id;
         this.start = start;
         this.face = face;
-        LocationFactory.replace2x2Door(start, face, Material.BARRIER);
+        LocationFactory.replace2x2Door(start, face, Material.OBSIDIAN);
     }
 
     public BlockFace getFace() {
@@ -34,12 +35,15 @@ public class Door {
     public void tryOpen(Player p) {
         Optional<ItemStack> key = Arrays.stream(p.getInventory().getContents()).filter(it -> {
             if (it == null || !it.hasItemMeta()) return false;
-            var data = it.getItemMeta().getPersistentDataContainer().get(key_id, PersistentDataType.INTEGER);
-            return data != null && data == id;
+            var am = it.getItemMeta().getAttributeModifiers(Attribute.GENERIC_LUCK);
+            if (am == null) return false;
+            var data = am.stream().filter(attributeModifier -> attributeModifier.getKey().equals(key_id)).findFirst();
+            return data.isPresent() && data.get().getAmount() == id;
         }).findFirst();
         if (key.isPresent()) {
             p.getInventory().removeItem(key.get());
             LocationFactory.replace2x2Door(start, face, Material.AIR);
+            Game.game.doors.remove(start);
         } else {
             p.sendMessage(rMsg("无卡"));
         }

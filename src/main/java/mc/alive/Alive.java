@@ -15,6 +15,7 @@ import mc.alive.listener.*;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -27,10 +28,10 @@ import org.bukkit.scoreboard.Team;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
-import static mc.alive.Game.team_hunter;
-import static mc.alive.Game.team_survivor;
+import static mc.alive.Game.*;
 import static mc.alive.util.Message.rMsg;
 import static org.bukkit.Bukkit.*;
 
@@ -117,8 +118,21 @@ public final class Alive extends JavaPlugin implements Listener {
                                 return Command.SINGLE_SUCCESS;
                             }).build(),
                     "重置游戏",
-                    List.of("ar")
+                    List.of("a_r")
             );
+            cs.register(
+                    Commands.literal("test")
+                            .executes(ctx -> {
+                                if (ctx.getSource().getSender() instanceof Player player) {
+                                    List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().limit(2).toList());
+                                    game = new Game(players, true);
+                                }
+                                return Command.SINGLE_SUCCESS;
+                            }).build(),
+                    "测试",
+                    List.of("a_t")
+            );
+
         });
     }
 

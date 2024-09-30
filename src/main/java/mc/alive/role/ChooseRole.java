@@ -19,7 +19,10 @@ import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -34,7 +37,7 @@ public final class ChooseRole {
     public final List<Integer> remainedId_S = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
     public final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 101).boxed().toList());
     private final List<Player> choosing = new ArrayList<>();
-    public Player currentPlayer;
+    private Player currentPlayer;
 
     public ChooseRole(List<Player> players) {
         choosing.addAll(players);
@@ -56,7 +59,8 @@ public final class ChooseRole {
         if (role == null) return false;
 
         remainedId_S.remove(role);
-        game.playerData.put(player, new PlayerData(player, Objects.requireNonNull(Role.of(role, player))));
+        //noinspection DataFlowIssue
+        game.playerData.put(player, new PlayerData(player, Role.of(role, player)));
         player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
         player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
         nextChoose();
@@ -123,7 +127,7 @@ public final class ChooseRole {
             remainedId_H.forEach(rid -> {
                 Material material = switch (rid) {
                     case 100 -> Material.DIAMOND_HOE;
-                    case 101 -> Material.DIAMOND_HOE;
+                    case 101 -> Material.DIAMOND_AXE;
                     default -> throw new IllegalArgumentException("Unexpected value: " + rid);
                 };
                 world.spawn(location.get(), ItemDisplay.class, id -> {

@@ -128,7 +128,7 @@ public class Lift {
                     lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::openDoor);
                     players.forEach(player -> {
                         player.teleport(
-                                player.getLocation().add(0, 0.5, 0),
+                                blockDisplay.getLocation().add(1.5, 0.5, 1.5),
                                 TeleportFlag.Relative.YAW,
                                 TeleportFlag.Relative.PITCH
                         );

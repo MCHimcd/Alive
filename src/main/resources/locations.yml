@@ -21,18 +21,19 @@ lifts:
 
 #密码门坐标
 doors:
-  - 1,1,1 N
+  - -8,-60,20 N
+  - -9,-60,18 E
 
 #尸体
 bodies:
-  - 1,1,1 DoorCard1 ChamberStandardCartridge*10
+  - -7.5,-60,18.5 DoorCard1 DoorCard2 ChamberStandardCartridge*10
 
 #可拾取物品
 # x y z 数量 类名
 items:
-  - 2 -60 13 256
-    ChamberStandardCartridge
-  - 2 -60 13 1
+  - 2 -60 13
+    ChamberStandardCartridge*256
+  - 2 -60 13
     ChamberPistol
     ChamberShotgun
     CabinGuardian
