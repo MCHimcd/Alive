@@ -110,7 +110,7 @@ public class Lift {
         private int target_time = 0;
 
         public RunnableTask(List<Player> players, BlockDisplay blockDisplay, Lift lift) {
-            this.players = players;
+            this.players = new ArrayList<>(players);
             this.blockDisplay = blockDisplay;
             this.lift = lift;
             LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
@@ -126,6 +126,13 @@ public class Lift {
                     //到达
                     LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
                     lift.liftDoors.stream().filter(liftDoor -> liftDoor.getFloor() == lift.getFloor()).findFirst().ifPresent(LiftDoor::openDoor);
+                    players.forEach(player -> {
+                        player.teleport(
+                                player.getLocation().add(0, 0.5, 0),
+                                TeleportFlag.Relative.YAW,
+                                TeleportFlag.Relative.PITCH
+                        );
+                    });
                     cancel();
                 } else {
                     t = 0;

@@ -105,7 +105,7 @@ public class PlayerListener implements Listener {
             players_looking_document.remove(player);
         }
 
-        if (game.isPaused) event.setCancelled(true);
+        if (game != null && game.isPaused) event.setCancelled(true);
         if (!Game.isRunning()) return;
 
         var pd = of(player);
