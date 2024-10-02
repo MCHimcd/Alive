@@ -1,6 +1,5 @@
 package mc.alive.mechanism;
 
-import mc.alive.Game;
 import mc.alive.util.LocationFactory;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,6 +19,7 @@ public class Door {
     private final int id;
     private final Location start;
     private final BlockFace face;
+    private boolean closed = true;
 
     public Door(Location start, BlockFace face, int id) {
         this.id = id;
@@ -28,11 +28,16 @@ public class Door {
         LocationFactory.replace2x2Door(start, face, Material.OBSIDIAN);
     }
 
+    public void open() {
+        LocationFactory.replace2x2Door(start, face, Material.AIR);
+        closed = false;
+    }
+
     public BlockFace getFace() {
         return face;
     }
 
-    public void tryOpen(Player p) {
+    public void action(Player p) {
         Optional<ItemStack> key = Arrays.stream(p.getInventory().getContents()).filter(it -> {
             if (it == null || !it.hasItemMeta()) return false;
             var am = it.getItemMeta().getAttributeModifiers(Attribute.GENERIC_LUCK);
@@ -41,9 +46,12 @@ public class Door {
             return data.isPresent() && data.get().getAmount() == id;
         }).findFirst();
         if (key.isPresent()) {
-            p.getInventory().removeItem(key.get());
-            LocationFactory.replace2x2Door(start, face, Material.AIR);
-            Game.game.doors.remove(start);
+            if (closed) {
+                LocationFactory.replace2x2Door(start, face, Material.AIR);
+            } else {
+                LocationFactory.replace2x2Door(start, face, Material.OBSIDIAN);
+            }
+            closed = !closed;
         } else {
             p.sendMessage(rMsg("无卡"));
         }

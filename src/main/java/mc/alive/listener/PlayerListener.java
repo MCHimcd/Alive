@@ -1,7 +1,6 @@
 package mc.alive.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import mc.alive.Alive;
 import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
@@ -25,7 +24,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,6 +31,7 @@ import static mc.alive.Game.game;
 import static mc.alive.PlayerData.of;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
+import static mc.alive.util.Message.rMsg;
 
 public class PlayerListener implements Listener {
     @EventHandler
@@ -43,6 +42,7 @@ public class PlayerListener implements Listener {
             AtomicReference<Player> found = new AtomicReference<>();
             game.playerData.forEach((p, d) -> {
                 if (p.getName().equals(player.getName())) {
+                    d.setPlayer(player);
                     pd.set(d);
                     found.set(p);
                 }
@@ -59,6 +59,8 @@ public class PlayerListener implements Listener {
         if (pd.get() != null) {
             game.playerData.put(player, pd.get());
             game.isPaused = false;
+            if (game.pause_task != null && !game.pause_task.isCancelled()) game.pause_task.cancel();
+            player.getWorld().sendMessage(rMsg("<dark_green>游戏已恢复"));
         } else {
             Game.resetPlayer(player);
         }
@@ -78,7 +80,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
-        if (!Game.isRunning() || game.isDebuging) return;
+        if (!Game.isRunning() || game.isDebugging) return;
 
         event.renderer((source, sourceDisplayName, message, viewer) -> {
             if (!(viewer instanceof Player player)) return Component.empty();
@@ -146,17 +148,7 @@ public class PlayerListener implements Listener {
         prepared_players.remove(player);
         if (Game.isRunning()) {
             if (game.playerData.containsKey(player)) {
-                game.end(null);
-                //todo 不会修
-                if (false) {
-                    game.pause();
-                    game.pause_task = new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            game.end(null);
-                        }
-                    }.runTaskLater(Alive.plugin, 1200);
-                }
+                game.pause();
             }
         }
         setAtChatCompletions();

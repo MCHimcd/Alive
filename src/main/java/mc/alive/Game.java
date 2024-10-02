@@ -61,7 +61,7 @@ public final class Game {
     public final List<Entity> markers = new LinkedList<>();
     public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
     private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
-    public boolean isDebuging = false;
+    public boolean isDebugging = false;
     public Player hunter;
     public BukkitTask pause_task = null;
     public boolean isPaused = false;
@@ -74,7 +74,7 @@ public final class Game {
     public Game(List<Player> players, boolean debug) {
         MainMenu.prepared_players.clear();
         if (debug) {
-            isDebuging = true;
+            isDebugging = true;
             Player p1 = players.getFirst();
             playerData.put(p1, new PlayerData(p1, new Alien(p1)));
             hunter = p1;
@@ -156,6 +156,7 @@ public final class Game {
 
     @SuppressWarnings({"DataFlowIssue", "unchecked"})
     private void summonEntities() {
+        Random random = new Random();
         var world = Bukkit.getWorld("world");
         assert world != null;
 
@@ -212,13 +213,18 @@ public final class Game {
         //密码门
         var doorsInfo = (List<String>) locations_config.getList("doors");
         int id_g = 0;
+        Door[] r_doors = new Door[4];
         for (String doorInfo : doorsInfo) {
             var info = doorInfo.split(" ");
             var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
             Location start = new Location(world, xyz[0], xyz[1], xyz[2]);
             Door door = new Door(start, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH, ++id_g);
             doors.put(start, door);
+            if (id_g <= 4) r_doors[id_g - 1] = door;
+            if (id_g == 5) door.open();
         }
+        //开局4个门中随机一个没锁
+        r_doors[random.nextInt(4)].open();
 
         //电梯
         var liftsInfo = (List<String>) locations_config.getList("lifts");
@@ -248,12 +254,30 @@ public final class Game {
         }
 
         //尸体
-        var bodiesInfo = (List<String>) locations_config.getList("bodies");
+        Map<Location, List<String>> final_names = new HashMap<>();
+        Map<String, List<Location>> r_locs = new HashMap<>(); // 没个门卡随机一个位置
+        var bodiesInfo = (List<String>) locations_config.getList("bodies.locs");
         for (String bodyInfo : bodiesInfo) {
             var info = bodyInfo.split(" ");
             var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
-            spawnPickableBody(new Location(world, xyz[0], xyz[1], xyz[2]), Arrays.stream(info).skip(1).toList());
+            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
+            List<String> names = new ArrayList<>();
+            Arrays.stream(info).skip(1).forEach(name -> {
+                if (name.matches("^DoorCard\\d+$")) {
+                    //是门钥匙
+                    r_locs.computeIfAbsent(name, _ -> new ArrayList<>())
+                            .add(location);
+                } else {
+                    //todo 其他物品随机
+                }
+            });
+            final_names.putIfAbsent(location, names);
         }
+        r_locs.forEach((name, locs) -> {
+            //随机一个尸体
+            final_names.get(locs.get(random.nextInt(locs.size()))).add(name);
+        });
+        final_names.forEach(this::spawnPickableBody);
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
@@ -311,7 +335,8 @@ public final class Game {
     }
 
     public void spawnPickableBody(Location location, List<String> item_name) {
-        pickable_bodies.put(location.getWorld().spawn(location, ArmorStand.class, ar -> {
+        pickable_bodies.put(location.getWorld().spawn(location.clone().add(0, -1.5, 0), ArmorStand.class, ar -> {
+            ar.setGravity(false);
             ar.setVisible(false);
             ar.setInvulnerable(true);
             ar.setDisabledSlots(EquipmentSlot.values());
@@ -330,6 +355,23 @@ public final class Game {
 
     public void start() {
         start(false);
+    }
+
+    public void pause() {
+        isPaused = true;
+        playerData.keySet().forEach(player -> {
+            var item = player.getInventory().getItemInMainHand();
+            if (ItemCheck.hasCustomModelData(item) && ItemCheck.isGun(item.getItemMeta().getCustomModelData())) {
+                ((Gun) usable_items.get(item)).stopShoot(player);
+            }
+            player.sendMessage(rMsg("<dark_red>游戏暂停，若离开玩家未返回将在1分钟后自动结束"));
+        });
+        pause_task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                end(null);
+            }
+        }.runTaskLater(Alive.plugin, 1200);
     }
 
     public void end(Player ender) {
@@ -408,17 +450,6 @@ public final class Game {
             blockDisplay.remove();
         }
         markers.forEach(Entity::remove);
-    }
-
-    public void pause() {
-        isPaused = true;
-        playerData.keySet().forEach(player -> {
-            var item = player.getInventory().getItemInMainHand();
-            if (ItemCheck.hasCustomModelData(item) && ItemCheck.isGun(item.getItemMeta().getCustomModelData())) {
-                ((Gun) usable_items.get(item)).stopShoot(player);
-            }
-            player.sendActionBar(rMsg("游戏暂停"));
-        });
     }
 
     public int fix(ItemDisplay id, int amount) {

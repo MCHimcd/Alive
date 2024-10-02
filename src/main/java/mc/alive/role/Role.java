@@ -19,9 +19,8 @@ public abstract class Role {
      * 与技能相关的locations
      */
     public final Map<Location, BukkitTask> skill_locations = new HashMap<>();
-    protected final Player player;
+    protected Player player;
     protected int level = 0;
-
     public Role(Player p) {
         player = p;
     }
@@ -62,6 +61,10 @@ public abstract class Role {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 
     /**

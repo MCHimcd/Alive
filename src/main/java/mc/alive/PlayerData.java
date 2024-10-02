@@ -38,12 +38,12 @@ import static mc.alive.util.Message.rMsg;
 public final class PlayerData implements TickRunnable {
     private final List<Effect> effects = new ArrayList<>();
     private final Role role;
-    private final Player player;
     private final List<Integer> skill_cd = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
     //维修cd
     public int fix_tick = -1;
     //攻击cd
     public double attack_cd = -1;
+    private Player player;
     //选择的技能
     private int current_skill_id = 0;
     //选择技能重置cd
@@ -177,6 +177,11 @@ public final class PlayerData implements TickRunnable {
         game.playerData.get(player).skill_cd.set(index, amount);
     }
 
+    public void setPlayer(Player player) {
+        role.setPlayer(player);
+        this.player = player;
+    }
+
     public int getStamina() {
         return stamina;
     }
@@ -275,7 +280,7 @@ public final class PlayerData implements TickRunnable {
         //捡尸体
         if (role instanceof Survivor && player.isSneaking()) {
             var body = game.pickable_bodies.keySet().stream()
-                    .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation(), 1).contains(player))
+                    .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation().add(0, 1.5, 0), 1).contains(player))
                     .findFirst().orElse(null);
             if (body != null && ++pickup_body_tick == 60) {
                 Random r = new Random();
