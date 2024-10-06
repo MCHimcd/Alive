@@ -6,6 +6,7 @@ import mc.alive.item.PickUp;
 import mc.alive.item.pickup.PickUpHandler;
 import mc.alive.item.usable.Usable;
 import mc.alive.item.usable.gun.Gun;
+import mc.alive.mechanism.Barrier;
 import mc.alive.mechanism.Door;
 import mc.alive.mechanism.Lift;
 import mc.alive.mechanism.LiftDoor;
@@ -51,6 +52,7 @@ public final class Game {
     public static Team team_survivor;
     public static Game game = null;
     public final Map<Location, Door> doors = new HashMap<>();
+    public final Map<Location, Barrier> barriers = new HashMap<>();
     public final Map<Player, PlayerData> playerData = new HashMap<>();
     public final List<Player> survivors;
     public final Map<ItemStack, Usable> usable_items = new HashMap<>();
@@ -278,6 +280,15 @@ public final class Game {
             final_names.get(locs.get(random.nextInt(locs.size()))).add(name);
         });
         final_names.forEach(this::spawnPickableBody);
+
+        //板子
+        var barriersInfo = (List<String>) locations_config.getList("barriers");
+        for (String barrierInfo : barriersInfo) {
+            var info = barrierInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
+            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
+            barriers.put(location, new Barrier(location, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH));
+        }
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
@@ -393,7 +404,7 @@ public final class Game {
                 GENERIC_MAX_ABSORPTION, 20.0,
                 GENERIC_ATTACK_SPEED, 255.0,
                 GENERIC_ATTACK_KNOCKBACK, -1.0,
-                GENERIC_JUMP_STRENGTH, .42,
+                GENERIC_JUMP_STRENGTH, .0,
                 PLAYER_ENTITY_INTERACTION_RANGE, 4.0
         ).forEach((key, value) -> {
             var a = player.getAttribute(key);

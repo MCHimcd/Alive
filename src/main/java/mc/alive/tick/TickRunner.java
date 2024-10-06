@@ -15,7 +15,6 @@ public final class TickRunner extends BukkitRunnable {
         tickRunnable.addAll(List.of(
                 new PlayerTickrunnable(),
                 new MechanismTickrunnable(),
-                new StaminaTickrunnable(),
                 new TriggerableTickrunnable()
         ));
     }

@@ -5,8 +5,8 @@ import mc.alive.Alive;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.Speed;
 import mc.alive.role.Skill;
-import mc.alive.util.LocationFactory;
 import mc.alive.util.ItemBuilder;
+import mc.alive.util.LocationFactory;
 import mc.alive.util.Message;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -31,11 +31,6 @@ public class Jack extends Survivor {
     @Override
     public int getStrength() {
         return 10;
-    }
-
-    @Override
-    public double getAttackCD() {
-        return 0;
     }
 
     @Override

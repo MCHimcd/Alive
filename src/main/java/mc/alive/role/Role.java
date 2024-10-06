@@ -21,6 +21,7 @@ public abstract class Role {
     public final Map<Location, BukkitTask> skill_locations = new HashMap<>();
     protected Player player;
     protected int level = 0;
+
     public Role(Player p) {
         player = p;
     }
@@ -71,11 +72,6 @@ public abstract class Role {
      * @return 力量
      */
     abstract public int getStrength();
-
-    /**
-     * @return 攻击间隔
-     */
-    abstract public double getAttackCD();
 
     /**
      * @return 移动速度

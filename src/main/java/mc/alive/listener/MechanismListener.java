@@ -2,10 +2,13 @@ package mc.alive.listener;
 
 import mc.alive.Game;
 import mc.alive.PlayerData;
+import mc.alive.effect.Slowness;
+import mc.alive.mechanism.Barrier;
 import mc.alive.mechanism.Door;
 import mc.alive.mechanism.Lift;
 import mc.alive.mechanism.LiftDoor;
 import mc.alive.menu.LiftMenu;
+import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
 import mc.alive.tick.MechanismTickrunnable;
 import org.bukkit.entity.Player;
@@ -13,13 +16,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 import static mc.alive.Game.game;
 
 public class MechanismListener implements Listener {
 
-    @EventHandler()
+    @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (!Game.isRunning()) return;
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
@@ -45,6 +49,12 @@ public class MechanismListener implements Listener {
             door.action(player);
         }
 
+        //板子
+        Barrier barrier = MechanismTickrunnable.chosenBarriers.get(player);
+        if (barrier != null) {
+            barrier.trigger(role instanceof Hunter, player);
+        }
+
         if (action == Action.RIGHT_CLICK_BLOCK) {
             var block = event.getClickedBlock();
             //呼叫电梯
@@ -53,5 +63,20 @@ public class MechanismListener implements Listener {
                 liftDoor.callLift();
             }
         }
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent event) {
+        if (!Game.isRunning()) return;
+        game.barriers.forEach((_, b) -> {
+            if (b.isTriggered()
+                    && b.getBoundingBox().contains(event.getTo().toVector())
+                    && !b.getBoundingBox().contains(event.getFrom().toVector())
+            ) {
+                Player player = event.getPlayer();
+                if (player.equals(game.hunter)) event.setCancelled(true);
+                else PlayerData.of(player).addEffect(new Slowness(player, 5, 4));
+            }
+        });
     }
 }

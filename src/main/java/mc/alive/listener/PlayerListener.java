@@ -1,10 +1,12 @@
 package mc.alive.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.Invisibility;
+import mc.alive.effect.Slowness;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
 import net.kyori.adventure.text.Component;
@@ -24,11 +26,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 import static mc.alive.Game.game;
-import static mc.alive.PlayerData.of;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
 import static mc.alive.util.Message.rMsg;
@@ -120,7 +122,7 @@ public class PlayerListener implements Listener {
         if (game != null && game.isPaused) event.setCancelled(true);
         if (!Game.isRunning()) return;
 
-        var pd = of(player);
+        var pd = PlayerData.of(player);
         if (pd.hasEffect(Giddy.class)) {
             event.setCancelled(true);
             return;
@@ -173,21 +175,20 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+    public void onPlayerDamageByPlayer(EntityDamageByEntityEvent event) {
         if (game == null || game.chooseRole != null) return;
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
-            var pd_hurt = of(player);
-            var pd_damager = of(damager);
+            var pd_damager = PlayerData.of(damager);
+            var pd_hurt = PlayerData.of(player);
             if (pd_damager.attack_cd > 0) {
                 event.setCancelled(true);
                 return;
             }
-            pd_damager.attack_cd = pd_damager.getRole().getAttackCD();
 
-            if (pd_damager.getRole() instanceof Hunter && pd_damager.getStamina() >= 50) {
+            if (pd_damager.getRole() instanceof Hunter h) {
                 if (pd_damager.hasEffect(Invisibility.class)) pd_damager.removeEffect(Invisibility.class);
                 pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
-                pd_damager.addStamina(-50);
+                pd_damager.attack_cd = h.getAttackCD();
             } else {
                 event.setCancelled(true);
             }
@@ -201,5 +202,15 @@ public class PlayerListener implements Listener {
         if (Game.isStarted() && game.isPaused) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    void onAttack(PlayerArmSwingEvent event) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND || !Game.isRunning()) return;
+        var player = event.getPlayer();
+        var pd = PlayerData.of(player);
+        if (pd == null || !(pd.getRole() instanceof Hunter h)) return;
+        pd.addEffect(new Slowness(player, 20, 2));
+        pd.attack_cd = h.getAttackCD();
     }
 }

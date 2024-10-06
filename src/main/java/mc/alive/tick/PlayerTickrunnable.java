@@ -9,8 +9,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.*;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -127,12 +129,6 @@ public class PlayerTickrunnable implements TickRunnable {
             if (m != null) {
                 chosen_duct = m.getLocation();
             }
-        }
-
-        if (!player.getLocation().getNearbyEntitiesByType(Marker.class, 1, m -> m.getScoreboardTags().contains("vertical_duct")).isEmpty()) {
-            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(100);
-        } else {
-            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(.42);
         }
     }
 }

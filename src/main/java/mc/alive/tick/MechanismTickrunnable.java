@@ -1,6 +1,7 @@
 package mc.alive.tick;
 
 import mc.alive.Game;
+import mc.alive.mechanism.Barrier;
 import mc.alive.mechanism.Door;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import static mc.alive.Game.game;
 
 public class MechanismTickrunnable implements TickRunnable {
     public static final Map<Player, Door> chosenDoors = new HashMap<>();
+    public static final Map<Player, Barrier> chosenBarriers = new HashMap<>();
 
     @Override
     public void tick() {
@@ -43,5 +45,24 @@ public class MechanismTickrunnable implements TickRunnable {
                         chosenDoors.put(player, door);
                     }
                 }));
+
+        //选择屏障
+        chosenBarriers.clear();
+        game.barriers.forEach((location, barrier) -> {
+            barrier.isChosen = false;
+            location.getNearbyPlayers(4).forEach(player -> {
+                BoundingBox boundingBox = barrier.getBoundingBox();
+                RayTraceResult result = boundingBox.rayTrace(player.getEyeLocation().toVector(), player.getEyeLocation().getDirection(), 3);
+                if (result != null) {
+                    barrier.isChosen = true;
+                    chosenBarriers.put(player, barrier);
+                }
+            });
+            if (!barrier.isChosen && barrier.tick_task != null) {
+                barrier.tick = 0;
+                barrier.tick_task.cancel();
+                barrier.tick_task = null;
+            }
+        });
     }
 }

@@ -2,7 +2,6 @@ package mc.alive.mechanism;
 
 import mc.alive.util.LocationFactory;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.BlockFace;
@@ -25,11 +24,11 @@ public class Door {
         this.id = id;
         this.start = start;
         this.face = face;
-        LocationFactory.replace2x2Door(start, face, Material.OBSIDIAN);
+        LocationFactory.setOpen2x2Door(start, face, true);
     }
 
     public void open() {
-        LocationFactory.replace2x2Door(start, face, Material.AIR);
+        LocationFactory.setOpen2x2Door(start, face, false);
         closed = false;
     }
 
@@ -46,11 +45,7 @@ public class Door {
             return data.isPresent() && data.get().getAmount() == id;
         }).findFirst();
         if (key.isPresent()) {
-            if (closed) {
-                LocationFactory.replace2x2Door(start, face, Material.AIR);
-            } else {
-                LocationFactory.replace2x2Door(start, face, Material.OBSIDIAN);
-            }
+            LocationFactory.setOpen2x2Door(start, face, !closed);
             closed = !closed;
         } else {
             p.sendMessage(rMsg("无卡"));

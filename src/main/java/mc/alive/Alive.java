@@ -11,7 +11,10 @@ import mc.alive.item.pickup.LevelUp;
 import mc.alive.item.usable.gun.CabinGuardian;
 import mc.alive.item.usable.gun.ChamberPistol;
 import mc.alive.item.usable.gun.ChamberShotgun;
-import mc.alive.listener.*;
+import mc.alive.listener.GunListener;
+import mc.alive.listener.ItemListener;
+import mc.alive.listener.MechanismListener;
+import mc.alive.listener.PlayerListener;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.Message;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -79,8 +82,7 @@ public final class Alive extends JavaPlugin implements Listener {
                 new ItemListener(),
                 new PlayerListener(),
                 new GunListener(),
-                new MechanismListener(),
-                new StaminaListener()
+                new MechanismListener()
         ).forEach(l -> getPluginManager().registerEvents(l, plugin));
     }
 
@@ -121,9 +123,10 @@ public final class Alive extends JavaPlugin implements Listener {
                     List.of("a_r")
             );
             cs.register(
+
                     Commands.literal("test")
                             .executes(ctx -> {
-                                if (ctx.getSource().getSender() instanceof Player player) {
+                                if (ctx.getSource().getSender() instanceof Player) {
                                     List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().limit(2).toList());
                                     game = new Game(players, true);
                                 }

@@ -3,7 +3,9 @@ package mc.alive.util;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.joml.Vector3f;
@@ -76,16 +78,18 @@ public final class LocationFactory {
         return new Location(player.getWorld(), newX, y1, newZ);
     }
 
-    public static void replace2x2Door(Location start, BlockFace face, Material material) {
+    public static void setOpen2x2Door(Location start, BlockFace face, boolean open) {
         int[][] offsets = switch (face) {
-            case NORTH, SOUTH -> new int[][]{{0, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 1, 1}};
-            case EAST, WEST -> new int[][]{{1, 0, 0}, {1, 1, 0}, {0, 0, 0}, {0, 1, 0}};
+            case NORTH, SOUTH -> new int[][]{{0, 0, 0}, {0, 0, 1}};
+            case EAST, WEST -> new int[][]{{1, 0, 0}, {0, 0, 0}};
             default -> throw new IllegalArgumentException("Unsupported BlockFace: " + face);
         };
-        Location[] corners = new Location[4];
 
         for (int[] offset : offsets) {
-            start.clone().add(offset[0], offset[1], offset[2]).getBlock().setType(material);
+            Block block = start.clone().add(offset[0], offset[1], offset[2]).getBlock();
+            var data = (Door) block.getBlockData();
+            data.setOpen(open);
+            block.setBlockData(data);
         }
     }
 

@@ -57,10 +57,6 @@ public final class PlayerData implements TickRunnable {
     private int shield_cd = 0;
     //回护盾cd
     private int shield_tick = 0;
-    //体力值
-    private int stamina = 0;
-    //回体力cd
-    private int stamina_tick = 0;
     //捡尸体计时
     private int pickup_body_tick = 0;
 
@@ -80,7 +76,6 @@ public final class PlayerData implements TickRunnable {
         @SuppressWarnings("DataFlowIssue") var name = rMsg(((String) Alive.roles_config.get(String.valueOf(role.getRoleID()))).split(" ")[1]);
         player.displayName(name);
         player.playerListName(name);
-        addStamina(100);
         startTick();
     }
 
@@ -152,20 +147,6 @@ public final class PlayerData implements TickRunnable {
     }
 
     /**
-     * @param amount 数量，可为负
-     * @return 是否大于0
-     */
-    public boolean addStamina(int amount) {
-        if (amount < 0) {
-            stamina_tick = 40;
-        }
-        stamina = Math.max(0, Math.min(stamina + amount, 100));
-        player.setLevel(stamina);
-        player.setExp((float) stamina / 100);
-        return stamina != 0;
-    }
-
-    /**
      * @return 玩家对应的PlayerData，若游戏未开始则返回null
      */
     public static PlayerData of(Player player) {
@@ -180,10 +161,6 @@ public final class PlayerData implements TickRunnable {
     public void setPlayer(Player player) {
         role.setPlayer(player);
         this.player = player;
-    }
-
-    public int getStamina() {
-        return stamina;
     }
 
     public Role getRole() {
@@ -257,12 +234,6 @@ public final class PlayerData implements TickRunnable {
         if (health_tick > 0) health_tick--;
         if (role instanceof Hunter && health_tick == 0) {
             damageOrHeal(-0.25);
-        }
-
-        //体力回复
-        if (stamina_tick > 0) stamina_tick--;
-        if (stamina_tick == 0) {
-            addStamina(2);
         }
 
         //维修

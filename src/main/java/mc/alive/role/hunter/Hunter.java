@@ -17,7 +17,14 @@ abstract public class Hunter extends Role {
         level = Math.max(getMaxLevel(), level + 1);
     }
 
-    //最大等级
+    /**
+     * @return 最大等级
+     */
     abstract public int getMaxLevel();
+
+    /**
+     * @return 攻击间隔
+     */
+    abstract public double getAttackCD();
 
 }

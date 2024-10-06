@@ -24,11 +24,6 @@ public class Dealt extends Survivor {
     }
 
     @Override
-    public double getAttackCD() {
-        return 0;
-    }
-
-    @Override
     public double getSpeed() {
         return 0.1;
     }
