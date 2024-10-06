@@ -75,7 +75,7 @@ public class MechanismListener implements Listener {
             ) {
                 Player player = event.getPlayer();
                 if (player.equals(game.hunter)) event.setCancelled(true);
-                else PlayerData.of(player).addEffect(new Slowness(player, 5, 4));
+                else PlayerData.of(player).addEffect(new Slowness(player, 5, 7));
             }
         });
     }
