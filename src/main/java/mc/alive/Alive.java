@@ -29,7 +29,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +42,24 @@ public final class Alive extends JavaPlugin implements Listener {
     public static Alive plugin;
     public static Scoreboard main_scoreboard;
     public static YamlConfiguration locations_config, roles_config;
+    public static File data_folder, data_file;
 
     @Override
     public void onDisable() {
+        try (FileOutputStream fileOut = new FileOutputStream(data_file); ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            StoredData.data.forEach(data -> {
+                try {
+                    out.writeObject(data);
+                } catch (IOException e) {
+                    getLogger().warning(e.getLocalizedMessage());
+                }
+            });
+            getLogger().info("Serialized data is saved in data.ser");
+
+        } catch (IOException i) {
+            getLogger().warning(i.getLocalizedMessage());
+        }
+
         if (Game.game == null) return;
         Game.game.destroy();
     }
@@ -54,6 +69,8 @@ public final class Alive extends JavaPlugin implements Listener {
     public void onEnable() {
         locations_config = YamlConfiguration.loadConfiguration(new InputStreamReader(getResource("locations.yml"), StandardCharsets.UTF_8));
         roles_config = YamlConfiguration.loadConfiguration(new InputStreamReader(getResource("roles.yml"), StandardCharsets.UTF_8));
+        data_folder = getDataFolder();
+        data_file = new File(data_folder.getPath() + "/data.ser");
 
         plugin = this;
         initScoreboard();
@@ -63,6 +80,36 @@ public final class Alive extends JavaPlugin implements Listener {
 
         new TickRunner().runTaskTimer(this, 0, 1);
         getOnlinePlayers().forEach(Game::resetPlayer);
+
+
+        if (!data_folder.exists()) {
+            if (!data_folder.mkdir()) getLogger().warning("Failed to create Alive directory");
+        }
+        if (!data_file.exists()) {
+            try {
+                if (!data_file.createNewFile()) getLogger().warning("Failed to create data.ser");
+            } catch (IOException e) {
+                getLogger().warning(e.getLocalizedMessage());
+            }
+        }
+        try (FileInputStream fileIn = new FileInputStream(data_file); ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            while (true) {
+                try {
+                    StoredData readData = (StoredData) in.readObject();
+                    Bukkit.getOnlinePlayers().forEach(player -> {
+                        if (player.getName().equals(readData.getName())) {
+                            StoredData.playerStoredData.put(player, readData);
+                        }
+                    });
+                    StoredData.data.add(readData);
+                } catch (EOFException e) {
+                    break;
+                }
+            }
+
+        } catch (Exception e) {
+            getLogger().warning(e.getLocalizedMessage());
+        }
     }
 
     private void registerGameItems() {

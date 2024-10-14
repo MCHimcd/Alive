@@ -115,9 +115,7 @@ public class ItemListener implements Listener {
                         || event.getAction() == Action.LEFT_CLICK_AIR
                         || event.getAction() == Action.LEFT_CLICK_BLOCK
         ) return;
-
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) return;
-
+        
         //使用物品
         if (game != null) {
             var data = item.getItemMeta().getCustomModelData();

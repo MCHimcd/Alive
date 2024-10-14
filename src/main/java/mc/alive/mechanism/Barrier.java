@@ -2,7 +2,6 @@ package mc.alive.mechanism;
 
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -53,7 +52,7 @@ public class Barrier {
                 if (++tick >= 30) {
                     if (destroy) {
                         game.barriers.remove(start);
-                        Bukkit.broadcastMessage("0");
+                        //todo 游戏中显示
                     } else {
                         Player hunter = game.hunter;
                         if (boundingBox.overlaps(hunter.getBoundingBox())) {
@@ -61,7 +60,7 @@ public class Barrier {
                         }
                         triggered = true;
                         tick = 0;
-                        Bukkit.broadcastMessage("1");
+                        //todo 游戏中显示
                     }
                     cancel();
                     tick_task = null;

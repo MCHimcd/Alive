@@ -7,6 +7,7 @@ import mc.alive.util.LocationFactory;
 import mc.alive.util.Message;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -34,11 +35,6 @@ public class Alien extends Hunter {
     }
 
     @Override
-    public double getAttackCD() {
-        return 1.8;
-    }
-
-    @Override
     public double getSpeed() {
         return 0.1;
     }
@@ -61,6 +57,26 @@ public class Alien extends Hunter {
     @Override
     public int getMaxLevel() {
         return 1;
+    }
+
+    @Override
+    public double getAttackCD() {
+        return 1.8;
+    }
+
+    @Override
+    public List<ItemStack> getRedFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
+    }
+
+    @Override
+    public List<ItemStack> getGreenFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
+    }
+
+    @Override
+    public List<ItemStack> getBlueFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
     }
 
     /**

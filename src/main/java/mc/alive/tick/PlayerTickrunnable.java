@@ -30,7 +30,6 @@ public class PlayerTickrunnable implements TickRunnable {
     public static final Map<Player, Item> chosen_item = new HashMap<>();
     public static Location chosen_duct = null;
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
     public void tick() {
         if (game.isPaused) return;

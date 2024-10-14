@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import mc.alive.Game;
 import mc.alive.PlayerData;
+import mc.alive.StoredData;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.Invisibility;
 import mc.alive.effect.Slowness;
@@ -28,9 +29,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static mc.alive.Game.game;
+import static mc.alive.StoredData.playerStoredData;
 import static mc.alive.menu.MainMenu.players_looking_document;
 import static mc.alive.menu.MainMenu.prepared_players;
 import static mc.alive.util.Message.rMsg;
@@ -39,6 +42,17 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        Optional<StoredData> data = StoredData.data.stream().filter(d -> d.getName().equals(player.getName())).findFirst();
+        if (data.isPresent())
+            playerStoredData.put(player, data.get());
+        else {
+            StoredData new_data = new StoredData(player.getName());
+            StoredData.data.add(new_data);
+            Bukkit.broadcastMessage(String.valueOf(StoredData.data.size()));
+            playerStoredData.put(player, new_data);
+        }
+
         AtomicReference<PlayerData> pd = new AtomicReference<>();
         if (Game.isStarted()) {
             AtomicReference<Player> found = new AtomicReference<>();
@@ -146,12 +160,15 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         var player = event.getPlayer();
+        playerStoredData.remove(player);
         players_looking_document.remove(player);
         prepared_players.remove(player);
         if (Game.isRunning()) {
             if (game.playerData.containsKey(player)) {
                 game.pause();
             }
+        } else if (game != null && game.chooseRole != null) {
+            game.end(null);
         }
         setAtChatCompletions();
     }

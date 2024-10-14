@@ -1,6 +1,7 @@
 package mc.alive.role;
 
 import mc.alive.PlayerData;
+import mc.alive.menu.HChooseFeatureMenu;
 import mc.alive.tick.PlayerTickrunnable;
 import mc.alive.util.ItemBuilder;
 import net.kyori.adventure.text.Component;
@@ -34,8 +35,8 @@ import static mc.alive.Game.game;
 
 public final class ChooseRole {
     public final Map<ItemDisplay, Integer> roles = new HashMap<>();
-    public final List<Integer> remainedId_S = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
-    public final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 101).boxed().toList());
+    private final List<Integer> remainedId_S = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
+    private final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 101).boxed().toList());
     private final List<Player> choosing = new ArrayList<>();
     private Player currentPlayer;
 
@@ -58,11 +59,18 @@ public final class ChooseRole {
         var role = roles.get(td);
         if (role == null) return false;
 
-        remainedId_S.remove(role);
-        //noinspection DataFlowIssue
-        game.playerData.put(player, new PlayerData(player, Role.of(role, player)));
+        Role r = Role.of(role, player);
+        assert r != null;
+        game.playerData.put(player, new PlayerData(player, r));
         player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
         player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BIT, 2f, 1f);
+
+        if (role >= 200) remainedId_S.remove(role);
+        else {
+            // 狩猎者
+            player.openInventory(new HChooseFeatureMenu(r, 0).getInventory());
+            return true;
+        }
         nextChoose();
         return true;
     }

@@ -8,7 +8,10 @@ import mc.alive.util.Message;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.List;
 
 public class Void extends Hunter {
     private int skill1_time = -1;
@@ -28,6 +31,26 @@ public class Void extends Hunter {
     }
 
     @Override
+    public double getAttackCD() {
+        return 2;
+    }
+
+    @Override
+    public List<ItemStack> getRedFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
+    }
+
+    @Override
+    public List<ItemStack> getGreenFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
+    }
+
+    @Override
+    public List<ItemStack> getBlueFeatures() {
+        return List.of(new ItemStack(Material.DIAMOND));
+    }
+
+    @Override
     public int getRoleID() {
         return 101;
     }
@@ -35,11 +58,6 @@ public class Void extends Hunter {
     @Override
     public int getStrength() {
         return 20;
-    }
-
-    @Override
-    public double getAttackCD() {
-        return 2;
     }
 
     @Override

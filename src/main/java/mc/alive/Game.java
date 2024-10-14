@@ -96,7 +96,7 @@ public final class Game {
                 player.getInventory().clear();
                 player.closeInventory();
             });
-            hunter = players.removeFirst();
+            hunter = players.removeLast();
             survivors = players;
             new BukkitRunnable() {
                 @Override
