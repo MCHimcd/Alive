@@ -48,7 +48,7 @@ public final class Alive extends JavaPlugin implements Listener {
     public void onDisable() {
         try (FileOutputStream fileOut = new FileOutputStream(data_file); ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             StoredData.data.forEach(data -> {
-                try {
+                if (data.isValid()) try {
                     out.writeObject(data);
                 } catch (IOException e) {
                     getLogger().warning(e.getLocalizedMessage());
@@ -96,6 +96,7 @@ public final class Alive extends JavaPlugin implements Listener {
             while (true) {
                 try {
                     StoredData readData = (StoredData) in.readObject();
+                    if (!readData.isValid()) continue;
                     Bukkit.getOnlinePlayers().forEach(player -> {
                         if (player.getName().equals(readData.getName())) {
                             StoredData.playerStoredData.put(player, readData);

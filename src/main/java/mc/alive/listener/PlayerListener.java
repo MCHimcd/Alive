@@ -45,11 +45,10 @@ public class PlayerListener implements Listener {
 
         Optional<StoredData> data = StoredData.data.stream().filter(d -> d.getName().equals(player.getName())).findFirst();
         if (data.isPresent())
-            playerStoredData.put(player, data.get());
+            playerStoredData.put(player, data.get().updateDate());
         else {
             StoredData new_data = new StoredData(player.getName());
             StoredData.data.add(new_data);
-            Bukkit.broadcastMessage(String.valueOf(StoredData.data.size()));
             playerStoredData.put(player, new_data);
         }
 

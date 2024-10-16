@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 
 abstract public class Survivor extends Role {
-    protected final int feature = StoredData.playerStoredData.get(player).getOption("feature");
+    protected final int feature = StoredData.playerStoredData.get(player).getOption(StoredData.Option.FEATURE);
 
     public Survivor(Player pl) {
         super(pl);

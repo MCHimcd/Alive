@@ -21,7 +21,7 @@ public class SChooseFeatureMenu extends SlotMenu {
         for (int i = 0; i < items.size(); i++) {
             int finalI = i;
             setSlot(i, items.get(i), (_, _) -> {
-                StoredData.playerStoredData.get(p).setOption("feature", finalI);
+                StoredData.playerStoredData.get(p).setOption(StoredData.Option.FEATURE, finalI);
                 p.sendMessage(rMsg("<green>你选择了特质").append(items.get(finalI).displayName()));
             });
         }

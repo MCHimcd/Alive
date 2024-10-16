@@ -65,7 +65,7 @@ public class MainMenu extends SlotMenu {
         //选择特质
         setSlot(18, ItemBuilder.material(Material.FEATHER)
                 .name(rMsg("<aqua>选择特质"))
-                .lore(List.of(rMsg("<gray>当前选择：<reset>").append(SChooseFeatureMenu.items.get(StoredData.playerStoredData.get(p).getOption("feature")).displayName())))
+                .lore(List.of(rMsg("<gray>当前选择：<reset>").append(SChooseFeatureMenu.items.get(StoredData.playerStoredData.get(p).getOption(StoredData.Option.FEATURE)).displayName())))
                 .build(), (_, pl) -> {
             pl.openInventory(new SChooseFeatureMenu(pl).getInventory());
             close = false;
