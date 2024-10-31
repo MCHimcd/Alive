@@ -20,8 +20,12 @@ abstract public class Hunter extends Role {
     abstract public double getAttackRange();
 
     public void levelUp() {
+        if (level >= getMaxLevel()) {
+            player.sendMessage(rMsg("你已经达到最高等级"));
+            return;
+        }
         player.sendMessage(rMsg("你升级了"));
-        level = Math.max(getMaxLevel(), level + 1);
+        level += 1;
     }
 
     /**
@@ -30,7 +34,7 @@ abstract public class Hunter extends Role {
     abstract public int getMaxLevel();
 
     /**
-     * @return 攻击间隔
+     * @return 攻击间隔(tick)
      */
     abstract public double getAttackCD();
 

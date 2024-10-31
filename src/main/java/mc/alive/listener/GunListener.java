@@ -43,10 +43,7 @@ public class GunListener implements Listener {
 
         //蓄力技能取消
         PlayerData pd = PlayerData.of(player);
-        pd.getRole().skill_locations.forEach((loc, task) -> {
-            if (loc.equals(Role.ZERO_LOC) && task != null && !task.isCancelled()) task.cancel();
-        });
-        pd.getRole().skill_locations.remove(Role.ZERO_LOC);
+        pd.getRole().removeSkillLocation(Role.ZERO_LOC);
 
         //noinspection DataFlowIssue
         player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);

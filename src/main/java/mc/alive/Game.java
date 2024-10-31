@@ -13,8 +13,8 @@ import mc.alive.mechanism.LiftDoor;
 import mc.alive.menu.MainMenu;
 import mc.alive.role.ChooseRole;
 import mc.alive.role.Role;
-import mc.alive.role.hunter.Alien;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.role.hunter.SmokeGhost;
 import mc.alive.role.survivor.Mike;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.ItemBuilder;
@@ -78,7 +78,7 @@ public final class Game {
         if (debug) {
             isDebugging = true;
             Player p1 = players.getFirst();
-            playerData.put(p1, new PlayerData(p1, new Alien(p1)));
+            playerData.put(p1, new PlayerData(p1, new SmokeGhost(p1)));
             hunter = p1;
             Player p2 = players.get(1);
             playerData.put(p2, new PlayerData(p2, new Mike(p2)));
@@ -487,21 +487,6 @@ public final class Game {
             }});
             armorStand.addScoreboardTag("body");
             armorStand.setDisabledSlots(EquipmentSlot.values());
-            //alien技能
-            if (playerData.get(hunter).getRole() instanceof Alien alien) {
-                Location location = armorStand.getLocation();
-                alien.skill_locations.put(location, new BukkitRunnable() {
-                    private int t = 0;
-
-                    @Override
-                    public void run() {
-                        armorStand.getWorld().spawnParticle(Particle.DUST, location.clone().add(0, 2, 0), 100, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.RED, 1f), true);
-                        if (t++ == 300) {
-                            alien.removeSkillLocation(location);
-                        }
-                    }
-                }.runTaskTimer(plugin, 0, 1));
-            }
         }));
     }
 

@@ -4,6 +4,7 @@ import io.papermc.paper.entity.LookAnchor;
 import mc.alive.Alive;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.Speed;
+import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.LocationFactory;
@@ -66,9 +67,10 @@ public class Jack extends Survivor {
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().clone().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0, null, true);
 
         //清除jack 周围4格内  hunter的location
-        game.playerData.get(game.hunter).getRole().skill_locations.entrySet().removeIf(entry -> {
-            if (entry.getKey().distance(player.getEyeLocation()) <= 4) {
-                LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), entry.getKey(), 0.5).forEach(location ->
+        Role role = game.playerData.get(game.hunter).getRole();
+        role.getSkillLocations().forEach(key -> {
+            if (key.distance(player.getEyeLocation()) <= 4) {
+                LocationFactory.line(player.getEyeLocation().subtract(0, 1, 0), key, 0.5).forEach(location ->
                         player.spawnParticle(
                                 Particle.FLAME,
                                 location.subtract(0, 1, 0),
@@ -80,11 +82,8 @@ public class Jack extends Survivor {
                                 null,
                                 true)
                 );
-                var bukkitTask = entry.getValue();
-                if (bukkitTask != null && !bukkitTask.isCancelled()) bukkitTask.cancel();
-                return true;
+                role.removeSkillLocation(key);
             }
-            return false;
         });
 
         setSkillCD(player, 1, 300);

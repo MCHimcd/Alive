@@ -30,13 +30,20 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
+import static java.util.Map.entry;
 import static mc.alive.Alive.plugin;
 import static mc.alive.Game.game;
 
 public final class ChooseRole {
+    private final static Map<Integer, Material> displayItems = Map.ofEntries(
+            entry(100, Material.DIAMOND_HOE),
+            entry(200, Material.DIAMOND),
+            entry(201, Material.IRON_INGOT),
+            entry(202, Material.GOLD_INGOT)
+    );
     public final Map<ItemDisplay, Integer> roles = new HashMap<>();
     private final List<Integer> remainedId_S = new ArrayList<>(IntStream.rangeClosed(200, 202).boxed().toList());
-    private final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 101).boxed().toList());
+    private final List<Integer> remainedId_H = new ArrayList<>(IntStream.rangeClosed(100, 100).boxed().toList());
     private final List<Player> choosing = new ArrayList<>();
     private Player currentPlayer;
 
@@ -130,33 +137,10 @@ public final class ChooseRole {
                     .add(new Vector(2, 0, 0).rotateAroundY((float) toRadians(45 * currentIndex)));
         };
 
-        if (isHunter) {
-            // 狩猎者
-            remainedId_H.forEach(rid -> {
-                Material material = switch (rid) {
-                    case 100 -> Material.DIAMOND_HOE;
-                    case 101 -> Material.DIAMOND_AXE;
-                    default -> throw new IllegalArgumentException("Unexpected value: " + rid);
-                };
+        (isHunter ? remainedId_H : remainedId_S).forEach(remainedId ->
                 world.spawn(location.get(), ItemDisplay.class, id -> {
-                    init.accept(id, ItemBuilder.material(material, rid).build());
-                    roles.put(id, rid);
-                });
-            });
-        } else {
-            // 幸存者
-            remainedId_S.forEach(rid -> {
-                Material material = switch (rid) {
-                    case 200 -> Material.DIAMOND;
-                    case 201 -> Material.IRON_INGOT;
-                    case 202 -> Material.GOLD_INGOT;
-                    default -> throw new IllegalArgumentException("Unexpected value: " + rid);
-                };
-                world.spawn(location.get(), ItemDisplay.class, id -> {
-                    init.accept(id, ItemBuilder.material(material, rid).build());
-                    roles.put(id, rid);
-                });
-            });
-        }
+                    init.accept(id, ItemBuilder.material(displayItems.get(remainedId), remainedId).build());
+                    roles.put(id, remainedId);
+                }));
     }
 }

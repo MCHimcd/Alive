@@ -1,24 +1,30 @@
 package mc.alive.role;
 
 import mc.alive.Alive;
+import mc.alive.Game;
 import mc.alive.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Range;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static mc.alive.Alive.plugin;
 
 public abstract class Role {
+    /**
+     * 用于蓄力技能
+     */
     public static final Location ZERO_LOC = new Location(Bukkit.getWorld("world"), 0, 0, 0);
     /**
      * 与技能相关的locations
      */
-    public final Map<Location, BukkitTask> skill_locations = new HashMap<>();
+    private final Map<Location, BukkitTask> skill_locations = new HashMap<>();
     protected Player player;
     protected int level = 0;
 
@@ -48,13 +54,24 @@ public abstract class Role {
         return null;
     }
 
-    public void removeSkillLocation(final Location location) {
+    public Set<Location> getSkillLocations() {
+        return skill_locations.keySet();
+    }
+
+    public void removeSkillLocation(Location location) {
         BukkitTask bukkitTask = skill_locations.get(location);
         if (bukkitTask != null && !bukkitTask.isCancelled()) bukkitTask.cancel();
         skill_locations.remove(location);
     }
 
-    public abstract int getRoleID();
+    public void addSkillLocation(Location location, Runnable task, long period) {
+        skill_locations.put(location, Bukkit.getScheduler().runTaskTimer(plugin, task, 0, period));
+    }
+
+    /**
+     * @return 角色id，用于从配置文件中获取角色名
+     */
+    public abstract @Range(from = 100, to = 300) int getRoleID();
 
     public int getLevel() {
         return level;
@@ -99,6 +116,18 @@ public abstract class Role {
     }
 
     protected PlayerData getPlayerData() {
+        return getPlayerData(player);
+    }
+
+    protected PlayerData getPlayerData(Player player) {
         return PlayerData.of(player);
+    }
+
+    protected Game getGame() {
+        return Game.game;
+    }
+
+    protected void setSKillCD(int id, int cd) {
+        PlayerData.setSkillCD(player, id, cd);
     }
 }

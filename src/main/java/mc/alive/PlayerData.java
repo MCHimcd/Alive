@@ -24,6 +24,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ public final class PlayerData implements TickRunnable {
     private final List<Effect> effects = new ArrayList<>();
     private final Role role;
     private final List<Integer> skill_cd = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
+    private final Map<Integer, Method> skill_methods = new HashMap<>();
     //维修cd
     public int fix_tick = -1;
     //攻击cd
@@ -64,18 +66,28 @@ public final class PlayerData implements TickRunnable {
         this.player = player;
         this.role = role;
         damageOrHeal(-role.getMaxHealth());
+
         if (role instanceof Survivor s) {
             Game.team_survivor.addPlayer(player);
             shieldDamage(-s.getMaxShield());
         } else {
             Game.team_hunter.addPlayer(player);
         }
+
+        Arrays.stream(role.getClass().getMethods()).forEach(m -> {
+            var a = m.getAnnotation(Skill.class);
+            if (a != null) {
+                skill_methods.put(a.id(), m);
+            }
+        });
         for (int i = 0; i < role.getSkillCount(); i++) {
             skill_cd.add(0);
         }
+
         @SuppressWarnings("DataFlowIssue") var name = rMsg(((String) Alive.roles_config.get(String.valueOf(role.getRoleID()))).split(" ")[1]);
         player.displayName(name);
         player.playerListName(name);
+
         startTick();
     }
 
@@ -284,42 +296,38 @@ public final class PlayerData implements TickRunnable {
 
     public void changeSkillValue() {
         //蓄力技能取消
-        role.skill_locations.forEach((loc, task) -> {
-            if (loc.equals(Role.ZERO_LOC) && task != null && !task.isCancelled()) task.cancel();
-        });
-        role.skill_locations.remove(Role.ZERO_LOC);
+        role.removeSkillLocation(Role.ZERO_LOC);
 
         ++current_skill_id;
-        Arrays.stream(role.getClass().getMethods())
-                .forEach(m -> {
-                    var a = m.getAnnotation(Skill.class);
-                    if (a != null && a.id() == current_skill_id) {
-                        if (a.minLevel() > role.getLevel()) {
-                            ++current_skill_id;
-                            return;
-                        }
-                        //找到
-                        current_skill_reset_cd = 20;
-                        if (skill_cd.get(current_skill_id) == 0) {
-                            player.showTitle(
-                                    Title.title(
-                                            Component.text("§a·".repeat(a.id())),
-                                            Component.text(a.name(), TextColor.color(0, 255, 255)),
-                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
-                                    )
-                            );
-                        } else {
-                            player.showTitle(
-                                    Title.title(
-                                            Component.text("§a·".repeat(a.id())),
-                                            Component.text("冷却中", NamedTextColor.DARK_RED),
-                                            Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
-                                    )
-                            );
-                        }
-                        player.playSound(player, Sound.UI_BUTTON_CLICK, .3f, 10f);
-                    }
-                });
+        skill_methods.forEach((id, m) -> {
+            if (id == current_skill_id) {
+                var a = m.getAnnotation(Skill.class);
+                if (a.minLevel() > role.getLevel()) {
+                    ++current_skill_id;
+                    return;
+                }
+                //找到
+                current_skill_reset_cd = 20;
+                if (skill_cd.get(current_skill_id) == 0) {
+                    player.showTitle(
+                            Title.title(
+                                    Component.text("§a·".repeat(id)),
+                                    Component.text(a.name(), TextColor.color(0, 255, 255)),
+                                    Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
+                            )
+                    );
+                } else {
+                    player.showTitle(
+                            Title.title(
+                                    Component.text("§a·".repeat(id)),
+                                    Component.text("冷却中", NamedTextColor.DARK_RED),
+                                    Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
+                            )
+                    );
+                }
+                player.playSound(player, Sound.UI_BUTTON_CLICK, .3f, 10f);
+            }
+        });
         if (current_skill_id > role.getSkillCount()) {
             current_skill_id = 0;
             clearTitle();
@@ -336,30 +344,27 @@ public final class PlayerData implements TickRunnable {
     }
 
     public void useSkill() {
-        Arrays.stream(role.getClass().getMethods())
-                .filter(m -> {
-                    var a = m.getAnnotation(Skill.class);
-                    if (a != null) {
-                        return a.id() == current_skill_id && skill_cd.get(a.id()) == 0;
-                    }
-                    return false;
-                })
-                .forEach(m -> {
-                    try {
-                        current_skill_id = 0;
-                        skill_cd.set(0, 1);
-                        m.invoke(role);
-                        clearTitle();
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+        skill_methods.forEach((id, m) -> {
+            if (id == current_skill_id && skill_cd.get(id) == 0) {
+                try {
+                    current_skill_id = 0;
+                    skill_cd.set(0, 1);
+                    m.invoke(role);
+                    clearTitle();
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     public void tryIntoDuct() {
         if (chosen_duct != null) player.teleport(chosen_duct.clone().setDirection(player.getLocation().getDirection()));
     }
 
+    /**
+     * 若是Hunter则升级
+     */
     public void tryLevelUp() {
         if (!(role instanceof Hunter h)) return;
         h.levelUp();
