@@ -81,6 +81,10 @@ public class SmokeGhost extends Hunter {
 
     @Skill(name = "雾障", id = 1)
     public void smoke() {
+        if (ghost) {
+            player.sendMessage(rMsg("你不能在二重世界使用此技能"));
+            return;
+        }
         Location location = player.getLocation();
         if (smoke_locs.size() == 2) {
             var l = smoke_locs.removeFirst();

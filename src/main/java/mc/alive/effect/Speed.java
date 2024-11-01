@@ -6,12 +6,12 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Speed extends MultilevelEffect {
     public Speed(Player player, int tick, int level) {
-        super(player, tick, level);
+        super(player, tick - 1, level);
     }
 
     @Override
     protected boolean run() {
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1, level, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 2, level, false, false));
         return true;
     }
 }

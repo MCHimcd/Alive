@@ -93,7 +93,7 @@ public class PlayerListener implements Listener {
             event.setCancelled(true);
     }
 
-    @EventHandler
+    //    @EventHandler
     public void onChat(AsyncChatEvent event) {
         if (!Game.isRunning() || game.isDebugging) return;
 

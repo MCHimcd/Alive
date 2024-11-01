@@ -3,6 +3,7 @@ package mc.alive;
 import mc.alive.effect.Effect;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.MultilevelEffect;
+import mc.alive.effect.Speed;
 import mc.alive.item.DoorCard;
 import mc.alive.item.GameItem;
 import mc.alive.role.Role;
@@ -112,6 +113,8 @@ public final class PlayerData implements TickRunnable {
                     shieldDamage(amount_s);
                     shield_cd = 200;
                 }
+                //加速
+                addEffect(new Speed(player, 20, 0));
             }
             //减血量
             if (health >= 0) {
@@ -130,12 +133,14 @@ public final class PlayerData implements TickRunnable {
         if (health < 0) player.setHealth(0.1);
         else player.setHealth(Math.max(0.1, 20 * health / role.getMaxHealth()));
         //减速
-        AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
-        if (health <= role.getMaxHealth() * 0.5) {
-            speed.setBaseValue(role.getSpeed() * 0.3);
-        } else if (health <= role.getMaxHealth() * 0.2) {
-            speed.setBaseValue(-1);
-        } else speed.setBaseValue(role.getSpeed());
+        if (role instanceof Hunter) {
+            AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
+            if (health <= role.getMaxHealth() * 0.5) {
+                speed.setBaseValue(role.getSpeed() * 0.3);
+            } else if (health <= role.getMaxHealth() * 0.2) {
+                speed.setBaseValue(-1);
+            } else speed.setBaseValue(role.getSpeed());
+        }
     }
 
     private void die() {
@@ -161,6 +166,19 @@ public final class PlayerData implements TickRunnable {
         var max = ((Survivor) role).getMaxShield();
         shield = Math.min(max, Math.max(0, shield - amount));
         player.setAbsorptionAmount(20 * shield / max);
+    }
+
+    public void addEffect(Effect effect) {
+        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
+        if (e.isPresent()) {
+            if (!(e.get() instanceof MultilevelEffect)) {
+                e.get().addTime(effect.getTime());
+            } else {
+                effects.add(effect);
+            }
+        } else {
+            effects.add(effect);
+        }
     }
 
     /**
@@ -310,19 +328,6 @@ public final class PlayerData implements TickRunnable {
      */
     public static PlayerData of(Player player) {
         return game.playerData.get(player);
-    }
-
-    public void addEffect(Effect effect) {
-        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
-        if (e.isPresent()) {
-            if (!(e.get() instanceof MultilevelEffect)) {
-                e.get().addTime(effect.getTime());
-            } else {
-                effects.add(effect);
-            }
-        } else {
-            effects.add(effect);
-        }
     }
 
     /**
