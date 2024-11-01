@@ -1,14 +1,17 @@
 package mc.alive.tick;
 
+import mc.alive.effect.Effect;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static mc.alive.Game.game;
 
 public final class TickRunner extends BukkitRunnable {
     public static final List<TickRunnable> tickRunnable = new LinkedList<>();
+    public static final List<Effect> effectList = new CopyOnWriteArrayList<>();
     public static boolean gameEnd = false;
 
     public TickRunner() {
@@ -28,5 +31,6 @@ public final class TickRunner extends BukkitRunnable {
             return;
         }
         tickRunnable.forEach(TickRunnable::tick);
+        effectList.forEach(Effect::tick);
     }
 }

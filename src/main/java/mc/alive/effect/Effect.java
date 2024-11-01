@@ -11,7 +11,7 @@ public abstract class Effect implements TickRunnable {
     public Effect(Player player, int tick) {
         this.player = player;
         this.remained_tick = tick;
-        startTick();
+        TickRunner.effectList.add(this);
     }
 
     public int getTime() {
@@ -23,8 +23,8 @@ public abstract class Effect implements TickRunnable {
     }
 
     public boolean shouldRemove() {
-        boolean b = !run() || remained_tick <= 0;
-        if (b) TickRunner.tickRunnable.remove(this);
+        boolean b = remained_tick <= 0 || !run();
+        if (b) TickRunner.effectList.remove(this);
         return b;
     }
 

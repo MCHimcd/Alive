@@ -79,8 +79,12 @@ public final class Game {
         if (debug) {
             isDebugging = true;
             Player p1 = players.getFirst();
-            playerData.put(p1, new PlayerData(p1, new SmokeGhost(p1)));
-            hunter = p1;
+            SmokeGhost hunter = new SmokeGhost(p1);
+            hunter.setOtherFeature(0);
+            hunter.setPursuitFeature(0);
+            hunter.setSkillFeature(0);
+            playerData.put(p1, new PlayerData(p1, hunter));
+            this.hunter = p1;
             Player p2 = players.get(1);
             playerData.put(p2, new PlayerData(p2, new Mike(p2)));
             survivors = new ArrayList<>();

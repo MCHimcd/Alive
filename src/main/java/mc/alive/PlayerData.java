@@ -48,6 +48,8 @@ public final class PlayerData implements TickRunnable {
     public double attack_cd = -1;
     //心跳cd
     public int heartbeat_tick = 0;
+    //hunter破坏机子cd
+    public int break_tick = 0;
     private Player player;
     //选择的技能
     private int current_skill_id = 0;
@@ -206,15 +208,17 @@ public final class PlayerData implements TickRunnable {
         effects.removeIf(effect -> !(effect instanceof MultilevelEffect) && effect.shouldRemove());
 
         //心跳
-        if (role instanceof Survivor) {
-            if (heartbeat_tick <= 0) {
-                player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
-                player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
-                heartbeat_tick = 40;
+        if (Game.isRunning()) {
+            if (role instanceof Survivor) {
+                if (heartbeat_tick <= 0) {
+                    player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    player.spawnParticle(Particle.DUST, player.getEyeLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
+                    heartbeat_tick = 40;
+                }
+            } else if (role instanceof Hunter hunter) {
+                player.getWorld().getNearbyPlayers(player.getLocation(), hunter.getPursuitFeature() == 0 ? 12 : 18, p -> !p.equals(player))
+                        .forEach(pl -> --PlayerData.of(pl).heartbeat_tick);
             }
-        } else if (role instanceof Hunter hunter) {
-            player.getWorld().getNearbyPlayers(player.getLocation(), hunter.getPursuitFeature() == 0 ? 12 : 18, p -> !p.equals(player))
-                    .forEach(pl -> --PlayerData.of(pl).heartbeat_tick);
         }
 
         //普攻冷却
@@ -257,7 +261,8 @@ public final class PlayerData implements TickRunnable {
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
                 if (role instanceof Survivor survivor) {
                     game.fixGenerator(target, survivor.getFixSpeed());
-                } else if (role instanceof Hunter hunter) {
+                } else if (role instanceof Hunter hunter && break_tick-- <= 0) {
+                    break_tick = 90 * 20;
                     game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
                 }
             }

@@ -85,7 +85,7 @@ abstract public class Hunter extends Role {
     abstract public int getMaxLevel();
 
     /**
-     * @return 攻击间隔(tick)
+     * @return 攻击间隔(秒)
      */
     abstract public double getAttackCD();
 

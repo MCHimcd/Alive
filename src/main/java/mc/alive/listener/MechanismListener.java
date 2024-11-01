@@ -45,7 +45,7 @@ public class MechanismListener implements Listener {
 
         //开门
         Door door = MechanismTickrunnable.chosenDoors.get(player);
-        if (door != null) {
+        if (door != null && !player.equals(game.hunter)) {
             door.action(player);
         }
 
