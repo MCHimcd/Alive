@@ -21,12 +21,7 @@ import static mc.alive.PlayerData.setSkillCD;
 
 public class Jack extends Survivor {
     public Jack(Player pl) {
-        super(pl);
-    }
-
-    @Override
-    public int getRoleID() {
-        return 200;
+        super(pl, 200);
     }
 
     @Override

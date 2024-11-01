@@ -55,10 +55,10 @@ public class PlayerTickrunnable implements TickRunnable {
                             player.sendActionBar(rMsg("你当前选择的角色为: %s ".formatted(name.split(" ")[1])));
                             td.setGlowing(true);
                         }
-                    } else if (!player.equals(game.hunter)) {
-                        double progress = (double) game.fix(td, 0) / 400;
+                    } else {
+                        double progress = (double) game.fixGenerator(td, 0) / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fix(td, 0))));
+                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fixGenerator(td, 0))));
                     }
                     chosen_item_display.put(player, td);
                 }

@@ -94,18 +94,18 @@ public class ItemListener implements Listener {
             if (game.chooseRole != null && game.chooseRole.handleEvent(player)) return;
             if (game.chooseRole != null) return;
             var pd = game.playerData.get(player);
+            if (pd.hasEffect(Giddy.class)) {
+                event.setCancelled(true);
+                return;
+            }
             //管道
             if (pd.getRole() instanceof Hunter) {
                 pd.tryIntoDuct();
             }
-            //维修
+            //维修或破坏机子
             var target = chosen_item_display.get(player);
             if (target != null && pd.fix_tick == -1) {
                 pd.fix_tick = 20;
-                return;
-            }
-            if (pd.hasEffect(Giddy.class)) {
-                event.setCancelled(true);
                 return;
             }
         }
@@ -115,7 +115,7 @@ public class ItemListener implements Listener {
                         || event.getAction() == Action.LEFT_CLICK_AIR
                         || event.getAction() == Action.LEFT_CLICK_BLOCK
         ) return;
-        
+
         //使用物品
         if (game != null) {
             var data = item.getItemMeta().getCustomModelData();

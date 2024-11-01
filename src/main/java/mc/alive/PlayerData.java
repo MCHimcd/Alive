@@ -1,6 +1,7 @@
 package mc.alive;
 
 import mc.alive.effect.Effect;
+import mc.alive.effect.Giddy;
 import mc.alive.effect.MultilevelEffect;
 import mc.alive.item.DoorCard;
 import mc.alive.item.GameItem;
@@ -45,6 +46,8 @@ public final class PlayerData implements TickRunnable {
     public int fix_tick = -1;
     //攻击cd
     public double attack_cd = -1;
+    //心跳cd
+    public int heartbeat_tick = 0;
     private Player player;
     //选择的技能
     private int current_skill_id = 0;
@@ -159,12 +162,11 @@ public final class PlayerData implements TickRunnable {
     }
 
     /**
-     * @return 玩家对应的PlayerData，若游戏未开始则返回null
+     * 设置Role的技能的CD
+     * @param player 玩家
+     * @param index 技能id，从1开始
+     * @param amount 单位为tick
      */
-    public static PlayerData of(Player player) {
-        return game.playerData.get(player);
-    }
-
     public static void setSkillCD(Player player, int index, int amount) {
         assert game != null;
         game.playerData.get(player).skill_cd.set(index, amount);
@@ -177,19 +179,6 @@ public final class PlayerData implements TickRunnable {
 
     public Role getRole() {
         return role;
-    }
-
-    public void addEffect(Effect effect) {
-        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
-        if (e.isPresent()) {
-            if (!(e.get() instanceof MultilevelEffect)) {
-                e.get().addTime(effect.getTime());
-            } else {
-                effects.add(effect);
-            }
-        } else {
-            effects.add(effect);
-        }
     }
 
     public boolean hasEffect(Class<? extends Effect> effect) {
@@ -215,6 +204,18 @@ public final class PlayerData implements TickRunnable {
                     if (effect1.shouldRemove()) effects.remove(effect1);
                 }));
         effects.removeIf(effect -> !(effect instanceof MultilevelEffect) && effect.shouldRemove());
+
+        //心跳
+        if (role instanceof Survivor) {
+            if (heartbeat_tick <= 0) {
+                player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
+                player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
+                heartbeat_tick = 40;
+            }
+        } else if (role instanceof Hunter hunter) {
+            player.getWorld().getNearbyPlayers(player.getLocation(), hunter.getPursuitFeature() == 0 ? 12 : 18, p -> !p.equals(player))
+                    .forEach(pl -> --PlayerData.of(pl).heartbeat_tick);
+        }
 
         //普攻冷却
         attack_cd = Math.max(0, attack_cd - 0.05);
@@ -248,15 +249,20 @@ public final class PlayerData implements TickRunnable {
             damageOrHeal(-0.25);
         }
 
-        //维修
+        //维修或破坏
         var target = chosen_item_display.get(player);
         if (fix_tick >= 0) {
             if (--fix_tick == 0 && target != null) {
                 player.getLocation().getNearbyPlayers(20).forEach(player1 ->
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
                 if (role instanceof Survivor survivor) {
-                    game.fix(target, survivor.getFixSpeed());
+                    game.fixGenerator(target, survivor.getFixSpeed());
+                } else if (role instanceof Hunter hunter) {
+                    game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
                 }
+            }
+            if (role instanceof Hunter) {
+                addEffect(new Giddy(player, 1));
             }
         }
 
@@ -294,6 +300,29 @@ public final class PlayerData implements TickRunnable {
         } else pickup_body_tick = 0;
     }
 
+    /**
+     * @return 玩家对应的PlayerData，若游戏未开始则返回null
+     */
+    public static PlayerData of(Player player) {
+        return game.playerData.get(player);
+    }
+
+    public void addEffect(Effect effect) {
+        var e = effects.stream().filter(e1 -> e1.getClass().equals(effect.getClass())).findFirst();
+        if (e.isPresent()) {
+            if (!(e.get() instanceof MultilevelEffect)) {
+                e.get().addTime(effect.getTime());
+            } else {
+                effects.add(effect);
+            }
+        } else {
+            effects.add(effect);
+        }
+    }
+
+    /**
+     * 将选择的技能改为下一个
+     */
     public void changeSkillValue() {
         //蓄力技能取消
         role.removeSkillLocation(Role.ZERO_LOC);
@@ -302,7 +331,7 @@ public final class PlayerData implements TickRunnable {
         skill_methods.forEach((id, m) -> {
             if (id == current_skill_id) {
                 var a = m.getAnnotation(Skill.class);
-                if (a.minLevel() > role.getLevel()) {
+                if (role instanceof Hunter hunter && a.minLevel() > hunter.getLevel()) {
                     ++current_skill_id;
                     return;
                 }
@@ -343,6 +372,9 @@ public final class PlayerData implements TickRunnable {
         );
     }
 
+    /**
+     * 尝试使用选中的技能
+     */
     public void useSkill() {
         skill_methods.forEach((id, m) -> {
             if (id == current_skill_id && skill_cd.get(id) == 0) {
@@ -358,6 +390,9 @@ public final class PlayerData implements TickRunnable {
         });
     }
 
+    /**
+     * 尝试进入管道
+     */
     public void tryIntoDuct() {
         if (chosen_duct != null) player.teleport(chosen_duct.clone().setDirection(player.getLocation().getDirection()));
     }

@@ -10,12 +10,7 @@ import org.bukkit.entity.Player;
 
 public class Mike extends Survivor {
     public Mike(Player pl) {
-        super(pl);
-    }
-
-    @Override
-    public int getRoleID() {
-        return 201;
+        super(pl, 201);
     }
 
     @Override

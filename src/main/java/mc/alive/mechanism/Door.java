@@ -36,6 +36,10 @@ public class Door {
         return face;
     }
 
+    /**
+     * 开门或关门
+     * @param p 触发的玩家
+     */
     public void action(Player p) {
         Optional<ItemStack> key = Arrays.stream(p.getInventory().getContents()).filter(it -> {
             if (it == null || !it.hasItemMeta()) return false;

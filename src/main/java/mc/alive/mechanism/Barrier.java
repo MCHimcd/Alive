@@ -31,6 +31,9 @@ public class Barrier {
         );
     }
 
+    /**
+     * @return 是否已放倒
+     */
     public boolean isTriggered() {
         return triggered;
     }
@@ -43,6 +46,11 @@ public class Barrier {
         return face;
     }
 
+    /**
+     * 尝试触发改变
+     * @param destroy 破坏或放倒
+     * @param player 触发的玩家
+     */
     public void trigger(boolean destroy, Player player) {
         if (tick_task != null || (destroy && !triggered) || (!destroy && triggered)) return;
         tick_task = new BukkitRunnable() {

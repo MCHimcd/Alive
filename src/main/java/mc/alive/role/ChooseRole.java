@@ -108,6 +108,9 @@ public final class ChooseRole {
         currentPlayer.teleport(new Location(world, -4.5, -58, -1.5));
     }
 
+    /**
+     * 生成对应职业的供玩家选择的ItemDisplay
+     */
     private void summonItemDisplay(boolean isHunter) {
         roles.clear();
         var world = Bukkit.getWorld("world");

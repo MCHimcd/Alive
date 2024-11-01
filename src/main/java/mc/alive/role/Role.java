@@ -25,11 +25,12 @@ public abstract class Role {
      * 与技能相关的locations
      */
     private final Map<Location, BukkitTask> skill_locations = new HashMap<>();
+    private final int role_id;
     protected Player player;
-    protected int level = 0;
 
-    public Role(Player p) {
+    protected Role(Player p, int id) {
         player = p;
+        role_id = id;
     }
 
     public static Role of(int id, Player player) {
@@ -71,10 +72,8 @@ public abstract class Role {
     /**
      * @return 角色id，用于从配置文件中获取角色名
      */
-    public abstract @Range(from = 100, to = 300) int getRoleID();
-
-    public int getLevel() {
-        return level;
+    public @Range(from = 100, to = 300) int getRoleID() {
+        return role_id;
     }
 
     public Player getPlayer() {

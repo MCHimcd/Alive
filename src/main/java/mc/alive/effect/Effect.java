@@ -1,6 +1,7 @@
 package mc.alive.effect;
 
 import mc.alive.tick.TickRunnable;
+import mc.alive.tick.TickRunner;
 import org.bukkit.entity.Player;
 
 public abstract class Effect implements TickRunnable {
@@ -22,7 +23,9 @@ public abstract class Effect implements TickRunnable {
     }
 
     public boolean shouldRemove() {
-        return !run() || remained_tick <= 0;
+        boolean b = !run() || remained_tick <= 0;
+        if (b) TickRunner.tickRunnable.remove(this);
+        return b;
     }
 
     /**

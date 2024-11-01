@@ -39,6 +39,7 @@ import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.*;
 
@@ -156,6 +157,9 @@ public final class Game {
         }
     }
 
+    /**
+     * 生成由locations.yml决定的固定位置实体
+     */
     @SuppressWarnings({"DataFlowIssue", "unchecked"})
     private void summonEntities() {
         Random random = new Random();
@@ -295,6 +299,14 @@ public final class Game {
         spawnItem(game_item, location, amount, null);
     }
 
+    /**
+     * 生成可右键拾取的物品
+     * @param game_item 类
+     * @param location 位置
+     * @param amount 数量
+     * @param data CustomModelData
+     * @return 生成的实体
+     */
     public Item spawnItem(Class<? extends GameItem> game_item, Location location, int amount, Integer data) {
         return location.getWorld().spawn(location, Item.class, item_entity -> {
             GameItem item = new Air();
@@ -345,7 +357,12 @@ public final class Game {
         });
     }
 
-    public void spawnPickableBody(Location location, List<String> item_name) {
+    /**
+     * 生成尸体
+     * @param location 位置
+     * @param item_names 物品名列表
+     */
+    public void spawnPickableBody(Location location, List<String> item_names) {
         pickable_bodies.put(location.getWorld().spawn(location.clone().add(0, -1.5, 0), ArmorStand.class, ar -> {
             ar.setGravity(false);
             ar.setVisible(false);
@@ -353,7 +370,7 @@ public final class Game {
             ar.setDisabledSlots(EquipmentSlot.values());
             ar.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
             //todo
-        }), item_name);
+        }), item_names);
     }
 
     public static boolean isRunning() {
@@ -368,6 +385,9 @@ public final class Game {
         start(false);
     }
 
+    /**
+     * 暂停游戏
+     */
     public void pause() {
         isPaused = true;
         playerData.keySet().forEach(player -> {
@@ -385,7 +405,11 @@ public final class Game {
         }.runTaskLater(Alive.plugin, 1200);
     }
 
-    public void end(Player ender) {
+    /**
+     * 结束游戏
+     * @param ender 输入/reset的玩家
+     */
+    public void end(@Nullable Player ender) {
         destroy();
         game = null;
         playerData.keySet().forEach(Game::resetPlayer);
@@ -444,6 +468,9 @@ public final class Game {
         }
     }
 
+    /**
+     * 结束时的清理
+     */
     public void destroy() {
         if (chooseRole != null) {
             chooseRole.roles.keySet().forEach(Entity::remove);
@@ -463,7 +490,13 @@ public final class Game {
         markers.forEach(Entity::remove);
     }
 
-    public int fix(ItemDisplay id, int amount) {
+    /**
+     * 修复机子
+     * @param id 机子的实体
+     * @param amount 修复数（可为0已返回进度）
+     * @return 修复后的进度
+     */
+    public int fixGenerator(ItemDisplay id, int amount) {
         int currentProgress = fix_progress.getOrDefault(id, 0);
         int finalAmount = currentProgress + amount;
 
@@ -476,6 +509,16 @@ public final class Game {
         }
 
         return finalAmount;
+    }
+
+    /**
+     * 破坏机子
+     * @param id 机子的实体
+     * @param percent new = old * percent
+     */
+    public void breakGenerator(ItemDisplay id, double percent) {
+        int currentProgress = fix_progress.getOrDefault(id, 0);
+        fix_progress.put(id, (int) (currentProgress * percent));
     }
 
     public void spawnPlayerBody(Player player) {

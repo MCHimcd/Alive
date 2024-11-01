@@ -12,12 +12,11 @@ public class HChooseFeatureMenu extends SlotMenu {
     private final Hunter hunter;
 
     public HChooseFeatureMenu(Role role, int page) {
-        super(9, rMsg(switch (page) {
-            case 0 -> "<red>选择红色特质";
-            case 1 -> "<green>选择绿色特质";
-            case 2 -> "<blue>选择蓝色特质";
-            default -> "";
-        }), role.getPlayer());
+        super(
+                page == 0 ? 9 : 27,
+                rMsg(page == 0 ? "<gray>选择<red>红色<gray>特质" : "<gray>选择<green>绿色<gray>和<blue>蓝色<gray>特质"),
+                role.getPlayer()
+        );
         this.hunter = (Hunter) role;
         this.page = page;
         int i = 0;
@@ -25,25 +24,25 @@ public class HChooseFeatureMenu extends SlotMenu {
             for (ItemStack it : hunter.getRedFeatures()) {
                 int finalI = i;
                 setSlot(i++, it, (_, _) -> {
-                    hunter.setRedFeature(finalI);
+                    hunter.setSkillFeature(finalI);
                     nextPage();
                     close = false;
                 });
             }
         } else if (page == 1) {
-            for (ItemStack it : hunter.getGreenFeatures()) {
+            for (ItemStack it : Hunter.getOtherFeatures()) {
                 int finalI = i;
                 setSlot(i++, it, (_, _) -> {
-                    hunter.setGreenFeature(finalI);
+                    hunter.setOtherFeature(finalI);
                     nextPage();
                     close = false;
                 });
             }
-        } else if (page == 2) {
-            for (ItemStack it : hunter.getBlueFeatures()) {
-                int finalI = i;
+            int ii = i;
+            for (ItemStack it : Hunter.getPursuitFeatures()) {
+                int finalI = i - ii;
                 setSlot(i++, it, (_, _) -> {
-                    hunter.setBlueFeature(finalI);
+                    hunter.setPursuitFeature(finalI);
                     nextPage();
                     close = false;
                 });

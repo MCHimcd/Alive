@@ -90,6 +90,9 @@ public class MainMenu extends SlotMenu {
         }
     }
 
+    /**
+     * 更新所有此菜单中的准备状态
+     */
     private void update() {
         Bukkit.getOnlinePlayers().forEach(player1 -> {
             if (player1.getOpenInventory().getTopInventory().getHolder() instanceof MainMenu m) {
