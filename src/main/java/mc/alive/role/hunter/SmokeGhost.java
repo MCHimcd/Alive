@@ -7,10 +7,7 @@ import mc.alive.effect.Slowness;
 import mc.alive.role.Skill;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.LocationFactory;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -120,27 +117,28 @@ public class SmokeGhost extends Hunter {
         Location loc = new Location(player.getWorld(), 0, -1, 0);
         if (ghost) {
             //退出二重世界
-            getPlayerData().addEffect(new Giddy(player, 40));
+            int tick = skillFeature == 1 ? 20 : 40;
+            getPlayerData().addEffect(new Giddy(player, tick));
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 getGame().survivors.forEach(pl -> {
                     pl.showPlayer(plugin, player);
                     player.showPlayer(plugin, pl);
                 });
-            }, 40);
+            }, tick);
             removeSkillLocation(loc);
         } else {
             //进入二重世界
             addSkillLocation(loc, () -> {
                 if (skillFeature == 1) {
-                    player.getWorld().spawnParticle(Particle.ASH, player.getLocation(), 10);
+                    player.getWorld().spawnParticle(Particle.DUST, player.getLocation(), 1, 0, 0, 0, 0.1, new Particle.DustOptions(Color.fromRGB(0, 0, 0), 1));
                     getGame().survivors.stream().min(Comparator.comparingDouble(pl -> pl.getLocation().distance(player.getLocation()))).ifPresent(pl -> {
                         var v = pl.getLocation().subtract(player.getLocation()).toVector().normalize().multiply(2);
                         for (Location location : LocationFactory.line(player.getLocation(), player.getLocation().add(v), 0.5)) {
-                            player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0.1, new Particle.DustOptions(org.bukkit.Color.fromRGB(0, 0, 255), 1));
+                            player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0.1, new Particle.DustOptions(Color.fromRGB(0, 0, 255), 1));
                         }
                     });
                 } else getGame().survivors.forEach(pl ->
-                        player.spawnParticle(Particle.DUST, pl.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0.1, new Particle.DustOptions(org.bukkit.Color.fromRGB(0, 0, 255), 1))
+                        player.spawnParticle(Particle.DUST, pl.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0.1, new Particle.DustOptions(Color.fromRGB(0, 0, 255), 1))
                 );
             }, 10);
             getGame().survivors.forEach(pl -> {

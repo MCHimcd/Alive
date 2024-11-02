@@ -41,11 +41,6 @@ bodies:
 # x y z 数量 类名
 items:
   - 2 -60 13
-    ChamberStandardCartridge*256
-  - 2 -60 13
-    ChamberPistol
-    ChamberShotgun
-    CabinGuardian
     LevelUp
 
 #板子

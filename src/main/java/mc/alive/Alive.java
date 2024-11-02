@@ -4,14 +4,9 @@ import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import mc.alive.item.ChamberStandardCartridge;
 import mc.alive.item.DoorCard;
 import mc.alive.item.GameItem;
 import mc.alive.item.pickup.LevelUp;
-import mc.alive.item.usable.gun.CabinGuardian;
-import mc.alive.item.usable.gun.ChamberPistol;
-import mc.alive.item.usable.gun.ChamberShotgun;
-import mc.alive.listener.GunListener;
 import mc.alive.listener.ItemListener;
 import mc.alive.listener.MechanismListener;
 import mc.alive.listener.PlayerListener;
@@ -115,10 +110,6 @@ public final class Alive extends JavaPlugin implements Listener {
 
     private void registerGameItems() {
         List.of(
-                ChamberStandardCartridge.class,
-                CabinGuardian.class,
-                ChamberPistol.class,
-                ChamberShotgun.class,
                 LevelUp.class,
                 DoorCard.class
         ).forEach(GameItem::register);
@@ -129,7 +120,6 @@ public final class Alive extends JavaPlugin implements Listener {
                 this,
                 new ItemListener(),
                 new PlayerListener(),
-                new GunListener(),
                 new MechanismListener()
         ).forEach(l -> getPluginManager().registerEvents(l, plugin));
     }

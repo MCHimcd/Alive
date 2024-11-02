@@ -17,8 +17,8 @@ public abstract class GameItem {
 
     /**
      * 80000-85000可使用 |
-     * 80000-80100枪 |
      * 84000-90000拾取时触发
+     * 90001-100000普通
      */
     public abstract @Range(from = 80000, to = 100000) int customModelData();
 

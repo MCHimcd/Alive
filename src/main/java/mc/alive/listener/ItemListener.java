@@ -4,14 +4,15 @@ import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
 import mc.alive.item.PickUp;
-import mc.alive.item.usable.gun.Gun;
 import mc.alive.menu.MainMenu;
+import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
 import mc.alive.tick.PlayerTickrunnable;
 import mc.alive.util.ItemCheck;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -46,10 +48,6 @@ public class ItemListener implements Listener {
                     if (ItemCheck.isSkill(data)) {
                         //技能
                         PlayerData.of(event.getPlayer()).changeSkillValue();
-                        event.setCancelled(true);
-                    } else if (ItemCheck.isGun(data) && PlayerData.of(event.getPlayer()).getRole() instanceof Survivor) {
-                        //枪
-                        ((Gun) game.usable_items.get(item)).reload(event.getPlayer());
                         event.setCancelled(true);
                     }
                 }
@@ -168,5 +166,22 @@ public class ItemListener implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onChangeMainHandItem(PlayerItemHeldEvent event) {
+        if (!Game.isStarted()) return;
+        if (game.isPaused) {
+            event.setCancelled(true);
+            return;
+        }
+        var player = event.getPlayer();
+
+        //蓄力技能取消
+        PlayerData pd = PlayerData.of(player);
+        pd.getRole().removeSkillLocation(Role.ZERO_LOC);
+
+        //noinspection DataFlowIssue
+        player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
     }
 }

@@ -5,7 +5,6 @@ import mc.alive.item.GameItem;
 import mc.alive.item.PickUp;
 import mc.alive.item.pickup.PickUpHandler;
 import mc.alive.item.usable.Usable;
-import mc.alive.item.usable.gun.Gun;
 import mc.alive.mechanism.Barrier;
 import mc.alive.mechanism.Door;
 import mc.alive.mechanism.Lift;
@@ -18,7 +17,6 @@ import mc.alive.role.hunter.SmokeGhost;
 import mc.alive.role.survivor.Mike;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.ItemBuilder;
-import mc.alive.util.ItemCheck;
 import mc.alive.util.LocationFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -347,10 +345,6 @@ public final class Game {
                 pickup_items.put(is, pickUpHandler);
             }
 
-            if (item instanceof Gun gun) {
-                usable_items.put(is, gun);
-            }
-
             item_entity.setItemStack(is);
             item_entity.customName(is.displayName().append(amount == 1 ? Component.empty() : rMsg("*%d".formatted(amount))));
             item_entity.setCustomNameVisible(true);
@@ -395,10 +389,6 @@ public final class Game {
     public void pause() {
         isPaused = true;
         playerData.keySet().forEach(player -> {
-            var item = player.getInventory().getItemInMainHand();
-            if (ItemCheck.hasCustomModelData(item) && ItemCheck.isGun(item.getItemMeta().getCustomModelData())) {
-                ((Gun) usable_items.get(item)).stopShoot(player);
-            }
             player.sendMessage(rMsg("<dark_red>游戏暂停，若离开玩家未返回将在1分钟后自动结束"));
         });
         pause_task = new BukkitRunnable() {
@@ -482,11 +472,6 @@ public final class Game {
         fix_progress.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
         pickable_bodies.keySet().forEach(Entity::remove);
-        for (Usable usableGameItem : usable_items.values()) {
-            if (usableGameItem instanceof Gun gun) {
-                gun.stopShoot(null);
-            }
-        }
         for (BlockDisplay blockDisplay : lifts.keySet()) {
             LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.AIR, BlockFace.SELF);
             blockDisplay.remove();

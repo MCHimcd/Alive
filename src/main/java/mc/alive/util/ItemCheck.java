@@ -7,10 +7,6 @@ public final class ItemCheck {
         return item != null && item.hasItemMeta() && item.getItemMeta().hasCustomModelData();
     }
 
-    public static boolean isGun(int data) {
-        return data >= 80000 && data < 80100;
-    }
-
     public static boolean isUsable(int data) {
         return data >= 80000 && data < 85000;
     }
