@@ -43,6 +43,11 @@ public class SmokeGhost extends Hunter {
     }
 
     @Override
+    public double getMaxHealth() {
+        return 80;
+    }
+
+    @Override
     public List<ItemStack> getRedFeatures() {
         return List.of(
                 ItemBuilder.material(Material.FIREWORK_STAR)
@@ -57,18 +62,8 @@ public class SmokeGhost extends Hunter {
     }
 
     @Override
-    public int getStrength() {
-        return 30;
-    }
-
-    @Override
     public double getSpeed() {
         return 0.12;
-    }
-
-    @Override
-    public double getMaxHealth() {
-        return 80;
     }
 
     @Override
@@ -93,6 +88,7 @@ public class SmokeGhost extends Hunter {
                 location.getNearbyPlayers(2, 0.01, pl -> !pl.equals(player))
                         .forEach(pl -> {
                             PlayerData playerData = getPlayerData(pl);
+                            if (captured.contains(pl)) return;
                             playerData.addEffect(new Giddy(pl, 40));
                             playerData.addEffect(new Exposure(pl, 300));
                             smoke_locs.remove(location);
@@ -101,7 +97,9 @@ public class SmokeGhost extends Hunter {
             } else {
                 location.getNearbyPlayers(2, 0.01, pl -> !pl.equals(player))
                         .forEach(pl -> {
-                            getPlayerData(pl).addEffect(new Slowness(pl, 100, 0));
+                            if (captured.contains(pl)) return;
+                            PlayerData playerData = getPlayerData(pl);
+                            playerData.addEffect(new Slowness(pl, 100, 0));
                             smoke_locs.remove(location);
                             removeSkillLocation(location);
                         });
@@ -119,19 +117,18 @@ public class SmokeGhost extends Hunter {
             //退出二重世界
             int tick = skillFeature == 1 ? 20 : 40;
             getPlayerData().addEffect(new Giddy(player, tick));
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                getGame().survivors.forEach(pl -> {
-                    pl.showPlayer(plugin, player);
-                    player.showPlayer(plugin, pl);
-                });
-            }, tick);
+            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                    getGame().survivors.forEach(pl -> {
+                        pl.showPlayer(plugin, player);
+                        if (!captured.contains(pl)) player.showPlayer(plugin, pl);
+                    }), tick);
             removeSkillLocation(loc);
         } else {
             //进入二重世界
             addSkillLocation(loc, () -> {
                 if (skillFeature == 1) {
                     player.getWorld().spawnParticle(Particle.DUST, player.getLocation(), 1, 0, 0, 0, 0.1, new Particle.DustOptions(Color.fromRGB(0, 0, 0), 1));
-                    getGame().survivors.stream().min(Comparator.comparingDouble(pl -> pl.getLocation().distance(player.getLocation()))).ifPresent(pl -> {
+                    getGame().survivors.stream().filter(pl -> !captured.contains(pl)).min(Comparator.comparingDouble(pl -> pl.getLocation().distance(player.getLocation()))).ifPresent(pl -> {
                         var v = pl.getLocation().subtract(player.getLocation()).toVector().normalize().multiply(2);
                         for (Location location : LocationFactory.line(player.getLocation(), player.getLocation().add(v), 0.5)) {
                             player.spawnParticle(Particle.DUST, location, 1, 0, 0, 0, 0.1, new Particle.DustOptions(Color.fromRGB(0, 0, 255), 1));

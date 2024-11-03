@@ -59,25 +59,17 @@ public final class PlayerData implements TickRunnable {
     private double health;
     //hunter回血间隔
     private int health_tick = 0;
-    //护盾
-    private double shield;
-    //受伤后回护盾cd
-    private int shield_cd = 0;
-    //回护盾cd
-    private int shield_tick = 0;
     //捡尸体计时
     private int pickup_body_tick = 0;
 
     public PlayerData(Player player, Role role) {
         this.player = player;
         this.role = role;
-        damageOrHeal(-role.getMaxHealth());
-
-        if (role instanceof Survivor s) {
+        if (role instanceof Survivor) {
             Game.team_survivor.addPlayer(player);
-            shieldDamage(-s.getMaxShield());
-        } else {
+        } else if (role instanceof Hunter h) {
             Game.team_hunter.addPlayer(player);
+            damageOrHeal(-h.getMaxHealth());
         }
 
         Arrays.stream(role.getClass().getMethods()).forEach(m -> {
@@ -101,71 +93,49 @@ public final class PlayerData implements TickRunnable {
      * @param amount 正为扣血，负为加血
      */
     public void damageOrHeal(double amount) {
-        if (amount >= 0) {
+        if (amount > 0) {
             player.damage(0.01);
             BlockData blood = Material.REDSTONE_BLOCK.createBlockData();
             player.getWorld().spawnParticle(Particle.BLOCK, player.getLocation().clone().add(0, 1, 0), 100, 0.3, 0.3, 0.3, blood);
-            if (role instanceof Survivor) {
-                if (shield > 0) {
-                    //减护盾
-                    var amount_s = amount;
-                    amount = Math.max(0, amount - shield);
-                    shieldDamage(amount_s);
-                    shield_cd = 200;
-                }
-                //加速
-                addEffect(new Speed(player, 20, 0));
-            }
-            //减血量
-            if (health >= 0) {
-                health -= amount;
-                //回血时间=剩余血量%*200
-                health_tick = (int) Math.max(100, (Math.max(0, health / role.getMaxHealth()) * 400));
-                player.damage(0.01);
-            }
-            if (role instanceof Survivor) {
-                if (health <= 0) {
-                    die();
-                    return;
-                }
-            } else health = Math.max(-5, health);
-        } else health = Math.min(health - amount, role.getMaxHealth());
-        if (health < 0) player.setHealth(0.1);
-        else player.setHealth(Math.max(0.1, 20 * health / role.getMaxHealth()));
-        //减速
-        if (role instanceof Hunter) {
-            AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
-            if (health <= role.getMaxHealth() * 0.5) {
-                speed.setBaseValue(role.getSpeed() * 0.3);
-            } else if (health <= role.getMaxHealth() * 0.2) {
-                speed.setBaseValue(-1);
-            } else speed.setBaseValue(role.getSpeed());
+
         }
-    }
-
-    private void die() {
-        player.getWorld().sendMessage(player.displayName().append(rMsg("%s".formatted(List.of(
-                "去世了",
-                "离开了人间."
-        ).get(new Random().nextInt(0, 2))))));
-        game.spawnPlayerBody(player);
-        Game.resetPlayer(player);
-        player.setGameMode(GameMode.SPECTATOR);
-        Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
-            game.survivors.remove(player);
-            if (game.survivors.isEmpty()) {
-                TickRunner.gameEnd = true;
+        if (role instanceof Survivor s) {
+            if (amount > 0) {
+                if (!s.isHurt()) {
+                    s.setHurt(true);
+                } else {
+                    s.setDown(true);
+                }
+            } else {
+                if (s.isDown()) {
+                    s.setDown(false);
+                } else if (s.isHurt()) {
+                    s.setHurt(false);
+                }
             }
-        });
-    }
-
-    /**
-     * @param amount 正为扣护盾，负为加护盾
-     */
-    private void shieldDamage(double amount) {
-        var max = ((Survivor) role).getMaxShield();
-        shield = Math.min(max, Math.max(0, shield - amount));
-        player.setAbsorptionAmount(20 * shield / max);
+            //加速
+            addEffect(new Speed(player, 20, 0));
+        } else if (role instanceof Hunter h) {
+            if (amount >= 0) {
+                //减血量
+                if (health >= 0) {
+                    health -= amount;
+                    //回血时间=剩余血量%*200
+                    health_tick = (int) Math.max(100, (Math.max(0, health / h.getMaxHealth()) * 400));
+                    player.damage(0.01);
+                }
+                health = Math.max(-5, health);
+            } else health = Math.min(health - amount, h.getMaxHealth());
+            if (health < 0) player.setHealth(0.1);
+            else player.setHealth(Math.max(0.1, 20 * health / h.getMaxHealth()));
+            //减速
+            AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
+            if (health <= h.getMaxHealth() * 0.5) {
+                speed.setBaseValue(role.getSpeed() * 0.3);
+            } else if (health <= h.getMaxHealth() * 0.2) {
+                speed.setBaseValue(-1);
+            } else speed.setBaseValue(h.getSpeed());
+        }
     }
 
     public void addEffect(Effect effect) {
@@ -190,6 +160,22 @@ public final class PlayerData implements TickRunnable {
     public static void setSkillCD(Player player, int index, int amount) {
         assert game != null;
         game.playerData.get(player).skill_cd.set(index, amount);
+    }
+
+    private void die() {
+        player.getWorld().sendMessage(player.displayName().append(rMsg("%s".formatted(List.of(
+                "去世了",
+                "离开了人间."
+        ).get(new Random().nextInt(0, 2))))));
+        game.spawnPlayerBody(player);
+        Game.resetPlayer(player);
+        player.setGameMode(GameMode.SPECTATOR);
+        Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
+            game.survivors.remove(player);
+            if (game.survivors.isEmpty()) {
+                TickRunner.gameEnd = true;
+            }
+        });
     }
 
     public void setPlayer(Player player) {
@@ -227,8 +213,8 @@ public final class PlayerData implements TickRunnable {
 
         //心跳
         if (Game.isRunning()) {
-            if (role instanceof Survivor) {
-                if (heartbeat_tick <= 0) {
+            if (role instanceof Survivor s) {
+                if (!s.isCaptured() && heartbeat_tick <= 0) {
                     player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
                     player.spawnParticle(Particle.DUST, player.getEyeLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
                     heartbeat_tick = 40;
@@ -253,16 +239,6 @@ public final class PlayerData implements TickRunnable {
         current_skill_reset_cd = Math.max(0, current_skill_reset_cd - 1);
         if (current_skill_reset_cd == 0) {
             current_skill_id = 0;
-        }
-
-        //护盾恢复
-        if (role instanceof Survivor s) {
-            if (shield_cd > 0) shield_cd--;
-            if (shield_tick > 0) shield_tick--;
-            if (shield_cd == 0 && shield_tick == 0 && shield < s.getMaxShield()) {
-                shieldDamage(-5);
-                shield_tick = 20;
-            }
         }
 
         //血量恢复
@@ -416,7 +392,10 @@ public final class PlayerData implements TickRunnable {
     }
 
     public boolean canMove() {
-        return health > role.getMaxHealth() * 0.2;
+        if (role instanceof Hunter h) {
+            return health > h.getMaxHealth() * 0.2;
+        }
+        return true;
     }
 
 }

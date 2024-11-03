@@ -14,18 +14,8 @@ public class Mike extends Survivor {
     }
 
     @Override
-    public int getStrength() {
-        return 10;
-    }
-
-    @Override
     public double getSpeed() {
         return 0.1;
-    }
-
-    @Override
-    public double getMaxHealth() {
-        return 20;
     }
 
     @Override
@@ -36,11 +26,6 @@ public class Mike extends Survivor {
     @Skill
     public void attack() {
 
-    }
-
-    @Override
-    public int getMaxShield() {
-        return 20;
     }
 
     @Override

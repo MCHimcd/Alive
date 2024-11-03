@@ -1,16 +1,25 @@
 package mc.alive.role.hunter;
 
+import mc.alive.Game;
+import mc.alive.PlayerData;
 import mc.alive.role.Role;
+import mc.alive.role.survivor.Survivor;
+import mc.alive.tick.TickRunnable;
 import mc.alive.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import static mc.alive.Alive.plugin;
 import static mc.alive.util.Message.rMsg;
 
-abstract public class Hunter extends Role {
+abstract public class Hunter extends Role implements TickRunnable {
+    protected List<Player> captured = new LinkedList<>();
     protected int skillFeature = -1;
     protected int otherFeature = -1;
     protected int pursuitFeature = -1;
@@ -18,6 +27,7 @@ abstract public class Hunter extends Role {
 
     protected Hunter(Player p, int id) {
         super(p, id);
+        startTick();
     }
 
     /**
@@ -90,6 +100,11 @@ abstract public class Hunter extends Role {
     abstract public double getAttackCD();
 
     /**
+     * @return 最大生命
+     */
+    abstract public double getMaxHealth();
+
+    /**
      * @param id 特质的id
      */
     public void setSkillFeature(int id) {
@@ -101,4 +116,24 @@ abstract public class Hunter extends Role {
      */
     abstract public List<ItemStack> getRedFeatures();
 
+    public void addCaptured(Player pl) {
+        captured.add(pl);
+        player.hidePlayer(plugin, pl);
+        ((Survivor) PlayerData.of(pl).getRole()).setCaptured(true);
+    }
+
+    public void removeCaptured(Player pl) {
+        captured.remove(pl);
+        player.showPlayer(plugin, pl);
+        ((Survivor) PlayerData.of(pl).getRole()).setCaptured(false);
+    }
+
+    @Override
+    public void tick() {
+        if (!Game.isRunning()) return;
+        captured.forEach(pl -> {
+            pl.teleport(player);
+            pl.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 100, true, false));
+        });
+    }
 }

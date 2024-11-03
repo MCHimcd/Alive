@@ -184,4 +184,5 @@ public class ItemListener implements Listener {
         //noinspection DataFlowIssue
         player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
     }
+
 }

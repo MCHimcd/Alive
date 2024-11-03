@@ -25,28 +25,13 @@ public class Jack extends Survivor {
     }
 
     @Override
-    public int getStrength() {
-        return 10;
-    }
-
-    @Override
     public double getSpeed() {
         return 0.1;
     }
 
     @Override
-    public double getMaxHealth() {
-        return 20;
-    }
-
-    @Override
     public void equip() {
         player.getInventory().setItem(0, ItemBuilder.material(Material.DIAMOND, 10200).name(Message.rMsg("<gold><bold>个人终端")).build());
-    }
-
-    @Override
-    public int getMaxShield() {
-        return 20;
     }
 
     @Override

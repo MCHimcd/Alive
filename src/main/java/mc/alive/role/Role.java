@@ -85,20 +85,9 @@ public abstract class Role {
     }
 
     /**
-     * @return 力量
-     */
-    abstract public int getStrength();
-
-    /**
      * @return 移动速度
      */
     abstract public double getSpeed();
-
-    /**
-     * @return 最大生命
-     */
-    abstract public double getMaxHealth();
-
 
     /**
      * 初始物品给予

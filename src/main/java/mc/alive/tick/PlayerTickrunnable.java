@@ -1,7 +1,7 @@
 package mc.alive.tick;
 
 import mc.alive.Game;
-import mc.alive.PlayerData;
+import mc.alive.effect.Giddy;
 import mc.alive.item.PickUp;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
@@ -91,7 +91,7 @@ public class PlayerTickrunnable implements TickRunnable {
                             if (entity.getType() != EntityType.ITEM) return false;
                             var item = (Item) entity;
                             PickUp pickUp = game.item_on_ground.get(item);
-                            var pd = PlayerData.of(player);
+                            var pd = of(player);
                             return pickUp != null && switch (pickUp) {
                                 case SURVIVOR -> pd.getRole() instanceof Survivor;
                                 case HUNTER -> pd.getRole() instanceof Hunter;
@@ -129,5 +129,14 @@ public class PlayerTickrunnable implements TickRunnable {
                 chosen_duct = m.getLocation();
             }
         }
+
+        //倒地
+        game.survivors.forEach(pl -> {
+            var pd = of(pl);
+            var s = ((Survivor) pd.getRole());
+            if (s.isDown()) {
+                pd.addEffect(new Giddy(pl, 1));
+            }
+        });
     }
 }

@@ -10,6 +10,7 @@ import mc.alive.effect.Invisibility;
 import mc.alive.effect.Slowness;
 import mc.alive.menu.SlotMenu;
 import mc.alive.role.hunter.Hunter;
+import mc.alive.role.survivor.Survivor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -23,10 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.Optional;
@@ -203,7 +201,7 @@ public class PlayerListener implements Listener {
 
             if (pd_damager.getRole() instanceof Hunter h) {
                 if (pd_damager.hasEffect(Invisibility.class)) pd_damager.removeEffect(Invisibility.class);
-                pd_hurt.damageOrHeal(pd_damager.getRole().getStrength());
+                pd_hurt.damageOrHeal(1);
                 pd_damager.attack_cd = h.getAttackCD();
             } else {
                 event.setCancelled(true);
@@ -228,5 +226,21 @@ public class PlayerListener implements Listener {
         if (pd == null || !(pd.getRole() instanceof Hunter h)) return;
         pd.addEffect(new Slowness(player, 20, 2));
         pd.attack_cd = h.getAttackCD();
+    }
+
+    @EventHandler
+    public void onInteractWithPlayer(PlayerInteractEntityEvent event) {
+        if (Game.isRunning() && event.getRightClicked() instanceof Player clicked) {
+            var pd = game.playerData.get(event.getPlayer());
+            if (pd.hasEffect(Giddy.class)) {
+                event.setCancelled(true);
+            }
+            var pd_clicked = game.playerData.get(clicked);
+            if (pd_clicked.getRole() instanceof Survivor survivor && pd.getRole() instanceof Hunter hunter) {
+                if (survivor.isDown()) {
+                    hunter.addCaptured(clicked);
+                }
+            }
+        }
     }
 }

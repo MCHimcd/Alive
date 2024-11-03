@@ -131,6 +131,7 @@ public final class Alive extends JavaPlugin implements Listener {
         if (team_hunter == null) {
             team_hunter = main_scoreboard.registerNewTeam("hunter");
             team_hunter.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+            team_hunter.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
             team_hunter.color(NamedTextColor.DARK_PURPLE);
         }
 
@@ -138,6 +139,7 @@ public final class Alive extends JavaPlugin implements Listener {
         if (team_survivor == null) {
             team_survivor = main_scoreboard.registerNewTeam("survivor");
             team_survivor.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.FOR_OTHER_TEAMS);
+            team_survivor.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
             team_survivor.color(NamedTextColor.DARK_GRAY);
         }
     }
