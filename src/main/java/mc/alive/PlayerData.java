@@ -101,12 +101,14 @@ public final class PlayerData implements TickRunnable {
         }
         if (role instanceof Survivor s) {
             if (amount > 0) {
+                //伤害
                 if (!s.isHurt()) {
                     s.setHurt(true);
                 } else {
                     s.setDown(true);
                 }
             } else {
+                //治疗
                 if (s.isDown()) {
                     s.setDown(false);
                 } else if (s.isHurt()) {
@@ -211,7 +213,7 @@ public final class PlayerData implements TickRunnable {
                 }));
         effects.removeIf(effect -> !(effect instanceof MultilevelEffect) && effect.shouldRemove());
 
-        //心跳
+        //心跳和受伤粒子
         if (Game.isRunning()) {
             if (role instanceof Survivor s) {
                 if (!s.isCaptured() && heartbeat_tick <= 0) {
@@ -219,49 +221,15 @@ public final class PlayerData implements TickRunnable {
                     player.spawnParticle(Particle.DUST, player.getEyeLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
                     heartbeat_tick = 40;
                 }
+                if (s.isHurt()) {
+                    player.spawnParticle(Particle.BLOCK, player.getLocation(), 10, 0.1, 0, 0.1, Bukkit.createBlockData(Material.REDSTONE_BLOCK));
+                }
+                if (s.isDown()) {
+                    player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0, 0.1, new Particle.DustOptions(Color.RED, 1));
+                }
             } else if (role instanceof Hunter hunter) {
                 player.getWorld().getNearbyPlayers(player.getLocation(), hunter.getPursuitFeature() == 0 ? 12 : 18, p -> !p.equals(player))
                         .forEach(pl -> --PlayerData.of(pl).heartbeat_tick);
-            }
-        }
-
-        //普攻冷却
-        attack_cd = Math.max(0, attack_cd - 0.05);
-        if (attack_cd > 0) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
-        }
-
-        //技能冷却
-        for (int i = 0; i < skill_cd.size(); i++) {
-            if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
-        }
-        //技能选择
-        current_skill_reset_cd = Math.max(0, current_skill_reset_cd - 1);
-        if (current_skill_reset_cd == 0) {
-            current_skill_id = 0;
-        }
-
-        //血量恢复
-        if (health_tick > 0) health_tick--;
-        if (role instanceof Hunter && health_tick == 0) {
-            damageOrHeal(-0.25);
-        }
-
-        //维修或破坏
-        var target = chosen_item_display.get(player);
-        if (fix_tick >= 0) {
-            if (--fix_tick == 0 && target != null) {
-                player.getLocation().getNearbyPlayers(20).forEach(player1 ->
-                        player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
-                if (role instanceof Survivor survivor) {
-                    game.fixGenerator(target, survivor.getFixSpeed());
-                } else if (role instanceof Hunter hunter && break_tick-- <= 0) {
-                    break_tick = 90 * 20;
-                    game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
-                }
-            }
-            if (role instanceof Hunter) {
-                addEffect(new Giddy(player, 1));
             }
         }
 
@@ -297,6 +265,47 @@ public final class PlayerData implements TickRunnable {
                 body.remove();
             }
         } else pickup_body_tick = 0;
+
+        //普攻冷却
+        attack_cd = Math.max(0, attack_cd - 0.05);
+        if (attack_cd > 0) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
+        }
+
+        //血量恢复
+        if (health_tick > 0) health_tick--;
+        if (role instanceof Hunter && health_tick == 0) {
+            damageOrHeal(-0.25);
+        }
+
+        //维修或破坏
+        var target = chosen_item_display.get(player);
+        if (fix_tick >= 0) {
+            if (--fix_tick == 0 && target != null) {
+                player.getLocation().getNearbyPlayers(20).forEach(player1 ->
+                        player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
+                if (role instanceof Survivor survivor) {
+                    game.fixGenerator(target, survivor.getFixSpeed());
+                } else if (role instanceof Hunter hunter && break_tick-- <= 0) {
+                    break_tick = 90 * 20;
+                    game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
+                }
+            }
+            if (role instanceof Hunter) {
+                addEffect(new Giddy(player, 1));
+            }
+        }
+
+        //技能冷却
+        for (int i = 0; i < skill_cd.size(); i++) {
+            if (skill_cd.get(i) > 0) skill_cd.set(i, skill_cd.get(i) - 1);
+        }
+
+        //技能选择
+        current_skill_reset_cd = Math.max(0, current_skill_reset_cd - 1);
+        if (current_skill_reset_cd == 0) {
+            current_skill_id = 0;
+        }
     }
 
     /**
