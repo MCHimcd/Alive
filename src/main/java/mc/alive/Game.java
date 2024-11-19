@@ -22,7 +22,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -118,7 +117,7 @@ public final class Game {
                 Role role = playerData1.getRole();
                 role.equip();
                 if (role instanceof Hunter h) //noinspection DataFlowIssue
-                    player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
+                    player.getAttribute(ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
             });
             summonEntities();
         } else {
@@ -149,7 +148,7 @@ public final class Game {
                             Role role = playerData1.getRole();
                             role.equip();
                             if (role instanceof Hunter h) //noinspection DataFlowIssue
-                                player.getAttribute(PLAYER_ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
+                                player.getAttribute(ENTITY_INTERACTION_RANGE).setBaseValue(h.getAttackRange());
                         });
                         summonEntities();
                         cancel();
@@ -335,7 +334,7 @@ public final class Game {
 
             if (data != null) {
                 is.editMeta(meta -> {
-                    meta.addAttributeModifier(Attribute.GENERIC_LUCK, new AttributeModifier(Door.key_id, data, AttributeModifier.Operation.ADD_NUMBER));
+                    meta.addAttributeModifier(LUCK, new AttributeModifier(Door.key_id, data, AttributeModifier.Operation.ADD_NUMBER));
                     //noinspection DataFlowIssue
                     meta.displayName(meta.displayName().append(rMsg(" #%d".formatted(data))));
                 });
@@ -388,9 +387,7 @@ public final class Game {
      */
     public void pause() {
         isPaused = true;
-        playerData.keySet().forEach(player -> {
-            player.sendMessage(rMsg("<dark_red>游戏暂停，若离开玩家未返回将在1分钟后自动结束"));
-        });
+        playerData.keySet().forEach(player -> player.sendMessage(rMsg("<dark_red>游戏暂停，若离开玩家未返回将在1分钟后自动结束")));
         pause_task = new BukkitRunnable() {
             @Override
             public void run() {
@@ -417,13 +414,13 @@ public final class Game {
 
     public static void resetPlayer(Player player) {
         Map.of(
-                GENERIC_MOVEMENT_SPEED, .1,
-                GENERIC_ATTACK_DAMAGE, 1.0,
-                GENERIC_MAX_ABSORPTION, 20.0,
-                GENERIC_ATTACK_SPEED, 255.0,
-                GENERIC_ATTACK_KNOCKBACK, -1.0,
-                GENERIC_JUMP_STRENGTH, .0,
-                PLAYER_ENTITY_INTERACTION_RANGE, 4.0
+                MOVEMENT_SPEED, .1,
+                ATTACK_DAMAGE, 1.0,
+                MAX_ABSORPTION, 20.0,
+                ATTACK_SPEED, 255.0,
+                ATTACK_KNOCKBACK, -1.0,
+                JUMP_STRENGTH, .0,
+                ENTITY_INTERACTION_RANGE, 4.0
         ).forEach((key, value) -> {
             var a = player.getAttribute(key);
             assert a != null;

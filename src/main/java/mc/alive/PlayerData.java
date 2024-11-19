@@ -131,7 +131,7 @@ public final class PlayerData implements TickRunnable {
             if (health < 0) player.setHealth(0.1);
             else player.setHealth(Math.max(0.1, 20 * health / h.getMaxHealth()));
             //减速
-            AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED));
+            AttributeInstance speed = requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED));
             if (health <= h.getMaxHealth() * 0.5) {
                 speed.setBaseValue(role.getSpeed() * 0.3);
             } else if (health <= h.getMaxHealth() * 0.2) {

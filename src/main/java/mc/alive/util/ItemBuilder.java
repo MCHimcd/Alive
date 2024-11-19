@@ -47,7 +47,7 @@ public final class ItemBuilder {
 
     public ItemBuilder unique() {
         item.editMeta(meta -> {
-            meta.addAttributeModifier(Attribute.GENERIC_LUCK, new AttributeModifier(new NamespacedKey(Alive.plugin, String.valueOf(new Random().nextDouble())), 1, AttributeModifier.Operation.ADD_NUMBER));
+            meta.addAttributeModifier(Attribute.LUCK, new AttributeModifier(new NamespacedKey(Alive.plugin, String.valueOf(new Random().nextDouble())), 1, AttributeModifier.Operation.ADD_NUMBER));
         });
         return this.hideAttributes();
     }

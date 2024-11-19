@@ -17,11 +17,11 @@ public class TriggerableTickrunnable implements TickRunnable {
         var pd_hunter = PlayerData.of(hunter);
 
         //竖直管道
-        hunter.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(.0);
+        hunter.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(.0);
         hunter.getLocation().getNearbyEntitiesByType(Marker.class, 1).forEach(marker -> {
             var tags = marker.getScoreboardTags();
             if (tags.contains("vertical_duct")) {
-                hunter.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).setBaseValue(100);
+                hunter.getAttribute(Attribute.JUMP_STRENGTH).setBaseValue(100);
             }
         });
     }

@@ -182,7 +182,7 @@ public class ItemListener implements Listener {
         pd.getRole().removeSkillLocation(Role.ZERO_LOC);
 
         //noinspection DataFlowIssue
-        player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(255);
+        player.getAttribute(Attribute.ATTACK_SPEED).setBaseValue(255);
     }
 
 }

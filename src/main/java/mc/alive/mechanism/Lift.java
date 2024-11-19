@@ -129,8 +129,7 @@ public class Lift {
                     players.forEach(player -> {
                         player.teleport(
                                 blockDisplay.getLocation().add(1.5, 0.5, 1.5),
-                                TeleportFlag.Relative.YAW,
-                                TeleportFlag.Relative.PITCH
+                                TeleportFlag.Relative.VELOCITY_ROTATION
                         );
                     });
                     cancel();
@@ -142,8 +141,7 @@ public class Lift {
                 players.forEach(player -> {
                     player.teleport(
                             player.getLocation().add(0, dy, 0),
-                            TeleportFlag.Relative.YAW,
-                            TeleportFlag.Relative.PITCH
+                            TeleportFlag.Relative.VELOCITY_ROTATION
                     );
                 });
                 blockDisplay.teleport(blockDisplay.getLocation().add(0, dy, 0));

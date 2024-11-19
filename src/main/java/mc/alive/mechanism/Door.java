@@ -43,7 +43,7 @@ public class Door {
     public void action(Player p) {
         Optional<ItemStack> key = Arrays.stream(p.getInventory().getContents()).filter(it -> {
             if (it == null || !it.hasItemMeta()) return false;
-            var am = it.getItemMeta().getAttributeModifiers(Attribute.GENERIC_LUCK);
+            var am = it.getItemMeta().getAttributeModifiers(Attribute.LUCK);
             if (am == null) return false;
             var data = am.stream().filter(attributeModifier -> attributeModifier.getKey().equals(key_id)).findFirst();
             return data.isPresent() && data.get().getAmount() == id;
