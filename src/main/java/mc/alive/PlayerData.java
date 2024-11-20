@@ -4,8 +4,6 @@ import mc.alive.effect.Effect;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.MultilevelEffect;
 import mc.alive.effect.Speed;
-import mc.alive.item.DoorCard;
-import mc.alive.item.GameItem;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import mc.alive.role.hunter.Hunter;
@@ -21,9 +19,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -43,24 +38,12 @@ public final class PlayerData implements TickRunnable {
     private final Role role;
     private final List<Integer> skill_cd = new ArrayList<>(Arrays.asList(0, 0, 0, 0));
     private final Map<Integer, Method> skill_methods = new HashMap<>();
-    //维修cd
-    public int fix_tick = -1;
-    //攻击cd
-    public double attack_cd = -1;
-    //心跳cd
-    public int heartbeat_tick = 0;
-    //hunter破坏机子cd
-    public int break_tick = 0;
+    public int generator_tick = -1;    //维修或破坏cd
     private Player player;
-    //选择的技能
-    private int current_skill_id = 0;
-    //选择技能重置cd
-    private int current_skill_reset_cd = 0;
+    private int current_skill_id = 0;    //选择的技能
+    private int current_skill_reset_cd = 0;    //选择技能重置cd
     private double health;
-    //hunter回血间隔
-    private int health_tick = 0;
-    //捡尸体计时
-    private int pickup_body_tick = 0;
+
 
     public PlayerData(Player player, Role role) {
         this.player = player;
@@ -101,19 +84,9 @@ public final class PlayerData implements TickRunnable {
         }
         if (role instanceof Survivor s) {
             if (amount > 0) {
-                //伤害
-                if (!s.isHurt()) {
-                    s.setHurt(true);
-                } else {
-                    s.setDown(true);
-                }
+                s.damage();
             } else {
-                //治疗
-                if (s.isDown()) {
-                    s.setDown(false);
-                } else if (s.isHurt()) {
-                    s.setHurt(false);
-                }
+                s.heal();
             }
             //加速
             addEffect(new Speed(player, 20, 0));
@@ -123,7 +96,7 @@ public final class PlayerData implements TickRunnable {
                 if (health >= 0) {
                     health -= amount;
                     //回血时间=剩余血量%*200
-                    health_tick = (int) Math.max(100, (Math.max(0, health / h.getMaxHealth()) * 400));
+                    h.resetHealthTick(health);
                     player.damage(0.01);
                 }
                 health = Math.max(-5, health);
@@ -162,6 +135,13 @@ public final class PlayerData implements TickRunnable {
     public static void setSkillCD(Player player, int index, int amount) {
         assert game != null;
         game.playerData.get(player).skill_cd.set(index, amount);
+    }
+
+    /**
+     * @return 玩家对应的PlayerData，若游戏未开始则返回null
+     */
+    public static PlayerData of(Player player) {
+        return game.playerData.get(player);
     }
 
     private void die() {
@@ -213,81 +193,15 @@ public final class PlayerData implements TickRunnable {
                 }));
         effects.removeIf(effect -> !(effect instanceof MultilevelEffect) && effect.shouldRemove());
 
-        //心跳和受伤粒子
-        if (Game.isRunning()) {
-            if (role instanceof Survivor s) {
-                if (!s.isCaptured() && heartbeat_tick <= 0) {
-                    player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
-                    player.spawnParticle(Particle.DUST, player.getEyeLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
-                    heartbeat_tick = 40;
-                }
-                if (s.isHurt()) {
-                    player.spawnParticle(Particle.BLOCK, player.getLocation(), 10, 0.1, 0, 0.1, Bukkit.createBlockData(Material.REDSTONE_BLOCK));
-                }
-                if (s.isDown()) {
-                    player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0, 0.1, new Particle.DustOptions(Color.RED, 1));
-                }
-            } else if (role instanceof Hunter hunter) {
-                player.getWorld().getNearbyPlayers(player.getLocation(), hunter.getPursuitFeature() == 0 ? 12 : 18, p -> !p.equals(player))
-                        .forEach(pl -> --PlayerData.of(pl).heartbeat_tick);
-            }
-        }
-
-        //捡尸体
-        if (role instanceof Survivor && player.isSneaking()) {
-            var body = game.pickable_bodies.keySet().stream()
-                    .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation().add(0, 1.5, 0), 1).contains(player))
-                    .findFirst().orElse(null);
-            if (body != null && ++pickup_body_tick == 60) {
-                Random r = new Random();
-                game.pickable_bodies.get(body).forEach(name -> {
-                    int key_id = 0, count = 1;
-                    var c_index = name.indexOf("*");
-                    if (c_index != -1) {
-                        count = Integer.parseInt(name.substring(c_index + 1));
-                        name = name.substring(0, c_index);
-                    }
-                    if (name.startsWith("DoorCard")) {
-                        key_id = Integer.parseInt(name.substring(8));
-                        name = "DoorCard";
-                    }
-                    var clazz = GameItem.registries.get(name);
-                    if (clazz != null) {
-                        var it = game.spawnItem(clazz, player.getLocation(), count, clazz.equals(DoorCard.class) ? key_id : null);
-                        it.setVelocity(new Vector(
-                                (r.nextBoolean() ? 1 : -1) * r.nextDouble() * 0.3,
-                                0.2,
-                                (r.nextBoolean() ? 1 : -1) * r.nextDouble() * 0.3
-                        ));
-                    }
-                });
-                game.pickable_bodies.remove(body);
-                body.remove();
-            }
-        } else pickup_body_tick = 0;
-
-        //普攻冷却
-        attack_cd = Math.max(0, attack_cd - 0.05);
-        if (attack_cd > 0) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
-        }
-
-        //血量恢复
-        if (health_tick > 0) health_tick--;
-        if (role instanceof Hunter && health_tick == 0) {
-            damageOrHeal(-0.25);
-        }
-
         //维修或破坏
         var target = chosen_item_display.get(player);
-        if (fix_tick >= 0) {
-            if (--fix_tick == 0 && target != null) {
+        if (generator_tick >= 0) {
+            if (--generator_tick == 0 && target != null) {
                 player.getLocation().getNearbyPlayers(20).forEach(player1 ->
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
                 if (role instanceof Survivor survivor) {
                     game.fixGenerator(target, survivor.getFixSpeed());
-                } else if (role instanceof Hunter hunter && break_tick-- <= 0) {
-                    break_tick = 90 * 20;
+                } else if (role instanceof Hunter hunter && hunter.breakTick()) {
                     game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
                 }
             }
@@ -306,13 +220,6 @@ public final class PlayerData implements TickRunnable {
         if (current_skill_reset_cd == 0) {
             current_skill_id = 0;
         }
-    }
-
-    /**
-     * @return 玩家对应的PlayerData，若游戏未开始则返回null
-     */
-    public static PlayerData of(Player player) {
-        return game.playerData.get(player);
     }
 
     /**

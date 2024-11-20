@@ -4,7 +4,6 @@ import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.role.Role;
 import mc.alive.role.survivor.Survivor;
-import mc.alive.tick.TickRunnable;
 import mc.alive.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -18,16 +17,18 @@ import java.util.List;
 import static mc.alive.Alive.plugin;
 import static mc.alive.util.Message.rMsg;
 
-abstract public class Hunter extends Role implements TickRunnable {
+abstract public class Hunter extends Role {
     protected List<Player> captured = new LinkedList<>();
     protected int skillFeature = -1;
     protected int otherFeature = -1;
     protected int pursuitFeature = -1;
     protected int level = 0;
+    private int break_tick = 0;    //hunter破坏机子cd
+    private double attack_cd = -1;  //攻击cd
+    private int health_tick = 0;    //回血间隔
 
     protected Hunter(Player p, int id) {
         super(p, id);
-        startTick();
     }
 
     /**
@@ -51,6 +52,15 @@ abstract public class Hunter extends Role implements TickRunnable {
                         .build()
         );
     }
+
+    public void resetHealthTick(double health) {
+        health_tick = (int) Math.max(100, (Math.max(0, health / getMaxHealth()) * 400));
+    }
+
+    /**
+     * @return 最大生命
+     */
+    abstract public double getMaxHealth();
 
     public int getLevel() {
         return level;
@@ -95,14 +105,23 @@ abstract public class Hunter extends Role implements TickRunnable {
     abstract public int getMaxLevel();
 
     /**
+     * 设置攻击cd
+     */
+    public void attack() {
+        attack_cd = getAttackCD();
+    }
+
+    /**
      * @return 攻击间隔(秒)
      */
     abstract public double getAttackCD();
 
     /**
-     * @return 最大生命
+     * @return 是否可以攻击
      */
-    abstract public double getMaxHealth();
+    public boolean canAttack() {
+        return attack_cd == 0;
+    }
 
     /**
      * @param id 特质的id
@@ -128,12 +147,32 @@ abstract public class Hunter extends Role implements TickRunnable {
         ((Survivor) PlayerData.of(pl).getRole()).setCaptured(false);
     }
 
+    public boolean breakTick() {
+        if (break_tick-- == 0) break_tick = 90 * 20;
+        return break_tick <= 0;
+    }
+
     @Override
     public void tick() {
         if (!Game.isRunning()) return;
+        //抓捕
         captured.forEach(pl -> {
             pl.teleport(player);
             pl.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 100, true, false));
         });
+        //普攻冷却
+        attack_cd = Math.max(0, attack_cd - 0.05);
+        if (attack_cd > 0) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 1, 100, true, false));
+        }
+        //血量恢复
+        if (health_tick > 0) health_tick--;
+        if (health_tick == 0) {
+            PlayerData.of(player).damageOrHeal(-0.25);
+        }
+        //心跳
+        player.getWorld().getNearbyPlayers(player.getLocation(), pursuitFeature == 0 ? 12 : 18, p -> !p.equals(player))
+                .forEach(pl -> ((Survivor) PlayerData.of(pl).getRole()).heartbeatTick());
     }
+
 }

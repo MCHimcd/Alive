@@ -143,7 +143,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        pd.fix_tick = -1;
+        pd.generator_tick = -1;
 
         if (pd.getRole() instanceof Hunter) {
             var from = event.getFrom();
@@ -194,15 +194,15 @@ public class PlayerListener implements Listener {
         if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player damager) {
             var pd_damager = PlayerData.of(damager);
             var pd_hurt = PlayerData.of(player);
-            if (pd_damager.attack_cd > 0) {
-                event.setCancelled(true);
-                return;
-            }
 
             if (pd_damager.getRole() instanceof Hunter h) {
+                if (!h.canAttack()) {
+                    event.setCancelled(true);
+                    return;
+                }
                 if (pd_damager.hasEffect(Invisibility.class)) pd_damager.removeEffect(Invisibility.class);
                 pd_hurt.damageOrHeal(1);
-                pd_damager.attack_cd = h.getAttackCD();
+                h.attack();
             } else {
                 event.setCancelled(true);
             }
@@ -225,7 +225,7 @@ public class PlayerListener implements Listener {
         var pd = PlayerData.of(player);
         if (pd == null || !(pd.getRole() instanceof Hunter h)) return;
         pd.addEffect(new Slowness(player, 20, 2));
-        pd.attack_cd = h.getAttackCD();
+        h.attack();
     }
 
     @EventHandler

@@ -102,8 +102,8 @@ public class ItemListener implements Listener {
             }
             //维修或破坏机子
             var target = chosen_item_display.get(player);
-            if (target != null && pd.fix_tick == -1) {
-                pd.fix_tick = 20;
+            if (target != null && pd.generator_tick == -1) {
+                pd.generator_tick = 20;
                 return;
             }
         }

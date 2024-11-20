@@ -3,6 +3,7 @@ package mc.alive.role;
 import mc.alive.Alive;
 import mc.alive.Game;
 import mc.alive.PlayerData;
+import mc.alive.tick.TickRunnable;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,7 +17,7 @@ import java.util.Set;
 
 import static mc.alive.Alive.plugin;
 
-public abstract class Role {
+public abstract class Role implements TickRunnable {
     /**
      * 用于蓄力技能
      */
@@ -31,6 +32,7 @@ public abstract class Role {
     protected Role(Player p, int id) {
         player = p;
         role_id = id;
+        startTick();
     }
 
     public static Role of(int id, Player player) {
@@ -118,4 +120,6 @@ public abstract class Role {
     protected void setSKillCD(int id, int cd) {
         PlayerData.setSkillCD(player, id, cd);
     }
+
+
 }
