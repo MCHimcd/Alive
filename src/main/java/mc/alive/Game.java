@@ -5,16 +5,14 @@ import mc.alive.item.GameItem;
 import mc.alive.item.PickUp;
 import mc.alive.item.pickup.PickUpHandler;
 import mc.alive.item.usable.Usable;
-import mc.alive.mechanism.Barrier;
-import mc.alive.mechanism.Door;
-import mc.alive.mechanism.Lift;
-import mc.alive.mechanism.LiftDoor;
+import mc.alive.mechanism.*;
 import mc.alive.menu.MainMenu;
 import mc.alive.role.ChooseRole;
 import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.hunter.SmokeGhost;
 import mc.alive.role.survivor.Mike;
+import mc.alive.role.survivor.Survivor;
 import mc.alive.tick.TickRunner;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.LocationFactory;
@@ -60,12 +58,14 @@ public final class Game {
     public final Map<Block, LiftDoor> liftDoors = new HashMap<>();
     public final List<Entity> markers = new LinkedList<>();
     public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
-    private final Map<ItemDisplay, Integer> fix_progress = new HashMap<>();
+    public final Map<ItemDisplay, SignalRepeater> signal_repeaters = new HashMap<>();
     public boolean isDebugging = false;
     public Player hunter;
     public BukkitTask pause_task = null;
     public boolean isPaused = false;
     public ChooseRole chooseRole;
+    private int survivorScore = 0;
+    private int hunterScore = 0;
 
     public Game(List<Player> players) {
         this(players, false);
@@ -182,11 +182,13 @@ public final class Game {
         });
 
         // 维修
-        locations_config.getList("fixes").forEach(fix -> {
-            var xyz = Arrays.stream(((String) fix).split(",")).mapToDouble(Double::parseDouble).toArray();
+        List<String> signalRepeaters = (List<String>) locations_config.getList("signal_repeaters");
+        Collections.shuffle(signalRepeaters);
+        signalRepeaters.stream().limit(6).forEach(fix -> {
+            var xyz = Arrays.stream(fix.split(",")).mapToDouble(Double::parseDouble).toArray();
             world.spawn(new Location(world, xyz[0], xyz[1], xyz[2]), ItemDisplay.class, id -> {
                 id.setItemStack(new ItemStack(Material.FEATHER));
-                fix_progress.put(id, 0);
+                signal_repeaters.put(id, new SignalRepeater(id));
             });
         });
 
@@ -393,7 +395,7 @@ public final class Game {
             public void run() {
                 end(null);
             }
-        }.runTaskLater(Alive.plugin, 1200);
+        }.runTaskLater(plugin, 1200);
     }
 
     /**
@@ -402,14 +404,14 @@ public final class Game {
      */
     public void end(@Nullable Player ender) {
         destroy();
-        game = null;
         playerData.keySet().forEach(Game::resetPlayer);
         Bukkit.getScheduler().cancelTasks(plugin);
         new TickRunner().runTaskTimer(plugin, 0, 1);
         var world = Bukkit.getWorld("world");
         assert world != null;
         if (ender != null) world.sendMessage(ender.name().append(rMsg("强制结束了游戏")));
-        else world.sendMessage(rMsg("游戏结束"));
+        else world.sendMessage(rMsg("游戏结束,%s胜利".formatted(survivorScore > hunterScore ? "幸存者" : "猎人")));
+        game = null;
     }
 
     public static void resetPlayer(Player player) {
@@ -466,7 +468,7 @@ public final class Game {
         if (chooseRole != null) {
             chooseRole.roles.keySet().forEach(Entity::remove);
         }
-        fix_progress.keySet().forEach(Entity::remove);
+        signal_repeaters.keySet().forEach(Entity::remove);
         item_on_ground.keySet().forEach(Entity::remove);
         pickable_bodies.keySet().forEach(Entity::remove);
         for (BlockDisplay blockDisplay : lifts.keySet()) {
@@ -474,37 +476,6 @@ public final class Game {
             blockDisplay.remove();
         }
         markers.forEach(Entity::remove);
-    }
-
-    /**
-     * 修复机子
-     * @param id 机子的实体
-     * @param amount 修复数（可为0已返回进度）
-     * @return 修复后的进度
-     */
-    public int fixGenerator(ItemDisplay id, int amount) {
-        int currentProgress = fix_progress.getOrDefault(id, 0);
-        int finalAmount = currentProgress + amount;
-
-        if (finalAmount >= 400) {
-            fix_progress.remove(id);
-            id.remove();
-            Bukkit.broadcast(rMsg("fix complete"));
-        } else {
-            fix_progress.put(id, finalAmount);
-        }
-
-        return finalAmount;
-    }
-
-    /**
-     * 破坏机子
-     * @param id 机子的实体
-     * @param percent new = old * percent
-     */
-    public void breakGenerator(ItemDisplay id, double percent) {
-        int currentProgress = fix_progress.getOrDefault(id, 0);
-        fix_progress.put(id, (int) (currentProgress * percent));
     }
 
     public void spawnPlayerBody(Player player) {
@@ -519,5 +490,37 @@ public final class Game {
         }));
     }
 
+    public void intoSecondStage() {
+        Bukkit.getScheduler().runTaskLater(plugin, _ -> {
+            ((Hunter) playerData.get(hunter).getRole()).strengthen();
+            Portal.summon();
+        }, 20 * 60);
+    }
 
+    /**
+     * 幸存者通过传送门逃出
+     * @param player 逃出的人
+     */
+    public void survivorRunOut(Player player) {
+        survivorScore += 6;
+        Game.resetPlayer(player);
+        player.setGameMode(GameMode.SPECTATOR);
+        Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
+            game.survivors.remove(player);
+            if (game.survivors.isEmpty()) {
+                TickRunner.gameEnd = true;
+            }
+        });
+    }
+
+    /**
+     * 封印幸存者
+     * @param player 被封印者
+     * @param dom 鬼界
+     */
+    public void sealSurvivor(Player player, GhostDom dom) {
+        var pd = PlayerData.of(player);
+        if (((Survivor) pd.getRole()).seal(dom)) hunterScore += 6;
+        hunterScore++;
+    }
 }

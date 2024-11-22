@@ -56,9 +56,9 @@ public class PlayerTickrunnable implements TickRunnable {
                             td.setGlowing(true);
                         }
                     } else {
-                        double progress = (double) game.fixGenerator(td, 0) / 400;
+                        double progress = (double) game.signal_repeaters.get(td).getProgress() / 400;
                         int a = (int) (progress * 40);
-                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.fixGenerator(td, 0))));
+                        player.sendActionBar(rMsg("<yellow>" + "|".repeat(a) + "<white>" + "|".repeat(40 - a) + "     <red> %d / 400".formatted(game.signal_repeaters.get(td).getProgress())));
                     }
                     chosen_item_display.put(player, td);
                 }

@@ -2,6 +2,7 @@ package mc.alive.role.hunter;
 
 import mc.alive.Game;
 import mc.alive.PlayerData;
+import mc.alive.mechanism.GhostDom;
 import mc.alive.role.Role;
 import mc.alive.role.survivor.Survivor;
 import mc.alive.util.ItemBuilder;
@@ -23,6 +24,7 @@ abstract public class Hunter extends Role {
     protected int otherFeature = -1;
     protected int pursuitFeature = -1;
     protected int level = 0;
+    protected boolean strengthened = false; //第二阶段强化
     private int break_tick = 0;    //hunter破坏机子cd
     private double attack_cd = -1;  //攻击cd
     private int health_tick = 0;    //回血间隔
@@ -117,6 +119,13 @@ abstract public class Hunter extends Role {
     abstract public double getAttackCD();
 
     /**
+     * 第二阶段的强化
+     */
+    public void strengthen() {
+        strengthened = true;
+    }
+
+    /**
      * @return 是否可以攻击
      */
     public boolean canAttack() {
@@ -141,6 +150,13 @@ abstract public class Hunter extends Role {
         ((Survivor) PlayerData.of(pl).getRole()).setCaptured(true);
     }
 
+    public void sealCaptured(GhostDom dom) {
+        captured.forEach(pl -> {
+            getGame().sealSurvivor(pl, dom);
+            removeCaptured(pl);
+        });
+    }
+
     public void removeCaptured(Player pl) {
         captured.remove(pl);
         player.showPlayer(plugin, pl);
@@ -151,6 +167,7 @@ abstract public class Hunter extends Role {
         if (break_tick-- == 0) break_tick = 90 * 20;
         return break_tick <= 0;
     }
+
 
     @Override
     public void tick() {

@@ -1,9 +1,12 @@
 package mc.alive.role.survivor;
 
 import mc.alive.Game;
+import mc.alive.PlayerData;
 import mc.alive.StoredData;
+import mc.alive.effect.Giddy;
 import mc.alive.item.DoorCard;
 import mc.alive.item.GameItem;
+import mc.alive.mechanism.GhostDom;
 import mc.alive.role.Role;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -21,6 +24,7 @@ abstract public class Survivor extends Role {
     protected boolean down = false;
     protected boolean captured = false;
     private int pickup_body_tick = 0;   //捡尸体计时
+    private int seal_count = 0; //被封印次数
 
     protected Survivor(Player p, int id) {
         super(p, id);
@@ -35,20 +39,8 @@ abstract public class Survivor extends Role {
      */
     abstract public int getFixSpeed();
 
-    public boolean isHurt() {
-        return hurt;
-    }
-
-    public void setHurt(boolean hurt) {
-        this.hurt = hurt;
-    }
-
     public boolean isDown() {
         return down;
-    }
-
-    public void setDown(boolean down) {
-        this.down = down;
     }
 
     public void setCaptured(boolean captured) {
@@ -58,7 +50,7 @@ abstract public class Survivor extends Role {
     public void heartbeatTick() {
         if (heartbeat_tick > 0) heartbeat_tick--;
     }
-    
+
     public void damage() {
         if (!hurt) hurt = true;
         else down = true;
@@ -69,11 +61,20 @@ abstract public class Survivor extends Role {
         else if (hurt) hurt = false;
     }
 
+    public boolean seal(GhostDom dom) {
+        if (++seal_count == 3) {
+            PlayerData.of(player).die();
+            return true;
+        }
+        dom.addPlayer(player);
+        return false;
+    }
+
     @Override
     public void tick() {
         if (!Game.isRunning()) return;
         //捡尸体
-        if (player.isSneaking()) {
+        if (player.isSneaking() && !down) {
             var body = game.pickable_bodies.keySet().stream()
                     .filter(entity -> player.getWorld().getNearbyPlayers(entity.getLocation().add(0, 1.5, 0), 1).contains(player))
                     .findFirst().orElse(null);
@@ -114,6 +115,7 @@ abstract public class Survivor extends Role {
         }
         if (down) {
             player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0, 0.1, new Particle.DustOptions(Color.RED, 1));
+            getPlayerData().addEffect(new Giddy(player, 2));
         }
     }
 }

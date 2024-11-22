@@ -4,6 +4,7 @@ import mc.alive.effect.Effect;
 import mc.alive.effect.Giddy;
 import mc.alive.effect.MultilevelEffect;
 import mc.alive.effect.Speed;
+import mc.alive.mechanism.SignalRepeater;
 import mc.alive.role.Role;
 import mc.alive.role.Skill;
 import mc.alive.role.hunter.Hunter;
@@ -144,7 +145,7 @@ public final class PlayerData implements TickRunnable {
         return game.playerData.get(player);
     }
 
-    private void die() {
+    public void die() {
         player.getWorld().sendMessage(player.displayName().append(rMsg("%s".formatted(List.of(
                 "去世了",
                 "离开了人间."
@@ -199,10 +200,12 @@ public final class PlayerData implements TickRunnable {
             if (--generator_tick == 0 && target != null) {
                 player.getLocation().getNearbyPlayers(20).forEach(player1 ->
                         player1.playSound(player1, Sound.ENTITY_IRON_GOLEM_REPAIR, 1f, 1f));
+                SignalRepeater signalRepeater = game.signal_repeaters.get(target);
                 if (role instanceof Survivor survivor) {
-                    game.fixGenerator(target, survivor.getFixSpeed());
+                    if (!signalRepeater.isFixed())
+                        signalRepeater.fix(survivor.getFixSpeed());
                 } else if (role instanceof Hunter hunter && hunter.breakTick()) {
-                    game.breakGenerator(target, hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
+                    signalRepeater.destroy(hunter.getOtherFeature() == 0 ? 0.8 : 0.9);
                 }
             }
             if (role instanceof Hunter) {

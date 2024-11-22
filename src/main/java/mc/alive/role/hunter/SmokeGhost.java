@@ -28,6 +28,11 @@ public class SmokeGhost extends Hunter {
     }
 
     @Override
+    public double getMaxHealth() {
+        return 80;
+    }
+
+    @Override
     public double getAttackRange() {
         return 2;
     }
@@ -40,11 +45,6 @@ public class SmokeGhost extends Hunter {
     @Override
     public double getAttackCD() {
         return 2;
-    }
-
-    @Override
-    public double getMaxHealth() {
-        return 80;
     }
 
     @Override
