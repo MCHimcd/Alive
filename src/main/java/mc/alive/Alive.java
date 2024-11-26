@@ -167,7 +167,7 @@ public final class Alive extends JavaPlugin implements Listener {
                     Commands.literal("test")
                             .executes(ctx -> {
                                 if (ctx.getSource().getSender() instanceof Player) {
-                                    List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().limit(2).toList());
+                                    List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers().stream().limit(3).toList());
                                     game = new Game(players, true);
                                 }
                                 return Command.SINGLE_SUCCESS;

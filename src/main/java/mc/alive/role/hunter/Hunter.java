@@ -1,5 +1,6 @@
 package mc.alive.role.hunter;
 
+import io.papermc.paper.entity.TeleportFlag;
 import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.mechanism.GhostDom;
@@ -151,16 +152,16 @@ abstract public class Hunter extends Role {
     }
 
     public void sealCaptured(GhostDom dom) {
-        captured.forEach(pl -> {
+        for (var it = captured.iterator(); it.hasNext(); ) {
+            var pl = it.next();
+            pl.teleport(dom.getLocation(), TeleportFlag.Relative.VELOCITY_ROTATION);
             getGame().sealSurvivor(pl, dom);
-            removeCaptured(pl);
-        });
-    }
-
-    public void removeCaptured(Player pl) {
-        captured.remove(pl);
-        player.showPlayer(plugin, pl);
-        ((Survivor) PlayerData.of(pl).getRole()).setCaptured(false);
+            player.showPlayer(plugin, pl);
+            Survivor survivor = (Survivor) PlayerData.of(pl).getRole();
+            survivor.setCaptured(false);
+            survivor.damage();
+            it.remove();
+        }
     }
 
     public boolean breakTick() {
@@ -173,10 +174,7 @@ abstract public class Hunter extends Role {
     public void tick() {
         if (!Game.isRunning()) return;
         //抓捕
-        captured.forEach(pl -> {
-            pl.teleport(player);
-            pl.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 100, true, false));
-        });
+        captured.forEach(pl -> pl.teleport(player));
         //普攻冷却
         attack_cd = Math.max(0, attack_cd - 0.05);
         if (attack_cd > 0) {

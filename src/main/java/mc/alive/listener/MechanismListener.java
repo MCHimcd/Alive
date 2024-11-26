@@ -50,7 +50,7 @@ public class MechanismListener implements Listener {
         }
 
         //板子
-        Barrier barrier = MechanismTickrunnable.chosenBarriers.get(player);
+        Barrier barrier = Barrier.chosenBarriers.get(player);
         if (barrier != null) {
             barrier.trigger(role instanceof Hunter, player);
         }

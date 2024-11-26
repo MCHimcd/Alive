@@ -10,6 +10,8 @@ import mc.alive.mechanism.GhostDom;
 import mc.alive.role.Role;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
@@ -22,12 +24,17 @@ abstract public class Survivor extends Role {
     public int heartbeat_tick = 0;    //心跳cd
     protected boolean hurt = false;
     protected boolean down = false;
+    protected boolean sealed = false;
     protected boolean captured = false;
     private int pickup_body_tick = 0;   //捡尸体计时
     private int seal_count = 0; //被封印次数
 
     protected Survivor(Player p, int id) {
         super(p, id);
+    }
+
+    public boolean isSealed() {
+        return sealed;
     }
 
     public int getFeature() {
@@ -52,6 +59,7 @@ abstract public class Survivor extends Role {
     }
 
     public void damage() {
+        if (down) sealed = true;
         if (!hurt) hurt = true;
         else down = true;
     }
@@ -59,6 +67,7 @@ abstract public class Survivor extends Role {
     public void heal() {
         if (down) down = false;
         else if (hurt) hurt = false;
+        if (sealed) sealed = false;
     }
 
     public boolean seal(GhostDom dom) {
@@ -67,6 +76,7 @@ abstract public class Survivor extends Role {
             return true;
         }
         dom.addPlayer(player);
+        sealed = true;
         return false;
     }
 
@@ -105,17 +115,20 @@ abstract public class Survivor extends Role {
                 body.remove();
             }
         } else pickup_body_tick = 0;
-        if (!captured && heartbeat_tick <= 0) {
+        if (!captured && !sealed && heartbeat_tick <= 0) {
             player.playSound(player, Sound.BLOCK_ANVIL_LAND, 1, 1);
             player.spawnParticle(Particle.DUST, player.getEyeLocation(), 10, 0.1, 0.2, 0.1, new Particle.DustOptions(Color.RED, 1));
             heartbeat_tick = 40;
         }
-        if (hurt) {
-            player.spawnParticle(Particle.BLOCK, player.getLocation(), 10, 0.1, 0, 0.1, Bukkit.createBlockData(Material.REDSTONE_BLOCK));
+        if (hurt && !sealed && !down) {
+            player.getWorld().spawnParticle(Particle.BLOCK, player.getLocation(), 10, 0.1, 0, 0.1, Bukkit.createBlockData(Material.REDSTONE_BLOCK));
         }
-        if (down) {
-            player.spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0, 0.1, new Particle.DustOptions(Color.RED, 1));
+        if (down && !sealed) {
+            player.getWorld().spawnParticle(Particle.DUST, player.getLocation(), 10, 0.1, 0, 0.1, new Particle.DustOptions(Color.RED, 1));
             getPlayerData().addEffect(new Giddy(player, 2));
+        }
+        if (down || captured || sealed) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 100, true, false));
         }
     }
 }

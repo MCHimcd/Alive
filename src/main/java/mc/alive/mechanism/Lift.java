@@ -2,6 +2,7 @@ package mc.alive.mechanism;
 
 import io.papermc.paper.entity.TeleportFlag;
 import mc.alive.Game;
+import mc.alive.tick.TickRunnable;
 import mc.alive.util.ItemBuilder;
 import mc.alive.util.LocationFactory;
 import org.bukkit.Material;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -24,7 +26,7 @@ import java.util.function.BiConsumer;
 import static mc.alive.Alive.plugin;
 import static mc.alive.util.Message.rMsg;
 
-public class Lift {
+public class Lift implements TickRunnable {
     private final BlockDisplay blockDisplay;
     private final int max_floor;
     public List<Player> players = new ArrayList<>();
@@ -37,6 +39,7 @@ public class Lift {
         this.blockDisplay = blockDisplay;
         this.max_floor = max_floor;
         LocationFactory.replace2x2Lift(blockDisplay.getLocation(), Material.BARRIER, BlockFace.SELF);
+        startTick();
     }
 
     /**
@@ -96,6 +99,20 @@ public class Lift {
     public boolean changeFloor() {
         floor += getTargetDirection();
         return floor == target_floor;
+    }
+
+    @Override
+    public void tick() {
+        if (!Game.isRunning()) return;
+        players.clear();
+        blockDisplay.getWorld().getNearbyPlayers(blockDisplay.getLocation(), 3).forEach(player -> {
+            if (player.getBoundingBox().overlaps(new BoundingBox(
+                    blockDisplay.getX() + 0.6, blockDisplay.getY() + 0.3, blockDisplay.getZ() + 0.6,
+                    blockDisplay.getX() + 1.4, blockDisplay.getY() + 1.3, blockDisplay.getZ() + 1.4
+            ))) {
+                players.add(player);
+            }
+        });
     }
 
     public record Result(ItemStack item, BiConsumer<ItemStack, Player> function) {

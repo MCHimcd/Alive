@@ -1,19 +1,26 @@
 package mc.alive.mechanism;
 
+import mc.alive.Game;
 import mc.alive.PlayerData;
 import mc.alive.effect.Giddy;
+import mc.alive.tick.TickRunnable;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.RayTraceResult;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static mc.alive.Alive.plugin;
 import static mc.alive.Game.game;
 import static mc.alive.util.Message.rMsg;
 
-public class Barrier {
+public class Barrier implements TickRunnable {
+    public static final Map<Player, Barrier> chosenBarriers = new HashMap<>();
     private final BlockFace face;
     private final Location start;
     private final BoundingBox boundingBox;
@@ -29,6 +36,7 @@ public class Barrier {
                 start.getX(), start.getY(), start.getZ(),
                 start.getX() + (face == BlockFace.EAST ? 2 : 1), start.getY() + 2, start.getZ() + (face == BlockFace.NORTH ? 2 : 1)
         );
+        startTick();
     }
 
     /**
@@ -36,10 +44,6 @@ public class Barrier {
      */
     public boolean isTriggered() {
         return triggered;
-    }
-
-    public BoundingBox getBoundingBox() {
-        return boundingBox;
     }
 
     public BlockFace getFace() {
@@ -75,5 +79,28 @@ public class Barrier {
                 }
             }
         }.runTaskTimer(plugin, 0, 1);
+    }
+
+    @Override
+    public void tick() {
+        if (!Game.isRunning()) return;
+        isChosen = false;
+        start.getNearbyPlayers(4).forEach(player -> {
+            BoundingBox boundingBox = getBoundingBox();
+            RayTraceResult result = boundingBox.rayTrace(player.getEyeLocation().toVector(), player.getEyeLocation().getDirection(), 3);
+            if (result != null) {
+                isChosen = true;
+                chosenBarriers.put(player, this);
+            }
+        });
+        if (!isChosen && tick_task != null) {
+            tick = 0;
+            tick_task.cancel();
+            tick_task = null;
+        }
+    }
+
+    public BoundingBox getBoundingBox() {
+        return boundingBox;
     }
 }

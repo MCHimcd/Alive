@@ -201,8 +201,12 @@ public class PlayerListener implements Listener {
                     return;
                 }
                 if (pd_damager.hasEffect(Invisibility.class)) pd_damager.removeEffect(Invisibility.class);
-                pd_hurt.damageOrHeal(1);
                 h.attack();
+                if (pd_hurt.getRole() instanceof Survivor survivor && (survivor.isSealed() || survivor.isDown())) {
+                    event.setCancelled(true);
+                    return;
+                }
+                pd_hurt.damageOrHeal(1);
             } else {
                 event.setCancelled(true);
             }
@@ -237,7 +241,7 @@ public class PlayerListener implements Listener {
             }
             var pd_clicked = game.playerData.get(clicked);
             if (pd_clicked.getRole() instanceof Survivor survivor && pd.getRole() instanceof Hunter hunter) {
-                if (survivor.isDown()) {
+                if (survivor.isDown() && !survivor.isSealed()) {
                     hunter.addCaptured(clicked);
                 }
             }

@@ -11,6 +11,7 @@ import mc.alive.role.ChooseRole;
 import mc.alive.role.Role;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.hunter.SmokeGhost;
+import mc.alive.role.survivor.Dealt;
 import mc.alive.role.survivor.Mike;
 import mc.alive.role.survivor.Survivor;
 import mc.alive.tick.TickRunner;
@@ -86,6 +87,11 @@ public final class Game {
             playerData.put(p2, new PlayerData(p2, new Mike(p2)));
             survivors = new ArrayList<>();
             survivors.add(p2);
+            Player p3 = players.get(2);
+            if (p3 != null) {
+                playerData.put(p3, new PlayerData(p3, new Dealt(p3)));
+                survivors.add(p3);
+            }
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -296,6 +302,8 @@ public final class Game {
             Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
             barriers.put(location, new Barrier(location, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH));
         }
+
+        GhostDom.summon();
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
@@ -404,6 +412,7 @@ public final class Game {
      */
     public void end(@Nullable Player ender) {
         destroy();
+        game = null;
         playerData.keySet().forEach(Game::resetPlayer);
         Bukkit.getScheduler().cancelTasks(plugin);
         new TickRunner().runTaskTimer(plugin, 0, 1);
@@ -411,7 +420,6 @@ public final class Game {
         assert world != null;
         if (ender != null) world.sendMessage(ender.name().append(rMsg("强制结束了游戏")));
         else world.sendMessage(rMsg("游戏结束,%s胜利".formatted(survivorScore > hunterScore ? "幸存者" : "猎人")));
-        game = null;
     }
 
     public static void resetPlayer(Player player) {
@@ -476,6 +484,8 @@ public final class Game {
             blockDisplay.remove();
         }
         markers.forEach(Entity::remove);
+        TickRunner.tickRunnable.clear();
+        TickRunner.effectList.clear();
     }
 
     public void spawnPlayerBody(Player player) {
@@ -511,6 +521,7 @@ public final class Game {
                 TickRunner.gameEnd = true;
             }
         });
+        Bukkit.broadcastMessage(String.valueOf(survivorScore));
     }
 
     /**
@@ -520,7 +531,10 @@ public final class Game {
      */
     public void sealSurvivor(Player player, GhostDom dom) {
         var pd = PlayerData.of(player);
-        if (((Survivor) pd.getRole()).seal(dom)) hunterScore += 6;
+        Survivor survivor = (Survivor) pd.getRole();
+        if (survivor.isSealed()) return;
         hunterScore++;
+        if (survivor.seal(dom)) hunterScore += 6;
+        Bukkit.broadcastMessage(String.valueOf(hunterScore));
     }
 }

@@ -1,7 +1,6 @@
 package mc.alive.tick;
 
 import mc.alive.Game;
-import mc.alive.effect.Giddy;
 import mc.alive.item.PickUp;
 import mc.alive.role.hunter.Hunter;
 import mc.alive.role.survivor.Survivor;
@@ -129,14 +128,5 @@ public class PlayerTickrunnable implements TickRunnable {
                 chosen_duct = m.getLocation();
             }
         }
-
-        //倒地
-        game.survivors.forEach(pl -> {
-            var pd = of(pl);
-            var s = ((Survivor) pd.getRole());
-            if (s.isDown()) {
-                pd.addEffect(new Giddy(pl, 1));
-            }
-        });
     }
 }
