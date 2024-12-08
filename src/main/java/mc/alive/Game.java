@@ -44,6 +44,7 @@ import static mc.alive.util.Message.rMsg;
 import static org.bukkit.attribute.Attribute.*;
 
 
+@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class Game {
     public static Team team_hunter;
     public static Team team_survivor;
@@ -60,6 +61,8 @@ public final class Game {
     public final List<Entity> markers = new LinkedList<>();
     public final Map<Entity, List<String>> pickable_bodies = new HashMap<>();
     public final Map<ItemDisplay, SignalRepeater> signal_repeaters = new HashMap<>();
+    private final Random random = new Random();
+    private final World world = Bukkit.getWorld("world");
     public boolean isDebugging = false;
     public Player hunter;
     public BukkitTask pause_task = null;
@@ -167,12 +170,21 @@ public final class Game {
     /**
      * 生成由locations.yml决定的固定位置实体
      */
-    @SuppressWarnings({"DataFlowIssue", "unchecked"})
     private void summonEntities() {
-        Random random = new Random();
-        var world = Bukkit.getWorld("world");
+
         assert world != null;
 
+        spawnDucts();
+        spawnSignalRepeaters();
+        spawnPickableItems();
+        spawnDoors();
+        spawnLifts();
+        spawnBodies();
+        spawnBarriers();
+        GhostDom.summon();
+    }
+
+    private void spawnDucts() {
         // 管道入口
         locations_config.getList("ducts.entrance").forEach(duct -> {
             var xyz = Arrays.stream(((String) duct).split(",")).mapToDouble(Double::parseDouble).toArray();
@@ -186,7 +198,9 @@ public final class Game {
                 e.addScoreboardTag("vertical_duct");
             });
         });
+    }
 
+    private void spawnSignalRepeaters() {
         // 维修
         List<String> signalRepeaters = (List<String>) locations_config.getList("signal_repeaters");
         Collections.shuffle(signalRepeaters);
@@ -197,7 +211,9 @@ public final class Game {
                 signal_repeaters.put(id, new SignalRepeater(id));
             });
         });
+    }
 
+    private void spawnPickableItems() {
         //可拾取物品
         var itemsInfo = (List<String>) locations_config.getList("items");
         for (String item : itemsInfo) {
@@ -224,86 +240,6 @@ public final class Game {
                 }
             });
         }
-
-        //密码门
-        var doorsInfo = (List<String>) locations_config.getList("doors");
-        int id_g = 0;
-        Door[] r_doors = new Door[4];
-        for (String doorInfo : doorsInfo) {
-            var info = doorInfo.split(" ");
-            var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
-            Location start = new Location(world, xyz[0], xyz[1], xyz[2]);
-            Door door = new Door(start, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH, ++id_g);
-            doors.put(start, door);
-            if (id_g <= 4) r_doors[id_g - 1] = door;
-            if (id_g == 5) door.open();
-        }
-        //开局4个门中随机一个没锁
-        r_doors[random.nextInt(4)].open();
-
-        //电梯
-        var liftsInfo = (List<String>) locations_config.getList("lifts");
-        for (String liftInfo : liftsInfo) {
-            var info = liftInfo.split(" ");
-            var xyz_lift = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
-            var blockDisplay = world.spawn(new Location(world, xyz_lift[0], xyz_lift[1], xyz_lift[2]), BlockDisplay.class, bd -> {
-                bd.setTransformation(new Transformation(
-                        new Vector3f(),
-                        new AxisAngle4f(),
-                        new Vector3f(2, 0.3f, 2),
-                        new AxisAngle4f()
-                ));
-                bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
-            });
-            var lift = new Lift(blockDisplay, 3);
-            lifts.put(blockDisplay, lift);
-            //电梯门
-            for (int i = 1; i < info.length; i++) {
-                var xyz_liftDoor = Arrays.stream(info[i].split(",")).mapToInt(Integer::parseInt).toArray();
-                var block = world.getBlockAt(xyz_liftDoor[0], xyz_liftDoor[1], xyz_liftDoor[2]);
-                LiftDoor liftDoor = new LiftDoor(block, lift, i);
-                if (i == 1) liftDoor.openDoor();
-                else liftDoor.closeDoor();
-                liftDoors.put(block, liftDoor);
-            }
-        }
-
-        //尸体
-        Map<Location, List<String>> final_names = new HashMap<>();
-        Map<String, List<Location>> r_locs = new HashMap<>(); // 没个门卡随机一个位置
-        var bodiesInfo = (List<String>) locations_config.getList("bodies.locs");
-        for (String bodyInfo : bodiesInfo) {
-            var info = bodyInfo.split(" ");
-            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
-            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
-            List<String> names = new ArrayList<>();
-            Arrays.stream(info).skip(1).forEach(name -> {
-                if (name.matches("^DoorCard\\d+$")) {
-                    //是门钥匙
-                    r_locs.computeIfAbsent(name, _ -> new ArrayList<>())
-                            .add(location);
-                } else {
-                    //todo 其他物品随机
-                }
-            });
-            final_names.putIfAbsent(location, names);
-        }
-        r_locs.forEach((name, locs) -> {
-            //随机一个尸体
-            final_names.get(locs.get(random.nextInt(locs.size()))).add(name);
-        });
-        final_names.forEach(this::spawnPickableBody);
-
-        //板子
-        var barriersInfo = (List<String>) locations_config.getList("barriers");
-        for (String barrierInfo : barriersInfo) {
-            var info = barrierInfo.split(" ");
-            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
-            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
-            barriers.put(location, new Barrier(location, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH));
-        }
-
-        GhostDom.summon();
     }
 
     public void spawnItem(Class<? extends GameItem> game_item, Location location, int amount) {
@@ -364,6 +300,81 @@ public final class Game {
         });
     }
 
+    private void spawnDoors() {
+        //密码门
+        var doorsInfo = (List<String>) locations_config.getList("doors");
+        int id_g = 0;
+        Door[] r_doors = new Door[4];
+        for (String doorInfo : doorsInfo) {
+            var info = doorInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToInt(Integer::parseInt).toArray();
+            Location start = new Location(world, xyz[0], xyz[1], xyz[2]);
+            Door door = new Door(start, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH, ++id_g);
+            doors.put(start, door);
+            if (id_g <= 4) r_doors[id_g - 1] = door;
+            if (id_g == 5) door.open();
+        }
+        //开局4个门中随机一个没锁
+        r_doors[random.nextInt(4)].open();
+    }
+
+    private void spawnLifts() {
+        //电梯
+        var liftsInfo = (List<String>) locations_config.getList("lifts");
+        for (String liftInfo : liftsInfo) {
+            var info = liftInfo.split(" ");
+            var xyz_lift = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
+            var blockDisplay = world.spawn(new Location(world, xyz_lift[0], xyz_lift[1], xyz_lift[2]), BlockDisplay.class, bd -> {
+                bd.setTransformation(new Transformation(
+                        new Vector3f(),
+                        new AxisAngle4f(),
+                        new Vector3f(2, 0.3f, 2),
+                        new AxisAngle4f()
+                ));
+                bd.setBlock(Bukkit.createBlockData(Material.IRON_BLOCK));
+            });
+            var lift = new Lift(blockDisplay, 3);
+            lifts.put(blockDisplay, lift);
+            //电梯门
+            for (int i = 1; i < info.length; i++) {
+                var xyz_liftDoor = Arrays.stream(info[i].split(",")).mapToInt(Integer::parseInt).toArray();
+                var block = world.getBlockAt(xyz_liftDoor[0], xyz_liftDoor[1], xyz_liftDoor[2]);
+                LiftDoor liftDoor = new LiftDoor(block, lift, i);
+                if (i == 1) liftDoor.openDoor();
+                else liftDoor.closeDoor();
+                liftDoors.put(block, liftDoor);
+            }
+        }
+    }
+
+    private void spawnBodies() {
+        //尸体
+        Map<Location, List<String>> final_names = new HashMap<>();
+        Map<String, List<Location>> r_locs = new HashMap<>(); // 没个门卡随机一个位置
+        var bodiesInfo = (List<String>) locations_config.getList("bodies.locs");
+        for (String bodyInfo : bodiesInfo) {
+            var info = bodyInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
+            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
+            List<String> names = new ArrayList<>();
+            Arrays.stream(info).skip(1).forEach(name -> {
+                if (name.matches("^DoorCard\\d+$")) {
+                    //是门钥匙
+                    r_locs.computeIfAbsent(name, _ -> new ArrayList<>())
+                            .add(location);
+                } else {
+                    //todo 其他物品随机
+                }
+            });
+            final_names.putIfAbsent(location, names);
+        }
+        r_locs.forEach((name, locs) -> {
+            //随机一个尸体
+            final_names.get(locs.get(random.nextInt(locs.size()))).add(name);
+        });
+        final_names.forEach(this::spawnPickableBody);
+    }
+
     /**
      * 生成尸体
      * @param location 位置
@@ -378,6 +389,17 @@ public final class Game {
             ar.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
             //todo
         }), item_names);
+    }
+
+    private void spawnBarriers() {
+        //板子
+        var barriersInfo = (List<String>) locations_config.getList("barriers");
+        for (String barrierInfo : barriersInfo) {
+            var info = barrierInfo.split(" ");
+            var xyz = Arrays.stream(info[0].split(",")).mapToDouble(Double::parseDouble).toArray();
+            Location location = new Location(world, xyz[0], xyz[1], xyz[2]);
+            barriers.put(location, new Barrier(location, info[1].equals("N") ? BlockFace.EAST : BlockFace.NORTH));
+        }
     }
 
     public static boolean isRunning() {
@@ -397,7 +419,7 @@ public final class Game {
      */
     public void pause() {
         isPaused = true;
-        playerData.keySet().forEach(player -> player.sendMessage(rMsg("<dark_red>游戏暂停，若离开玩家未返回将在1分钟后自动结束")));
+        playerData.keySet().forEach(player -> player.sendMessage(rMsg("<dark_red>游戏暂停，��离开玩家未返回将在1分钟后自动结束")));
         pause_task = new BukkitRunnable() {
             @Override
             public void run() {
@@ -521,7 +543,6 @@ public final class Game {
                 TickRunner.gameEnd = true;
             }
         });
-        Bukkit.broadcastMessage(String.valueOf(survivorScore));
     }
 
     /**
@@ -535,6 +556,5 @@ public final class Game {
         if (survivor.isSealed()) return;
         hunterScore++;
         if (survivor.seal(dom)) hunterScore += 6;
-        Bukkit.broadcastMessage(String.valueOf(hunterScore));
     }
 }
